@@ -242,6 +242,7 @@
         <module>ows-simulate</module>
         <module>jdbc-metrics</module>
         <module>oseo</module>
+        <module>taskmanager</module>
       </modules>
     </profile>
     <profile>
