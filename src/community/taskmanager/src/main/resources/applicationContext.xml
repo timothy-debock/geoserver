@@ -50,14 +50,16 @@
     <context:component-scan base-package="org.geoserver.taskmanager.report.impl" />
     
     <context:component-scan base-package="org.geoserver.taskmanager.tasks" />
-            
-    <import resource="applicationContext-config.xml" />
     
+    <bean class="org.geoserver.taskmanager.util.ConfigurationBeansLoader">
+       <constructor-arg ref="resourceStore"></constructor-arg>
+    </bean>
+
     <bean id="taskmanagerCategory" class="org.geoserver.web.Category">
-		<property name="nameKey" value="category.taskmanager" />
-		<property name="order" value="1000" />
-	</bean>
-        
+       <property name="nameKey" value="category.taskmanager" />
+       <property name="order" value="1000" />
+    </bean>
+    
     <bean id="templatesPage" class="org.geoserver.web.MenuPageInfo">
        <property name="id" value="templatesPage"/>
        <property name="titleKey" value="TemplatesPage.page.title"/>
