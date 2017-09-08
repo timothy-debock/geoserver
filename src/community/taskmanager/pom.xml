@@ -54,6 +54,7 @@
             <groupId>it.geosolutions</groupId>
             <artifactId>geoserver-manager</artifactId>
             <version>1.7.0</version>
+            <scope>compile</scope>
         </dependency>			
 				
         <dependency>
@@ -102,6 +103,14 @@
             <artifactId>xmlunit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.geoserver.web</groupId>
+            <artifactId>gs-web-core</artifactId>
+	    <classifier>tests</classifier>
+            <scope>test</scope>
+	    <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 
       <build>
