@@ -8,7 +8,7 @@
     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd" >
   
     <bean id="wfSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
-        <property name="dataSource" ref="wfDataSource"/>
+        <property name="dataSource" ref="tmDataSource"/>
         <property name="annotatedClasses">
             <list>
                 <value>org.geoserver.taskmanager.data.impl.AttributeImpl</value>
@@ -33,10 +33,11 @@
     </bean>
     <tx:annotation-driven transaction-manager="transactionManager" />
     
-    <bean name="SchedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+    <bean name="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
     	<property name="applicationContextSchedulerContextKey">
         	<value>applicationContext</value>
     	</property>
+    	<property name="quartzProperties" ref="quartzProperties" />
 	</bean>
 	  
     <context:component-scan base-package="org.geoserver.taskmanager.util" />
