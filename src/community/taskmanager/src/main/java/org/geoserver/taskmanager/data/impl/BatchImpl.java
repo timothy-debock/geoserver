@@ -34,7 +34,8 @@ import org.hibernate.annotations.FilterDef;
  *
  */
 @Entity 
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "configuration", "removeStamp" }) })
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "configuration", "removeStamp" }),
+        @UniqueConstraint(columnNames = { "nameNoConfig", "removeStamp" })})
 @FilterDef(name="activeElementFilter", defaultCondition="removeStamp = 0")
 public class BatchImpl extends BaseImpl implements Batch {
 
@@ -58,8 +59,13 @@ public class BatchImpl extends BaseImpl implements Batch {
     @Column(nullable = false)
     String name;
 
+    //stupid work-around
+    //duplicate of name only set if configuration == null, just for unique constraint
+    @Column
+    String nameNoConfig; 
+
     @ManyToOne
-    @JoinColumn(name = "configuration")
+    @JoinColumn(name = "configuration", nullable = true)
     private ConfigurationImpl configuration;
     
     @Column
@@ -116,6 +122,9 @@ public class BatchImpl extends BaseImpl implements Batch {
     @Override
     public void setName(String name) {
         this.name = name;
+        if (configuration == null) {
+            this.nameNoConfig = name;
+        }
     }
 
     @Override
@@ -126,6 +135,11 @@ public class BatchImpl extends BaseImpl implements Batch {
     @Override
     public void setConfiguration(Configuration configuration) {
         this.configuration = (ConfigurationImpl) configuration;
+        if (configuration == null) {
+            nameNoConfig = name;
+        } else {
+            nameNoConfig = null;
+        }
     }
     
     @Override

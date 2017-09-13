@@ -241,10 +241,21 @@ public class TaskManagerTaskUtil {
         }
         
         Set<String> domain = null;
+        //first add all inclusive domains
         for (AttributeInfo attInfo : attInfos) {
-            List<String> thisDomain = attInfo.getType().getDomain(attInfo.getDependsOn());
-            
-            if (thisDomain != null) {
+            List<String> thisDomain = attInfo.getType().getDomain(attInfo.getDependsOn());            
+            if (thisDomain != null && thisDomain.contains("")) {
+                if (domain == null) {
+                    domain = new LinkedHashSet<String>(thisDomain);
+                } else {
+                    domain.addAll(thisDomain);
+                }
+            }
+        }
+        //then select on all the exclusive domains
+        for (AttributeInfo attInfo : attInfos) {
+            List<String> thisDomain = attInfo.getType().getDomain(attInfo.getDependsOn());            
+            if (thisDomain != null && !thisDomain.contains("")) {
                 if (domain == null) {
                     domain = new LinkedHashSet<String>(thisDomain);
                 } else {

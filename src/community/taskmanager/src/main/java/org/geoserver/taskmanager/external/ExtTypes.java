@@ -50,6 +50,7 @@ public class ExtTypes {
 
         private Set<String> getTables(String databaseName) {
             Set<String> tables = new TreeSet<String>();
+            tables.add(""); //custom value is possible here
             if (databaseName != null) {
                 DbSource ds = dbSources.get(databaseName);
                 if (ds != null) {
