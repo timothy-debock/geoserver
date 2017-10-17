@@ -375,6 +375,17 @@
     </profile>
 
     <profile>
+      <id>dov-taskmanager</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.geoserver.community</groupId>
+          <artifactId>gs-taskmanager</artifactId>
+          <version>2.11.2-dov</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
       <id>kml</id>
       <dependencies>
         <dependency>
