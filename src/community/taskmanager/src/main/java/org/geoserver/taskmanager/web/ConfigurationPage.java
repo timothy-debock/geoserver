@@ -454,7 +454,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                     } else {
                         form.success(new ParamResourceModel("success", getPage()).getString());
                         target.add(batchesPanel);
-                        ((MarkupContainer) batchesPanel.get("batchesPanel:listContainer:items")).removeAll();
+                        ((MarkupContainer) batchesPanel.get("form:batchesPanel:listContainer:items")).removeAll();
                         target.add(feedbackPanel);
                     }
                 } catch (Exception e) { 

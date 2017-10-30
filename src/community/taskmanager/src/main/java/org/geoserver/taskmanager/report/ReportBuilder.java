@@ -4,6 +4,8 @@
  */
 package org.geoserver.taskmanager.report;
 
+import org.geoserver.taskmanager.data.BatchRun;
+
 /**
  * A report builder generates a report from a batch.
  * One could write a custom one.
@@ -13,6 +15,6 @@ package org.geoserver.taskmanager.report;
  */
 public interface ReportBuilder {
     
-    Report buildBatchReport(String batchName);
+    Report buildBatchRunReport(BatchRun batchRun);
 
 }

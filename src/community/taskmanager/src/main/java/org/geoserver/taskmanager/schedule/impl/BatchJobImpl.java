@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Run;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.report.Report;
@@ -57,7 +58,14 @@ public class BatchJobImpl implements InterruptableJob {
         
         //get the batch
         String batchName = (String) context.getJobDetail().getKey().getName();
-        Batch batch = beans.getDao().getBatch(batchName);        
+        Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchName));        
+        
+        //start new batch run
+        BatchRun batchRun = beans.getFac().createBatchRun();
+        batchRun.setBatch(batch);
+        batch.getBatchRuns().add(batchRun);
+        
+        //get batch elements
         List<? extends BatchElement> elements = batch.getElements();
         
         //stacks for processing
@@ -66,15 +74,18 @@ public class BatchJobImpl implements InterruptableJob {
                 
         for (int i = 0 ;  i < elements.size() ; i++) {
            
-            BatchElement element = elements.get(i);
+            BatchElement element = beans.getDataUtil().init(elements.get(i));
             
             //if this task is currently running, wait
             Run run = null;
-            while ((run = beans.getDataUtil().runIfPossible(element)) == null) {
+            while ((run = beans.getDataUtil().runIfPossible(element, batchRun)) == null) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {}
             }
+            
+            //make sure we are working with the 'good' batchRun
+            batchRun = run.getBatchRun();
             
             //OK, let's go
             Task task = element.getTask();                        
@@ -147,7 +158,7 @@ public class BatchJobImpl implements InterruptableJob {
         }
         
         //send the report
-        Report report = beans.getReportBuilder().buildBatchReport(batchName);
+        Report report = beans.getReportBuilder().buildBatchRunReport(batchRun);
         for (ReportService reportService : beans.getReportServices()) {
             if (reportService.getFilter().matches(report.getType())) {
                 reportService.sendReport(report);

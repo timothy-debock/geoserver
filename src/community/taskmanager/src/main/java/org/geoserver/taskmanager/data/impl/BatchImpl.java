@@ -23,6 +23,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -79,6 +80,10 @@ public class BatchImpl extends BaseImpl implements Batch {
 
     @Column(nullable = false)
     Long removeStamp = 0L;
+
+    @OneToMany(targetEntity = BatchRunImpl.class, mappedBy = "batch", cascade = CascadeType.ALL)
+    @OrderBy("id")
+    List<BatchRun> batchRuns = new ArrayList<BatchRun>();
     
     @Override
     public Long getId() {
@@ -160,6 +165,11 @@ public class BatchImpl extends BaseImpl implements Batch {
     @Override
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public List<BatchRun> getBatchRuns() {
+        return batchRuns;
     }
 
     @Override

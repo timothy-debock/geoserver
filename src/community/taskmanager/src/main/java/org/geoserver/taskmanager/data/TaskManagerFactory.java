@@ -26,4 +26,6 @@ public interface TaskManagerFactory {
     
     BatchElement createBatchElement();
 
+    BatchRun createBatchRun();
+
 }

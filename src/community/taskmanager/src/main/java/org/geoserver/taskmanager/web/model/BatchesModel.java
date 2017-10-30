@@ -23,6 +23,30 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
     public static final Property<Batch> FREQUENCY = new BeanProperty<Batch>("frequency", "frequency");
     public static final Property<Batch> ENABLED = new BeanProperty<Batch>("enabled", "enabled");
     public static final Property<Batch> NAME = new BeanProperty<Batch>("name", "name");
+    public static final Property<Batch> STATUS = new AbstractProperty<Batch>("status") {
+
+        private static final long serialVersionUID = 6588177543318699677L;
+
+        @Override
+        public Object getPropertyValue(Batch batch) {
+           batch = TaskManagerBeans.get().getDataUtil().init(batch);
+            if (!batch.getBatchRuns().isEmpty()) {
+                return batch.getBatchRuns().get(batch.getBatchRuns().size() - 1).getStatus();
+            }
+            return null;
+        }
+        
+    };
+    public static final Property<Batch> RUN = new AbstractProperty<Batch>("run") {
+
+        private static final long serialVersionUID = -978472501994535469L;
+
+        @Override
+        public Object getPropertyValue(Batch item) {
+            return null;
+        }
+        
+    };
     
     public static final Property<Batch> FULL_NAME = new AbstractProperty<Batch>("name") {
         private static final long serialVersionUID = 6588177543318699677L;
@@ -46,7 +70,8 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
     
     @Override
     protected List<Property<Batch>> getProperties() {
-        return Arrays.asList(WORKSPACE, configurationModel == null ? FULL_NAME : NAME, DESCRIPTION, FREQUENCY, ENABLED);
+        return Arrays.asList(WORKSPACE, configurationModel == null ? FULL_NAME : NAME, DESCRIPTION, 
+                FREQUENCY, ENABLED, RUN, STATUS);
     }
 
     @Override

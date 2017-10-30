@@ -7,6 +7,7 @@ package org.geoserver.taskmanager.data.impl;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Run;
@@ -52,4 +53,8 @@ public class TaskManagerFactoryImpl implements TaskManagerFactory {
         return new BatchElementImpl();
     }
 
+    @Override
+    public BatchRun createBatchRun() {
+        return new BatchRunImpl();
+    }
 }

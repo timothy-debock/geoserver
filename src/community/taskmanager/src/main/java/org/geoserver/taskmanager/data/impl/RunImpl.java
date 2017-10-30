@@ -6,6 +6,7 @@ package org.geoserver.taskmanager.data.impl;
 
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
@@ -17,6 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Run;
 
 @Entity 
@@ -34,18 +36,22 @@ public class RunImpl extends BaseImpl implements Run {
     @JoinColumn(name = "batchElement")
     private BatchElementImpl batchElement;
 
-    @Column
+    @Column(nullable = false)
     private Date start;
     
     @Column
     private Date end;
     
-    @Column
+    @Column(nullable = false)
     @Enumerated
-    private Status status;
+    private Status status = Status.RUNNING;
     
     @Column
     private String message;
+
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "batchRun")
+    private BatchRunImpl batchRun;
 
     @Override
     public Long getId() {
@@ -104,6 +110,16 @@ public class RunImpl extends BaseImpl implements Run {
     @Override
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public BatchRun getBatchRun() {
+        return batchRun;
+    }
+
+    @Override
+    public void setBatchRun(BatchRun br) {
+        this.batchRun = (BatchRunImpl) br;
     }
     
     

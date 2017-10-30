@@ -15,7 +15,7 @@ import java.util.Date;
  */
 public interface Run extends Serializable, Identifiable {    
 
-    public enum Status { FAILED, ROLLED_BACK, COMMITTING, COMMITTED}
+    public enum Status { RUNNING, FAILED, ROLLED_BACK, COMMITTING, COMMITTED}
 
     Date getStart();
 
@@ -32,9 +32,13 @@ public interface Run extends Serializable, Identifiable {
     BatchElement getBatchElement();
 
     void setBatchElement(BatchElement batchElement);
-
+    
     String getMessage();
 
     void setMessage(String message);
+    
+    BatchRun getBatchRun();
+    
+    void setBatchRun(BatchRun br);
 
 }

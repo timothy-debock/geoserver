@@ -9,8 +9,10 @@ import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.util.FrequencyUtil;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.web.BatchPage;
+import org.geoserver.taskmanager.web.BatchRunsPage;
 import org.geoserver.taskmanager.web.model.BatchesModel;
 import org.geoserver.web.CatalogIconFactory;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -18,6 +20,10 @@ import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geotools.util.logging.Logging;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
@@ -33,6 +39,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.Form;
@@ -41,6 +48,7 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 
@@ -170,8 +178,8 @@ public class BatchesPanel extends Panel {
         remove.setEnabled(false);
                         
         //the panel
-        add(batchesPanel = new GeoServerTablePanel<Batch>("batchesPanel", batchesModel, true) {
-
+        add(new Form<>("form").add(batchesPanel = 
+          new GeoServerTablePanel<Batch>("batchesPanel", batchesModel, true) {
             private static final long serialVersionUID = -8943273843044917552L;
 
             @Override
@@ -215,10 +223,47 @@ public class BatchesPanel extends Panel {
                     return f;
                 } else if (property == BatchesModel.FREQUENCY) {
                     return new Label(id, formatFrequency(itemModel.getObject().getFrequency()));
+                } else if (property == BatchesModel.STATUS) {
+                    return new SimpleAjaxLink<String>(id, (IModel<String>) property.getModel(itemModel)) {
+                        private static final long serialVersionUID = -9184383036056499856L;
+                        
+                        @Override
+                        public void onClick(AjaxRequestTarget target) {
+                            setResponsePage(new BatchRunsPage(itemModel, getPage()));
+                        }
+                    };
+                } else if (property == BatchesModel.RUN) {
+                    if (itemModel.getObject().getElements().isEmpty()) {
+                        return new Label(id);
+                    } else {
+                        SimpleAjaxSubmitLink link = new SimpleAjaxSubmitLink(id, null) {
+                            private static final long serialVersionUID = -9184383036056499856L;
+                            
+                            @Override
+                            protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
+                                Trigger trigger = TriggerBuilder.newTrigger()
+                                        .forJob(itemModel.getObject().getFullName())
+                                        .startNow()        
+                                        .build();
+                                try {
+                                    GeoServerApplication.get().getBeanOfType(Scheduler.class).scheduleJob(trigger);
+                                } catch (SchedulerException e) {
+                                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                                }
+                                info(new StringResourceModel("batchStarted", BatchesPanel.this).getString());
+                                
+                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                            }
+                        };
+                        link.getLink().add(new AttributeAppender("class", "play-link", ","));
+                        return link;
+                    }
+                } else {
+                
+                    return null;
                 }
-                return null;
-            }
-        });
+            } 
+        }));
         batchesPanel.setOutputMarkupId(true);
     }
 

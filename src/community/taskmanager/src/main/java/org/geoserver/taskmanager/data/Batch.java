@@ -43,6 +43,8 @@ public interface Batch extends SoftRemove, Serializable, Identifiable {
 
     void setConfiguration(Configuration configuration);
     
+    List<BatchRun> getBatchRuns();
+    
     default String getFullName() {
         return getConfiguration() == null ? getName() : 
             ((getConfiguration().getName() == null ? "" : 

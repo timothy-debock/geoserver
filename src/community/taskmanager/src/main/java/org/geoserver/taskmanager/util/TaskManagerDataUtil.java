@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Run;
@@ -254,6 +255,19 @@ public class TaskManagerDataUtil {
         Hibernate.initialize(be.getRuns());
         return be;
     }
+    
+    /**
+     * Initialize lazy collection(s) in Batch
+     * 
+     * @param be the Batch to be initialized
+     * @return return the initialized Batch
+     */
+    @Transactional    
+    public Batch init(Batch b) {
+        b = dao.reload(b);
+        Hibernate.initialize(b.getBatchRuns()); 
+        return b;
+    }
 
     /**
      * Run a batch element if possible (i.e. if the task is not being run already).
@@ -262,9 +276,11 @@ public class TaskManagerDataUtil {
      * @return the run, or null if the task is being run elsewhere)
      */
     @Transactional    
-    public Run runIfPossible(BatchElement element) {
+    public Run runIfPossible(BatchElement element, BatchRun br) {
         if (dao.getCurrentRun(element.getTask()) == null) {
             Run run = fac.createRun();
+            br.getRuns().add(run);
+            run.setBatchRun(br);
             run.setStart(new Date());
             run.setBatchElement(element);
             return dao.save(run);

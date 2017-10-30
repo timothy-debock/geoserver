@@ -18,6 +18,7 @@
                 <value>org.geoserver.taskmanager.data.impl.ParameterImpl</value>
                 <value>org.geoserver.taskmanager.data.impl.RunImpl</value>
                 <value>org.geoserver.taskmanager.data.impl.TaskImpl</value>
+                <value>org.geoserver.taskmanager.data.impl.BatchRunImpl</value>
             </list>
         </property>
         <property name="hibernateProperties">
