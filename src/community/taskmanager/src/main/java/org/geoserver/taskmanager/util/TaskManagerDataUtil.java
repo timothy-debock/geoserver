@@ -44,8 +44,7 @@ public class TaskManagerDataUtil {
     private TaskManagerDao dao;
 
     @Autowired
-    private BatchJobService bjService;
-    
+    private BatchJobService bjService;    
 
     // -------------------------
     // Non-transactional methods

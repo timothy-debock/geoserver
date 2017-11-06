@@ -62,6 +62,8 @@
        <property name="order" value="1000" />
     </bean>
     
+    <bean id="taskManagerMenuAuthorizer" class="org.geoserver.web.AuthenticatedComponentAuthorizer" />
+    
     <bean id="templatesPage" class="org.geoserver.web.MenuPageInfo">
        <property name="id" value="templatesPage"/>
        <property name="titleKey" value="TemplatesPage.page.title"/>
@@ -69,6 +71,7 @@
        <property name="componentClass" value="org.geoserver.taskmanager.web.TemplatesPage"/>
        <property name="category" ref="taskmanagerCategory" />
        <property name="order" value="1001" />
+       <property name="authorizer" ref="taskManagerMenuAuthorizer"/>
     </bean>
     
     <bean id="configurationsPage" class="org.geoserver.web.MenuPageInfo">
@@ -78,6 +81,7 @@
        <property name="componentClass" value="org.geoserver.taskmanager.web.ConfigurationsPage"/>
        <property name="category" ref="taskmanagerCategory" />
        <property name="order" value="1002" />
+       <property name="authorizer" ref="taskManagerMenuAuthorizer"/>
     </bean>
     
     <bean id="batchesPage" class="org.geoserver.web.MenuPageInfo">
@@ -87,6 +91,7 @@
        <property name="componentClass" value="org.geoserver.taskmanager.web.BatchesPage"/>
        <property name="category" ref="taskmanagerCategory" />
        <property name="order" value="1003" />
+       <property name="authorizer" ref="taskManagerMenuAuthorizer"/>
     </bean>
 
 </beans>

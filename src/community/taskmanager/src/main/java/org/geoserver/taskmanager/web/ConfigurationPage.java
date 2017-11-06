@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -45,6 +46,7 @@ import org.geoserver.taskmanager.web.panel.TaskParameterPanel;
 import org.geoserver.taskmanager.web.panel.TextFieldPanel;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerSecuredPage;
+import org.geoserver.web.UnauthorizedPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -76,6 +78,10 @@ public class ConfigurationPage extends GeoServerSecuredPage {
     private BatchesPanel batchesPanel;
     
     public ConfigurationPage(IModel<Configuration> configurationModel) {
+        if (!TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
+                configurationModel.getObject())) {
+             throw new RestartResponseException(UnauthorizedPage.class); 
+        } 
         this.configurationModel = configurationModel;
         if (configurationModel.getObject().isTemplate()) {
             setReturnPage(TemplatesPage.class);
@@ -156,6 +162,24 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                 doReturn();
             }            
         });
+        
+
+        if (configurationModel.getObject().getId() != null
+                && !TaskManagerBeans.get().getSecUtil().isWritable(
+                getSession().getAuthentication(), configurationModel.getObject())) {
+            form.get("name").setEnabled(false);
+            form.get("workspace").setEnabled(false);
+            form.get("description").setEnabled(false);
+            attributesPanel.setEnabled(false);
+            form.get("addNew").setEnabled(false);
+            form.get("removeSelected").setEnabled(false);
+            tasksPanel.setEnabled(false);
+            batchesPanel.get("addNew").setEnabled(false);
+            batchesPanel.get("removeSelected").setEnabled(false);
+            saveButton.setEnabled(false);
+            applyButton.setEnabled(false);
+        }
+        
     }
     
     protected String getTitle() {

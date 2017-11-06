@@ -4,11 +4,13 @@
  */
 package org.geoserver.taskmanager.web.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.web.wicket.GeoServerDataProvider;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 
 public class ConfigurationsModel extends GeoServerDataProvider<Configuration> {
@@ -32,7 +34,11 @@ public class ConfigurationsModel extends GeoServerDataProvider<Configuration> {
 
     @Override
     protected List<Configuration> getItems() {
-        return TaskManagerBeans.get().getDao().getConfigurations(templates);
+        List<Configuration> list = new ArrayList<Configuration>(
+                TaskManagerBeans.get().getDao().getConfigurations(templates));
+        list.removeIf(c -> !TaskManagerBeans.get().getSecUtil().isReadable(
+                SecurityContextHolder.getContext().getAuthentication(), c));
+        return list;
     }
 
 }

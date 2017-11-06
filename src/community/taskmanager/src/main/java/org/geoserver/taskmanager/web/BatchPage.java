@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -41,6 +42,7 @@ import org.geoserver.taskmanager.web.panel.FrequencyPanel;
 import org.geoserver.taskmanager.web.panel.PositionPanel;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerSecuredPage;
+import org.geoserver.web.UnauthorizedPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -65,6 +67,10 @@ public class BatchPage extends GeoServerSecuredPage {
     private GeoServerTablePanel<BatchElement> elementsPanel;
         
     public BatchPage(IModel<Batch> batchModel, Page parentPage) {
+        if (!TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
+                batchModel.getObject())) {
+            throw new RestartResponseException(UnauthorizedPage.class); 
+        } 
         this.batchModel = batchModel;
         setReturnPage(parentPage);
     }
@@ -133,6 +139,21 @@ public class BatchPage extends GeoServerSecuredPage {
                 doReturn();
             }            
         });
+        
+        if (batchModel.getObject().getId() != null
+                && !TaskManagerBeans.get().getSecUtil().isWritable(
+                getSession().getAuthentication(), batchModel.getObject())) {
+            form.get("name").setEnabled(false);
+            form.get("workspace").setEnabled(false);
+            form.get("description").setEnabled(false);
+            form.get("configuration").setEnabled(false);
+            form.get("frequency").setEnabled(false);
+            form.get("enabled").setEnabled(false);
+            form.get("addNew").setEnabled(false);
+            remove.setEnabled(false);
+            saveButton.setEnabled(false);
+            elementsPanel.setEnabled(false);
+        }
         
     }
     

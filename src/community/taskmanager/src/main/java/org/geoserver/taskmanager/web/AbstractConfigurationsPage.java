@@ -8,6 +8,7 @@ import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.web.model.ConfigurationsModel;
 import org.geoserver.taskmanager.web.panel.DropDownPanel;
+import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -48,6 +49,10 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
     
     public AbstractConfigurationsPage(boolean templates) {
         this.templates = templates;
+    }
+
+    protected ComponentAuthorizer getPageAuthorizer() {
+        return ComponentAuthorizer.AUTHENTICATED;
     }
     
     @Override

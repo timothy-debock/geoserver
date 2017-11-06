@@ -43,6 +43,9 @@ public class TaskManagerBeans {
     @Autowired
     private BatchJobService bjService;
 
+    @Autowired 
+    private TaskManagerSecurityUtil secUtil;
+    
     public LookupService<TaskType> getTaskTypes() {
         return taskTypes;
     }
@@ -73,6 +76,10 @@ public class TaskManagerBeans {
     
     public BatchJobService getBjService() {
         return bjService;
+    }
+    
+    public TaskManagerSecurityUtil getSecUtil() {
+        return secUtil;
     }
     
     public static TaskManagerBeans get() {

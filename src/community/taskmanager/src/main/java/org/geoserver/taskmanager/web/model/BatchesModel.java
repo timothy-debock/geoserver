@@ -13,6 +13,7 @@ import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class BatchesModel extends GeoServerDataProvider<Batch> {
 
@@ -29,9 +30,11 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
 
         @Override
         public Object getPropertyValue(Batch batch) {
-           batch = TaskManagerBeans.get().getDataUtil().init(batch);
-            if (!batch.getBatchRuns().isEmpty()) {
-                return batch.getBatchRuns().get(batch.getBatchRuns().size() - 1).getStatus();
+            if (batch.getId() != null) {
+                batch = TaskManagerBeans.get().getDataUtil().init(batch);
+                if (!batch.getBatchRuns().isEmpty()) {
+                    return batch.getBatchRuns().get(batch.getBatchRuns().size() - 1).getStatus();
+                }
             }
             return null;
         }
@@ -59,9 +62,8 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
     
     
     private IModel<Configuration> configurationModel;
-    
+
     public BatchesModel() {
-        
     }
     
     public BatchesModel(IModel<Configuration> configurationModel) {
@@ -76,8 +78,12 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
 
     @Override
     protected List<Batch> getItems() {
-        return configurationModel == null ? TaskManagerBeans.get().getDao().getBatches() : 
-            new ArrayList<Batch>(configurationModel.getObject().getBatches().values());
+        List<Batch> list = new ArrayList<Batch>(
+                configurationModel == null ? TaskManagerBeans.get().getDao().getBatches() : 
+                    configurationModel.getObject().getBatches().values());
+        list.removeIf(b -> !TaskManagerBeans.get().getSecUtil().isReadable(
+            SecurityContextHolder.getContext().getAuthentication(), b));
+        return list;
     }
 
 }

@@ -270,6 +270,9 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 if (Hibernate.isInitialized(be.getRuns())) {
                     be.getRuns().clear();
                 }
+            }              
+            if (Hibernate.isInitialized(batch.getBatchRuns())) {
+                batch.getBatchRuns().clear();
             }
         }
         return clone;

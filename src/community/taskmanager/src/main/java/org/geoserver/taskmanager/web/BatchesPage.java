@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.web;
 
 import org.geoserver.taskmanager.web.panel.BatchesPanel;
+import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerSecuredPage;
 
 public class BatchesPage extends GeoServerSecuredPage {
@@ -15,6 +16,10 @@ public class BatchesPage extends GeoServerSecuredPage {
     public void onInitialize() {
         super.onInitialize();
         add(new BatchesPanel("batchesPanel"));
+    }
+
+    protected ComponentAuthorizer getPageAuthorizer() {
+        return ComponentAuthorizer.AUTHENTICATED;
     }
 
 }
