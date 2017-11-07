@@ -39,7 +39,7 @@ public class RunImpl extends BaseImpl implements Run {
     @Column(nullable = false)
     private Date start;
     
-    @Column
+    @Column(name = "runEnd")
     private Date end;
     
     @Column(nullable = false)
