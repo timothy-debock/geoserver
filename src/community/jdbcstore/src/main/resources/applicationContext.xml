@@ -32,9 +32,22 @@
     <property name="resourceNotificationDispatcher" ref="resourceNotificationDispatcher"/>
   </bean>
   
+<<<<<<< 3dd46ae56d95075c3a05fbb2672152b1e137e960
    <context:annotation-config />
    <mvc:annotation-driven />
   
    <context:component-scan base-package="org.geoserver.jdbcstore.rest" />
+=======
+   <context:component-scan base-package="org.geoserver.jdbcstore.rest" />
+  
+   <bean id="geofenceRestURLMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="alwaysUseFullPath" value="true"/>
+        <property name="mappings">
+            <props>
+                <prop key="jdbcexport**">jdbcexport</prop>
+            </props>
+        </property>
+    </bean>
+>>>>>>> jdbcexport mapping
     
 </beans>

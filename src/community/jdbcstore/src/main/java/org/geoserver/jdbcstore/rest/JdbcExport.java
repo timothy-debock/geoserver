@@ -39,7 +39,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-@Controller("/jdbcexport")
+@Controller
 public class JdbcExport {
 
     static Logger LOGGER = Logging.getLogger( "org.geoserver" );
