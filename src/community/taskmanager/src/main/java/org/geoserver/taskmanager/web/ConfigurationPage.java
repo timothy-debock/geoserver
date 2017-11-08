@@ -78,7 +78,8 @@ public class ConfigurationPage extends GeoServerSecuredPage {
     private BatchesPanel batchesPanel;
     
     public ConfigurationPage(IModel<Configuration> configurationModel) {
-        if (!TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
+        if (configurationModel.getObject().getId() != null
+                && !TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
                 configurationModel.getObject())) {
              throw new RestartResponseException(UnauthorizedPage.class); 
         } 

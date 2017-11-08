@@ -67,7 +67,8 @@ public class BatchPage extends GeoServerSecuredPage {
     private GeoServerTablePanel<BatchElement> elementsPanel;
         
     public BatchPage(IModel<Batch> batchModel, Page parentPage) {
-        if (!TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
+        if (batchModel.getObject().getId() != null
+                && !TaskManagerBeans.get().getSecUtil().isReadable(getSession().getAuthentication(), 
                 batchModel.getObject())) {
             throw new RestartResponseException(UnauthorizedPage.class); 
         } 
