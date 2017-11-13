@@ -20,7 +20,7 @@
    		<property name="name" value="mydb"/>
 		<property name="host" value="localhost" />
 		<property name="db" value="mydb" />
-		<property name="schema" value="public" />
+		<!-- <property name="schema" value="public" /> -->
 		<property name="username" value="postgres" />
 		<property name="password" value="postgres" />
 	</bean>
@@ -29,7 +29,7 @@
 		<property name="name" value="myotherdb"/>
 		<property name="host" value="localhost" />
 		<property name="db" value="myotherdb" />
-		<property name="schema" value="temp" />
+		<!-- <property name="schema" value="temp" /> -->
 		<property name="username" value="postgres" />
 		<property name="password" value="postgres" />
 	</bean>

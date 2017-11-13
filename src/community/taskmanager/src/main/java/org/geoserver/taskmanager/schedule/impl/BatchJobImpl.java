@@ -58,7 +58,9 @@ public class BatchJobImpl implements InterruptableJob {
         
         //get the batch
         String batchName = (String) context.getJobDetail().getKey().getName();
-        Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchName));        
+        Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchName)); 
+        
+        LOGGER.log(Level.SEVERE, "Starting batch " + batch.getFullName());
         
         //start new batch run
         BatchRun batchRun = beans.getFac().createBatchRun();
@@ -71,8 +73,11 @@ public class BatchJobImpl implements InterruptableJob {
         //stacks for processing
         Stack<TaskResult> resultStack = new Stack<TaskResult>();
         Stack<Run> runStack = new Stack<Run>();
+        
+        boolean rollback = false;
                 
         for (int i = 0 ;  i < elements.size() ; i++) {
+            rollback = false;
            
             BatchElement element = beans.getDataUtil().init(elements.get(i));
             
@@ -91,8 +96,7 @@ public class BatchJobImpl implements InterruptableJob {
             Task task = element.getTask();                        
             TaskType type = beans.getTaskTypes().get(task.getType());
             Map<String, String> rawParameterValues = beans.getTaskUtil().getRawParameterValues(task);            
-            boolean rollback = false;
-
+            
             try {
                 Map<String, Object> parameterValues = beans.getTaskUtil().parseParameters(type, rawParameterValues);
                 resultStack.push(type.run(batch, task, parameterValues));
@@ -124,16 +128,20 @@ public class BatchJobImpl implements InterruptableJob {
                     } catch (Exception e) {
                         Task popTask = runPop.getBatchElement().getTask();
                         runPop.setMessage(e.getMessage());
+                        runPop.setStatus(Run.Status.FAILED);
                         LOGGER.log(Level.SEVERE, "Task " + popTask.getFullName() + 
                                 " failed to rollback in batch " + batch.getFullName() + "", e);
                     }
                     beans.getDao().save(runPop);
                 }
                 break; //leave for-loop           
-            }
-            
+            }             
         }
-
+        
+        if (!rollback) {
+            LOGGER.log(Level.SEVERE, "Committing batch " + batch.getFullName());
+        }
+        
         while (!resultStack.isEmpty()) {
             Run runPop = runStack.pop();
             Run runTemp;
@@ -156,6 +164,8 @@ public class BatchJobImpl implements InterruptableJob {
             }
             beans.getDao().save(runPop);
         }
+        
+        LOGGER.log(Level.SEVERE, "Finished batch " + batch.getFullName());
         
         //send the report
         Report report = beans.getReportBuilder().buildBatchRunReport(batchRun);

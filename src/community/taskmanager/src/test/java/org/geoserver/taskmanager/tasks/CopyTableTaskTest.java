@@ -45,12 +45,14 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
     //configure these constants
     private static final String SOURCEDB_NAME = "mydb";
     private static final String TARGETDB_NAME = "myotherdb";
-    private static final String TABLE_NAME = "vw_horizonten";
+    private static final String TABLE_NAME = "public.vw_horizonten";
+    private static final String TARGET_TABLE_NAME = "temp.vw_horizonten";
     
     //attributes
     private static final String ATT_TABLE_NAME = "table_name";
     private static final String ATT_TARGET_DB = "target_db";
     private static final String ATT_SOURCE_DB = "source_db";
+    private static final String ATT_TARGET_TABLE_NAME = "target_table_name";
     
     @Autowired
     private TaskManagerDao dao;
@@ -88,7 +90,8 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         task1.setType(CopyTableTaskTypeImpl.NAME);
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_SOURCE_DB_NAME, ATT_SOURCE_DB);
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TARGET_DB_NAME, ATT_TARGET_DB);
-        dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TABLE_NAME, ATT_TABLE_NAME);
+        dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TABLE_NAME, ATT_TABLE_NAME);;
+        dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TARGET_TABLE_NAME, ATT_TARGET_TABLE_NAME);
         dataUtil.addTaskToConfiguration(config, task1);
         
         config = dao.save(config);
@@ -113,6 +116,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_NAME);
         config = dao.save(config);
         
         Trigger trigger = TriggerBuilder.newTrigger()
@@ -124,13 +128,26 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        assertFalse(tableExists(TARGETDB_NAME, "_temp%"));
-        assertTrue(tableExists(TARGETDB_NAME, TABLE_NAME));
-        assertEquals(getNumberOfRecords(SOURCEDB_NAME), getNumberOfRecords(TARGETDB_NAME));   
-        assertEquals(getNumberOfColumns(SOURCEDB_NAME), getNumberOfColumns(TARGETDB_NAME));   
+        String[] split = TARGET_TABLE_NAME.split("\\.", 2);
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));            
+        }
+        assertEquals(getNumberOfRecords(SOURCEDB_NAME, TABLE_NAME), 
+                getNumberOfRecords(TARGETDB_NAME, TARGET_TABLE_NAME)); 
+        assertEquals(getNumberOfColumns(SOURCEDB_NAME, TABLE_NAME), 
+                getNumberOfColumns(TARGETDB_NAME, TARGET_TABLE_NAME));   
         
-        assertTrue(taskUtil.cleanup(config));        
-        assertFalse(tableExists(TARGETDB_NAME, TABLE_NAME));    
+        assertTrue(taskUtil.cleanup(config)); 
+        
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
+        }
     }
     
     @Test
@@ -143,6 +160,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_NAME);
         dataUtil.setConfigurationAttribute(config, "fail", "true");
         config = dao.save(config);
         task2 = config.getTasks().get("task2");
@@ -158,15 +176,21 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        assertFalse(tableExists(TARGETDB_NAME, TABLE_NAME));    
-        assertFalse(tableExists(TARGETDB_NAME, "_temp%"));    
+        String[] split = TARGET_TABLE_NAME.split("\\.", 2);
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
+            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
+            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));            
+        }
     }
     
-    private int getNumberOfRecords(String db) throws SQLException {
+    private int getNumberOfRecords(String db, String tableName) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + TABLE_NAME)) {
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
                     rs.next();
                     return rs.getInt(1);
                 }                    
@@ -174,22 +198,22 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         }
     }
     
-    private int getNumberOfColumns(String db) throws SQLException {
+    private int getNumberOfColumns(String db, String tableName) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + TABLE_NAME)) {
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
                     return rs.getMetaData().getColumnCount();
                 }                    
             }
         }
     }
     
-    private boolean tableExists(String db, String pattern) throws SQLException {
+    private boolean tableExists(String db, String schema, String pattern) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
             DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getTables(null, null, pattern, new String[] {"TABLE"});
+            ResultSet rs = md.getTables(null, schema, pattern, new String[] {"TABLE"});
             return (rs.next());
         }
     }

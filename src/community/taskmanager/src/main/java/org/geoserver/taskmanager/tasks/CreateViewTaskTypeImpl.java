@@ -23,6 +23,7 @@ import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -67,7 +68,7 @@ public class CreateViewTaskTypeImpl implements TaskType {
     @PostConstruct
     public void initParamInfo() {
         paramInfo.put(PARAM_DB_NAME, new ParameterInfo(PARAM_DB_NAME, extTypes.dbName, true));
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName, true)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(true), true)
                 .dependsOn(paramInfo.get(PARAM_DB_NAME)));
         paramInfo.put(PARAM_VIEW_NAME, new ParameterInfo(PARAM_VIEW_NAME, ParameterType.STRING, true));
         paramInfo.put(PARAM_SELECT, new ParameterInfo(PARAM_SELECT, SQL, true));
@@ -106,8 +107,9 @@ public class CreateViewTaskTypeImpl implements TaskType {
             public void commit() throws TaskException {
                 try (Connection conn = db.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP VIEW IF EXISTS " + viewName);
-                        stmt.executeUpdate("ALTER VIEW " + tempViewName + " RENAME TO " + viewName);
+                        stmt.executeUpdate("DROP VIEW IF EXISTS " + SqlUtil.quote(viewName));
+                        stmt.executeUpdate("ALTER VIEW " + tempViewName + " RENAME TO " + 
+                                SqlUtil.quote(viewName));
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -135,7 +137,7 @@ public class CreateViewTaskTypeImpl implements TaskType {
         final String viewName = (String) parameterValues.get(PARAM_VIEW_NAME);
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
-                stmt.executeUpdate("DROP VIEW IF EXISTS " + viewName);
+                stmt.executeUpdate("DROP VIEW IF EXISTS " + SqlUtil.quote(viewName));
             }
         } catch (SQLException e) {
             throw new TaskException(e);
