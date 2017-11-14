@@ -55,7 +55,8 @@ public class TestTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues) throws TaskException {
+    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
+            Map<Object, Object> tempValues) throws TaskException {
         String identifier = batch.getFullName() + ":" + task.getFullName();
         LOGGER.log(Level.INFO, "running task " + identifier);
         

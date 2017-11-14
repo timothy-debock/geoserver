@@ -75,7 +75,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     }
 
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues) throws TaskException {
+    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
+            Map<Object, Object> tempValues) throws TaskException {
         final ExternalGS extGS = (ExternalGS) parameterValues.get(PARAM_EXT_GS);   
         final LayerInfo layer = (LayerInfo) parameterValues.get(PARAM_LAYER);
         final ResourceInfo resource = layer.getResource();

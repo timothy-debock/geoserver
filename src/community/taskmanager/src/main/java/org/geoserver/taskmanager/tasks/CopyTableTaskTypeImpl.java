@@ -21,10 +21,11 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.wicket.util.string.Strings;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
+import org.geoserver.taskmanager.external.DbTable;
+import org.geoserver.taskmanager.external.DbTableImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskException;
@@ -69,7 +70,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public void initParamInfo() {
         paramInfo.put(PARAM_SOURCE_DB_NAME, new ParameterInfo(PARAM_SOURCE_DB_NAME, extTypes.dbName, true));
         paramInfo.put(PARAM_TARGET_DB_NAME, new ParameterInfo(PARAM_TARGET_DB_NAME, extTypes.dbName, true));
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(true), true)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(false /* true */), true)
                 .dependsOn(paramInfo.get(PARAM_SOURCE_DB_NAME)));
         /*paramInfo.put(PARAM_TYPE_SCHEMA_MAPPING, new ParameterInfo(PARAM_TYPE_SCHEMA_MAPPING, 
                 ParameterType.STRING, false));*/
@@ -83,33 +84,29 @@ public class CopyTableTaskTypeImpl implements TaskType {
     }
     
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues) throws TaskException {
+    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
+            Map<Object, Object> tempValues) throws TaskException {
         final DbSource sourcedb = (DbSource) parameterValues.get(PARAM_SOURCE_DB_NAME);
         final DbSource targetdb = (DbSource) parameterValues.get(PARAM_TARGET_DB_NAME);
-        final String tableName = (String) parameterValues.get(PARAM_TABLE_NAME);
+        final DbTable table = tempValues.containsKey(parameterValues.get(PARAM_TABLE_NAME)) ?
+                (DbTable) tempValues.get(parameterValues.get(PARAM_TABLE_NAME)) :
+                (DbTable) parameterValues.get(PARAM_TABLE_NAME);
         //final Map<String, String> typeSchemaMapping = 
         //        buildMap((String) parameterValues.get(PARAM_TYPE_SCHEMA_MAPPING));
         
-        String _targetTableName = (String) parameterValues.get(PARAM_TARGET_TABLE_NAME);
-        if (Strings.isEmpty(_targetTableName)) {
-            _targetTableName = tableName;
-        }
-        String _nqTargetTableName = _targetTableName;
-        String _tempTableName = "_temp_" + UUID.randomUUID().toString().replace('-', '_');
-        String[] split = _targetTableName.split("\\.", 2);
-        if (split.length == 2) {
-            _tempTableName = split[0] + "." + _tempTableName;
-            _nqTargetTableName = split[1];
-        }
-        
-        final String targetTableName = _targetTableName; //qualified
-        final String nqTargetTableName = _nqTargetTableName; //not qualified
-        final String tempTableName = _tempTableName;
+        final DbTable targetTable = parameterValues.containsKey(PARAM_TARGET_TABLE_NAME) ?
+                        (DbTable) parameterValues.get(PARAM_TARGET_TABLE_NAME) :
+                            new DbTableImpl(targetdb, table.getTableName());
+        final String tempTableName = SqlUtil.qualified(
+                SqlUtil.schema(targetTable.getTableName()),
+                "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
+        tempValues.put(targetTable, new DbTableImpl(targetdb, tempTableName));
         
         try (Connection sourceConn = sourcedb.getDataSource().getConnection()) {
             try (Connection destConn = targetdb.getDataSource().getConnection()) {
                 try (Statement stmt = sourceConn.createStatement()) {
-                    try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + SqlUtil.quote(tableName) + "")) {
+                    try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + 
+                            SqlUtil.quote(table.getTableName()) + "")) {
 
                         ResultSetMetaData rsmd = rs.getMetaData();
 
@@ -130,9 +127,9 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             }
                             sb.append(", ");
                         }
-                        sb.append("PRIMARY KEY (").append(getPrimaryKey(sourceConn, tableName))
+                        sb.append("PRIMARY KEY (").append(getPrimaryKey(sourceConn, table.getTableName()))
                                 .append("), ");
-                        for (String unique : getUniques(sourceConn, tableName)) {
+                        for (String unique : getUniques(sourceConn, table.getTableName())) {
                             sb.append("UNIQUE (").append(unique).append("), ");
                         }
                         sb.setLength(sb.length() - 2);
@@ -193,9 +190,10 @@ public class CopyTableTaskTypeImpl implements TaskType {
             public void commit() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(targetTableName));
-                        stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO \"" + 
-                                SqlUtil.quote(nqTargetTableName) + "\"");
+                        stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(
+                                targetTable.getTableName()));
+                        stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " + 
+                                SqlUtil.quote(SqlUtil.notQualified(targetTable.getTableName())));
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -206,7 +204,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
             public void rollback() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP TABLE \""+ tempTableName+ "\"");
+                        stmt.executeUpdate("DROP TABLE "+ SqlUtil.quote(tempTableName) + "");
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -218,15 +216,15 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
     @Override
     public void cleanup(Task task, Map<String, Object> parameterValues) throws TaskException {
+        final DbTable table = (DbTable) parameterValues.get(PARAM_TABLE_NAME);
         final DbSource targetDb = (DbSource) parameterValues.get(PARAM_TARGET_DB_NAME);
-        String tableName = (String) parameterValues.get(PARAM_TARGET_TABLE_NAME);
-        if (Strings.isEmpty(tableName)) {
-            tableName = (String) parameterValues.get(PARAM_TABLE_NAME);
-        }
+        final DbTable targetTable = parameterValues.containsKey(PARAM_TARGET_TABLE_NAME) ?
+                (DbTable) parameterValues.get(PARAM_TARGET_TABLE_NAME) :
+                    new DbTableImpl(targetDb, table.getTableName());
         
         try (Connection conn = targetDb.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
-                stmt.executeUpdate("DROP TABLE IF EXISTS \"" + SqlUtil.quote(tableName) + "\"");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(targetTable.getTableName()));
             }
         } catch (SQLException e) {
             throw new TaskException(e);

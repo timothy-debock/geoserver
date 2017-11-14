@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.schedule.impl;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
@@ -73,8 +74,9 @@ public class BatchJobImpl implements InterruptableJob {
         //stacks for processing
         Stack<TaskResult> resultStack = new Stack<TaskResult>();
         Stack<Run> runStack = new Stack<Run>();
-        
-        boolean rollback = false;
+
+        Map<Object, Object> tempValues = new HashMap<Object, Object>();
+        boolean rollback = false;        
                 
         for (int i = 0 ;  i < elements.size() ; i++) {
             rollback = false;
@@ -99,7 +101,7 @@ public class BatchJobImpl implements InterruptableJob {
             
             try {
                 Map<String, Object> parameterValues = beans.getTaskUtil().parseParameters(type, rawParameterValues);
-                resultStack.push(type.run(batch, task, parameterValues));
+                resultStack.push(type.run(batch, task, parameterValues, tempValues));
 
                 run.setEnd(new Date());   
                 run = beans.getDao().save(run);
@@ -128,11 +130,11 @@ public class BatchJobImpl implements InterruptableJob {
                     } catch (Exception e) {
                         Task popTask = runPop.getBatchElement().getTask();
                         runPop.setMessage(e.getMessage());
-                        runPop.setStatus(Run.Status.FAILED);
+                        runPop.setStatus(Run.Status.NOT_ROLLED_BACK);
                         LOGGER.log(Level.SEVERE, "Task " + popTask.getFullName() + 
                                 " failed to rollback in batch " + batch.getFullName() + "", e);
                     }
-                    beans.getDao().save(runPop);
+                    runPop = beans.getDao().save(runPop);
                 }
                 break; //leave for-loop           
             }             
@@ -160,15 +162,15 @@ public class BatchJobImpl implements InterruptableJob {
                 LOGGER.log(Level.SEVERE, "Task " + task.getFullName() + 
                         " failed to commit in batch " + batch.getFullName() + "", e);
                 runPop.setMessage(e.getMessage());
-                runPop.setStatus(Run.Status.FAILED);
+                runPop.setStatus(Run.Status.NOT_COMMITTED);                
             }
-            beans.getDao().save(runPop);
+            runPop = beans.getDao().save(runPop);
         }
         
         LOGGER.log(Level.SEVERE, "Finished batch " + batch.getFullName());
         
         //send the report
-        Report report = beans.getReportBuilder().buildBatchRunReport(batchRun);
+        Report report = beans.getReportBuilder().buildBatchRunReport(beans.getDao().reload(batchRun));
         for (ReportService reportService : beans.getReportServices()) {
             if (reportService.getFilter().matches(report.getType())) {
                 reportService.sendReport(report);

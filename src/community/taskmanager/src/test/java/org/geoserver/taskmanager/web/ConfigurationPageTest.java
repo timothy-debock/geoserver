@@ -2,6 +2,8 @@ package org.geoserver.taskmanager.web;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.Model;
 import org.geoserver.data.test.SystemTestData;
@@ -16,6 +18,7 @@ import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.geoserver.web.GeoServerWicketTestSupport;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ConfigurationPageTest extends GeoServerWicketTestSupport {
@@ -37,7 +40,7 @@ public class ConfigurationPageTest extends GeoServerWicketTestSupport {
     public Configuration createConfiguration() {
         Configuration config = fac.createConfiguration();  
         config.setName("test_template");
-        config.setWorkspace("some_ws");
+        //config.setWorkspace("some_ws");
         config.setDescription("my new configuration");
         
         Task task1 = tutil.initTask(CopyTableTaskTypeImpl.NAME, "task1");
@@ -52,9 +55,14 @@ public class ConfigurationPageTest extends GeoServerWicketTestSupport {
         return dao.save(config);
     }
     
+    @Before
+    public void init() throws IOException {
+        login();
+    }
+    
     @SuppressWarnings("unchecked")
     @Test
-    public void testCreate() {
+    public void testCreate() {        
         ConfigurationPage page = new ConfigurationPage(new Model<>(createConfiguration()));
         
         tester.startPage(page);

@@ -58,7 +58,7 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         tester.startPage(page);
         tester.assertRenderedPage(BatchesPage.class);
         
-        tester.assertComponent("batchesPanel:batchesPanel", GeoServerTablePanel.class);
+        tester.assertComponent("batchesPanel:form:batchesPanel", GeoServerTablePanel.class);
         tester.assertComponent("batchesPanel:dialog", GeoServerDialog.class);
         
         tester.assertComponent("batchesPanel:addNew", AjaxLink.class);
@@ -77,7 +77,7 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
 
         @SuppressWarnings("unchecked")
                 GeoServerTablePanel<Batch> table = (GeoServerTablePanel<Batch>) 
-                tester.getComponentFromLastRenderedPage("batchesPanel:batchesPanel");
+                tester.getComponentFromLastRenderedPage("batchesPanel:form:batchesPanel");
         
         assertEquals(Batches.size(), table.getDataProvider().size());
         assertTrue(containsConfig(getBatchesFromTable(table), dummy1));  
@@ -111,7 +111,7 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         
         @SuppressWarnings("unchecked")
         GeoServerTablePanel<Batch> table = (GeoServerTablePanel<Batch>) 
-            tester.getComponentFromLastRenderedPage("batchesPanel:batchesPanel");
+            tester.getComponentFromLastRenderedPage("batchesPanel:form:batchesPanel");
                 
         Batch dummy1 = dao.save(dummyBatch1());
         Batch dummy2 = dao.save(dummyBatch2());
@@ -120,11 +120,11 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         assertTrue(containsConfig(dao.getBatches(), dummy2));
         
         //sort descending on name
-        tester.clickLink("batchesPanel:batchesPanel:listContainer:sortableLinks:1:header:link", true);
-        tester.clickLink("batchesPanel:batchesPanel:listContainer:sortableLinks:1:header:link", true);
+        tester.clickLink("batchesPanel:form:batchesPanel:listContainer:sortableLinks:1:header:link", true);
+        tester.clickLink("batchesPanel:form:batchesPanel:listContainer:sortableLinks:1:header:link", true);
         
         //select
-        CheckBox selector = ((CheckBox) tester.getComponentFromLastRenderedPage("batchesPanel:batchesPanel:listContainer:items:3:selectItemContainer:selectItem"));
+        CheckBox selector = ((CheckBox) tester.getComponentFromLastRenderedPage("batchesPanel:form:batchesPanel:listContainer:items:3:selectItemContainer:selectItem"));
         tester.getRequest().setParameter(selector.getInputName(), "true");
         tester.executeAjaxEvent(selector, "click");
                 

@@ -20,6 +20,7 @@ import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.schedule.TestTaskTypeImpl;
 import org.geoserver.taskmanager.util.LookupService;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.junit.After;
@@ -176,14 +177,9 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        String[] split = TARGET_TABLE_NAME.split("\\.", 2);
-        if (split.length == 2) {
-            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
-            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
-        } else {
-            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
-            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));            
-        }
+        assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), "_temp%"));
+        assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), 
+                    SqlUtil.notQualified(TARGET_TABLE_NAME))); 
     }
     
     private int getNumberOfRecords(String db, String tableName) throws SQLException {

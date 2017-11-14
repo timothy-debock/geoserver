@@ -16,5 +16,16 @@ public class NamedImpl implements Named {
     public void setName(String name) {
         this.name = name;
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        return o.getClass().equals(getClass())
+                && ((NamedImpl) o).getName().equals(getName());
+    }
+    
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 
 }

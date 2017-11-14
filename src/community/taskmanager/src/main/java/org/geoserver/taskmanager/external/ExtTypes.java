@@ -88,12 +88,11 @@ public class ExtTypes {
     
             @Override
             public Object parse(String value, List<String> dependsOnRawValues) {
-                if (mustExist) {
+                if (mustExist && !getTables(dependsOnRawValues.get(0)).contains(value)) {
                     //now do validate, produce error if table doesn't exist
-                    return getTables(dependsOnRawValues.get(0)).contains(value) ? value : null;
-                } else {
-                    return value;
-                }
+                    return null;
+                } 
+                return new DbTableImpl(dbSources.get(dependsOnRawValues.get(0)), value);
             }
     
         };

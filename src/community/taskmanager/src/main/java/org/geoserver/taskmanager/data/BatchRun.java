@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.geoserver.taskmanager.data.Run.Status;
 
-public interface BatchRun extends Serializable {
+public interface BatchRun extends Serializable, Identifiable {
     
     Batch getBatch();
     

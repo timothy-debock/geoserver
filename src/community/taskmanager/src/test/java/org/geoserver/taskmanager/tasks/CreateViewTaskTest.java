@@ -20,6 +20,7 @@ import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.schedule.TestTaskTypeImpl;
 import org.geoserver.taskmanager.util.LookupService;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.junit.After;
@@ -44,8 +45,8 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
 
     //configure these constants
     private static final String DB_NAME = "mydb";
-    private static final String TABLE_NAME = "vw_horizonten";
-    private static final String VIEW_NAME = "view_vw_horizonten";
+    private static final String TABLE_NAME = "public.vw_horizonten";
+    private static final String VIEW_NAME = "public.view_vw_horizonten";
     private static final String SELECT = " gid, geom";
     private static final String WHERE = "horizontnummer = '3'";
     private static final int NUMBER_OF_RECORDS = 6995;
@@ -134,13 +135,13 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        assertFalse(viewExists("_temp%"));
-        assertTrue(viewExists(VIEW_NAME));
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));
+        assertTrue(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
         assertEquals(getNumberOfRecords(TABLE_NAME), getNumberOfRecords(VIEW_NAME));   
         assertEquals(getNumberOfColumns(TABLE_NAME), getNumberOfColumns(VIEW_NAME));   
         
         assertTrue(taskUtil.cleanup(config));        
-        assertFalse(viewExists(VIEW_NAME));    
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));    
     }
     
     @Test
@@ -161,13 +162,13 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        assertFalse(viewExists("_temp%"));
-        assertTrue(viewExists(VIEW_NAME));
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));
+        assertTrue(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
         assertEquals(NUMBER_OF_RECORDS, getNumberOfRecords(VIEW_NAME));   
         assertEquals(NUMBER_OF_COLUMNS, getNumberOfColumns(VIEW_NAME));   
         
         assertTrue(taskUtil.cleanup(config));
-        assertFalse(viewExists(VIEW_NAME));  
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));  
     }
     
     @Test
@@ -196,8 +197,8 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
-        assertFalse(viewExists(VIEW_NAME));    
-        assertFalse(viewExists("_temp%"));    
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));    
+        assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));    
     }
     
     private int getNumberOfRecords(String tableName) throws SQLException {
@@ -223,11 +224,11 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
         }
     }
     
-    private boolean viewExists(String pattern) throws SQLException {
+    private boolean viewExists(String schema, String pattern) throws SQLException {
         DbSource ds = dbSources.get(DB_NAME);
         try (Connection conn = ds.getDataSource().getConnection()) {
             DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getTables(null, null, pattern, new String[] {"VIEW"});
+            ResultSet rs = md.getTables(null, schema, pattern, new String[] {"VIEW"});
             return (rs.next());
         }
     }

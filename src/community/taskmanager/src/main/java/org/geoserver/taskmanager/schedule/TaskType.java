@@ -33,7 +33,8 @@ public interface TaskType extends Named {
      * 
      * @return the task result
      */
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues) throws TaskException;
+    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
+            Map<Object, Object> tempValues) throws TaskException;
     
     /**
      * Do a clean-up for this task (for example, if this task publishes something, remove it).

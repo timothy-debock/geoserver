@@ -152,6 +152,8 @@ public class ConfigurationsPageTest extends GeoServerWicketTestSupport {
         assertFalse(containsConfig(getConfigurationsFromTable(table), dummy1));
         assertTrue(containsConfig(getConfigurationsFromTable(table), dummy2));
         
+        dao.delete(dummy2);
+        
     }
     
     protected List<Configuration> getConfigurationsFromTable(GeoServerTablePanel<Configuration> table) {
