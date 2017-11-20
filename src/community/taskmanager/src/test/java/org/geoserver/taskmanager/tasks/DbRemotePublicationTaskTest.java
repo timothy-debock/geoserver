@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 
-@Ignore
+//@Ignore
 public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants

@@ -46,7 +46,7 @@ public class ExtTypes {
 
     };
     
-    public final ParameterType tableName(final boolean mustExist) {
+    public final ParameterType tableName() {
         return new ParameterType() {
             private Set<String> getTables(String databaseName) {
                 Set<String> tables = new TreeSet<String>();
@@ -81,17 +81,13 @@ public class ExtTypes {
             
             @Override
             public boolean validate(String value, List<String> dependsOnRawValues) {
-                //since the table may not yet exist at config time (could be result of other task
-                //do not validate at this point.
+                //since the table may not yet exist  (could be result of other task
+                //do not validate its existence.
                 return true; 
             }
     
             @Override
             public Object parse(String value, List<String> dependsOnRawValues) {
-                if (mustExist && !getTables(dependsOnRawValues.get(0)).contains(value)) {
-                    //now do validate, produce error if table doesn't exist
-                    return null;
-                } 
                 return new DbTableImpl(dbSources.get(dependsOnRawValues.get(0)), value);
             }
     

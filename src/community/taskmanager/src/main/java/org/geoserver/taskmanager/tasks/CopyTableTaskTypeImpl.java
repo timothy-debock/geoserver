@@ -70,11 +70,11 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public void initParamInfo() {
         paramInfo.put(PARAM_SOURCE_DB_NAME, new ParameterInfo(PARAM_SOURCE_DB_NAME, extTypes.dbName, true));
         paramInfo.put(PARAM_TARGET_DB_NAME, new ParameterInfo(PARAM_TARGET_DB_NAME, extTypes.dbName, true));
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(false /* true */), true)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(), true)
                 .dependsOn(paramInfo.get(PARAM_SOURCE_DB_NAME)));
         /*paramInfo.put(PARAM_TYPE_SCHEMA_MAPPING, new ParameterInfo(PARAM_TYPE_SCHEMA_MAPPING, 
                 ParameterType.STRING, false));*/
-        paramInfo.put(PARAM_TARGET_TABLE_NAME, new ParameterInfo(PARAM_TARGET_TABLE_NAME, extTypes.tableName(false), false)
+        paramInfo.put(PARAM_TARGET_TABLE_NAME, new ParameterInfo(PARAM_TARGET_TABLE_NAME, extTypes.tableName(), false)
                 .dependsOn(paramInfo.get(PARAM_TARGET_DB_NAME)));
     }
 

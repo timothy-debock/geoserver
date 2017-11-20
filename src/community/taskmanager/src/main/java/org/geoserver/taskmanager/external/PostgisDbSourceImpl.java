@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.geoserver.taskmanager.util.NamedImpl;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
@@ -134,6 +135,17 @@ public class PostgisDbSourceImpl extends NamedImpl implements DbSource {
         params.put(PostgisNGDataStoreFactory.USER.key, username);
         params.put(PostgisNGDataStoreFactory.PASSWD.key, password);
         return params;
+    }
+
+    @Override
+    public GSAbstractStoreEncoder postProcess(GSAbstractStoreEncoder encoder, DbTable table) {
+        if (table != null) {
+            String schema = SqlUtil.schema(table.getTableName());
+            if (schema != null) {
+                ((GSPostGISDatastoreEncoder) encoder).setSchema(schema);
+            }
+        }
+        return encoder;
     }
 
     /*

@@ -49,6 +49,15 @@ public interface DbSource extends Named {
      */
     String getSchema();
     
+    /**
+     * 
+     * 
+     * @param encoder
+     * @param origParameters
+     * @return 
+     */
+    GSAbstractStoreEncoder postProcess(GSAbstractStoreEncoder encoder, DbTable table);
+    
     /*
      * these methods could serve an alternative table copy implementation
      * that doesn't use jdbc but uses direct database commands and sends SQL commands

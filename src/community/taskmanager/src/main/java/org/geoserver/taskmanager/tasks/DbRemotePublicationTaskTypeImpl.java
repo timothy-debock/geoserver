@@ -11,13 +11,17 @@ import javax.annotation.PostConstruct;
 
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.taskmanager.external.DbSource;
+import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
+import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
+import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
 
 @Component
 public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTaskTypeImpl {
@@ -25,6 +29,8 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     public static final String NAME = "RemoteDbPublication";
 
     public static final String PARAM_DB_NAME = "database";
+
+    public static final String PARAM_TABLE_NAME = "table-name";
     
     @Autowired
     ExtTypes extTypes;
@@ -33,7 +39,10 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     @Override
     public void initParamInfo() {
         super.initParamInfo();
-        paramInfo.put(PARAM_DB_NAME, new ParameterInfo(PARAM_DB_NAME, extTypes.dbName, true));
+        ParameterInfo dbInfo = new ParameterInfo(PARAM_DB_NAME, extTypes.dbName, true);
+        paramInfo.put(PARAM_DB_NAME, dbInfo);
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(), false)
+                .dependsOn(dbInfo));
     }
     
     @Override
@@ -45,13 +54,22 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     protected boolean createStore(ExternalGS extGS, GeoServerRESTManager restManager,
             StoreInfo store, Map<String, Object> parameterValues) throws IOException {
         final DbSource db = (DbSource) parameterValues.get(PARAM_DB_NAME);
+        final DbTable table = (DbTable) parameterValues.get(PARAM_TABLE_NAME);
         return restManager.getStoreManager().create(store.getWorkspace().getName(), 
-                db.getStoreEncoder(store.getName()));
+                db.postProcess(db.getStoreEncoder(store.getName()), table));
     }
 
     @Override
     protected boolean mustCleanUpStore() {
         return false;
+    }
+    
+    @Override
+    protected void postProcess(GSResourceEncoder re, Map<String, Object> parameterValues) {
+        final DbTable table = (DbTable) parameterValues.get(PARAM_TABLE_NAME);
+        if (table != null) {
+            ((GSFeatureTypeEncoder) re).setNativeName(SqlUtil.notQualified(table.getTableName()));
+        }
     }
 
 }

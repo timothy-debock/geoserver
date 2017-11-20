@@ -164,6 +164,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                         fte.setNativeName(resource.getNativeName());
                         re = fte;
                     }
+                    postProcess(re, parameterValues);
                     re.setName(resource.getName());
                     re.setTitle(resource.getName());
                     re.setSRS(resource.getSRS());
@@ -322,4 +323,5 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     
     protected abstract boolean mustCleanUpStore();
 
+    protected void postProcess(GSResourceEncoder re, Map<String, Object> parameterValues) {}
 }

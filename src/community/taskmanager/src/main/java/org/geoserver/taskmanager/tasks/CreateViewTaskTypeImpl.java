@@ -69,7 +69,7 @@ public class CreateViewTaskTypeImpl implements TaskType {
     @PostConstruct
     public void initParamInfo() {
         paramInfo.put(PARAM_DB_NAME, new ParameterInfo(PARAM_DB_NAME, extTypes.dbName, true));
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(false /*true*/), true)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(), true)
                 .dependsOn(paramInfo.get(PARAM_DB_NAME)));
         paramInfo.put(PARAM_VIEW_NAME, new ParameterInfo(PARAM_VIEW_NAME, ParameterType.STRING, true));
         paramInfo.put(PARAM_SELECT, new ParameterInfo(PARAM_SELECT, SQL, true));
