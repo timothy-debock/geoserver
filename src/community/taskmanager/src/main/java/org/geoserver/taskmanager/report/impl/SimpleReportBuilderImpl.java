@@ -14,11 +14,9 @@ import org.geoserver.taskmanager.report.Report.Type;
 import org.springframework.stereotype.Service;
 
 /**
- * A very simple report builder.
- * Contains all information that matters in simple text format.
- * 
- * @author Niels Charlier
+ * A very simple report builder. Contains all information that matters in simple text format.
  *
+ * @author Niels Charlier
  */
 @Service
 public class SimpleReportBuilderImpl implements ReportBuilder {
@@ -26,21 +24,23 @@ public class SimpleReportBuilderImpl implements ReportBuilder {
     @Override
     public Report buildBatchRunReport(BatchRun batchRun) {
         StringBuilder reportContent = new StringBuilder();
-                        
+
         for (Run run : batchRun.getRuns()) {
             BatchElement element = run.getBatchElement();
             Task task = element.getTask();
-            reportContent.append(task.getFullName() + ", started " + run.getStart() + ", ended " + 
-                    run.getEnd() + ", status is " + run.getStatus() + "\n");
+            reportContent.append(task.getFullName() + ", started " + run.getStart() + ", ended "
+                    + run.getEnd() + ", status is " + run.getStatus() + "\n");
             if (run.getMessage() != null) {
-                reportContent.append("\tmessage: " + run.getMessage() + " (check logs for more details) \n");
+                reportContent.append(
+                        "\tmessage: " + run.getMessage() + " (check logs for more details) \n");
             }
-                                
+
         }
-        
-        StringBuilder reportTitle = new StringBuilder("Report: Batch " + batchRun.getBatch().getFullName() + " ");
+
+        StringBuilder reportTitle = new StringBuilder(
+                "Report: Batch " + batchRun.getBatch().getFullName() + " ");
         Type type;
-        
+
         switch (batchRun.getRuns().get(batchRun.getRuns().size() - 1).getStatus()) {
         case FAILED:
             reportTitle.append("has failed");
@@ -54,7 +54,7 @@ public class SimpleReportBuilderImpl implements ReportBuilder {
             reportTitle.append("was successful");
             type = Type.SUCCESS;
         }
-        
+
         return new Report(reportTitle.toString(), reportContent.toString(), type);
     }
 

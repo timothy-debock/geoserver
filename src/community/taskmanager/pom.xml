@@ -33,7 +33,7 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate-version}</version>
-        </dependency>         
+        </dependency>
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
@@ -48,15 +48,15 @@
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
             <version>1.4</version>
-        </dependency>	
-		
+        </dependency>
+
         <dependency>
             <groupId>it.geosolutions</groupId>
             <artifactId>geoserver-manager</artifactId>
             <version>1.7.0</version>
             <scope>compile</scope>
-        </dependency>			
-				
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -79,7 +79,7 @@
             <artifactId>gs-web-core</artifactId>
         </dependency>
 
-	   
+
         <!-- test dependencies -->
         <dependency>
             <groupId>org.geoserver</groupId>
@@ -106,26 +106,26 @@
         <dependency>
             <groupId>org.geoserver.web</groupId>
             <artifactId>gs-web-core</artifactId>
-	    <classifier>tests</classifier>
+            <classifier>tests</classifier>
             <scope>test</scope>
-	    <version>${project.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>
 
-      <build>
+    <build>
         <resources>
             <resource>
-            <directory>${basedir}/src/main/java</directory>
-              <includes>
-                <include>**/*.html</include>
-              </includes>
+                <directory>${basedir}/src/main/java</directory>
+                <includes>
+                    <include>**/*.html</include>
+                </includes>
             </resource>
             <resource>
-              <directory>${basedir}/src/main/resources</directory>
-              <includes>
-                 <include>**/*</include>
-              </includes>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </resource>
         </resources>
     </build>
