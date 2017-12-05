@@ -94,9 +94,7 @@ public class ExtTypes {
             }
 
         };
-    }
-
-    ;
+    };
 
     public final ParameterType extGeoserver = new ParameterType() {
 

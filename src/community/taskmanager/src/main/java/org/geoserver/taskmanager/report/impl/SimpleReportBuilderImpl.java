@@ -15,8 +15,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * A very simple report builder. Contains all information that matters in simple text format.
- *
+ * 
  * @author Niels Charlier
+ *
  */
 @Service
 public class SimpleReportBuilderImpl implements ReportBuilder {

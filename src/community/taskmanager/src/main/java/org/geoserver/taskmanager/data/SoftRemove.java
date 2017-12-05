@@ -6,8 +6,9 @@ package org.geoserver.taskmanager.data;
 
 /**
  * Objects that are be soft removed are still stored in database for historical reasons, but are generally not displayed.
- *
+ * 
  * @author Niels Charlier
+ *
  */
 public interface SoftRemove {
 

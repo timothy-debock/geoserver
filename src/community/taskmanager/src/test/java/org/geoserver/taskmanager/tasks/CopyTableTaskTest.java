@@ -47,9 +47,13 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     private static final String TARGETDB_NAME = "myotherdb";
 
-    private static final String TABLE_NAME = "public.vw_horizonten";
+    private static final String TABLE_NAME = "gw_beleid.grondwaterlichamen_new";
 
-    private static final String TARGET_TABLE_NAME = "temp.vw_horizonten";
+    private static final String TARGET_TABLE_NAME = "temp.grondwaterlichamen_copy";
+
+    private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
+
+    private static final String TARGET_VIEW_NAME = "temp.grondwaterlichamen_vw_copy";
 
     // attributes
     private static final String ATT_TABLE_NAME = "table_name";
@@ -100,7 +104,6 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 ATT_TARGET_DB);
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TABLE_NAME,
                 ATT_TABLE_NAME);
-        ;
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TARGET_TABLE_NAME,
                 ATT_TARGET_TABLE_NAME);
         dataUtil.addTaskToConfiguration(config, task1);
@@ -123,7 +126,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
     }
 
     @Test
-    public void testSuccess() throws SchedulerException, SQLException {
+    public void testTableSuccess() throws SchedulerException, SQLException {
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
@@ -150,6 +153,46 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 getNumberOfRecords(TARGETDB_NAME, TARGET_TABLE_NAME));
         assertEquals(getNumberOfColumns(SOURCEDB_NAME, TABLE_NAME),
                 getNumberOfColumns(TARGETDB_NAME, TARGET_TABLE_NAME));
+
+        assertTrue(taskUtil.cleanup(config));
+
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
+        }
+    }
+
+    @Test
+    public void testViewSuccess() throws SchedulerException, SQLException {
+        dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, VIEW_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_VIEW_NAME);
+        config = dao.save(config);
+
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+                .build();
+        scheduler.scheduleJob(trigger);
+
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+            // waiting to be done.
+        }
+
+        String[] split = TARGET_VIEW_NAME.split("\\.", 2);
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_VIEW_NAME));
+        }
+        assertEquals(getNumberOfRecords(SOURCEDB_NAME, VIEW_NAME),
+                getNumberOfRecords(TARGETDB_NAME, TARGET_VIEW_NAME));
+        // a primary key column was added
+        assertEquals(getNumberOfColumns(SOURCEDB_NAME, VIEW_NAME) + 1,
+                getNumberOfColumns(TARGETDB_NAME, TARGET_VIEW_NAME));
 
         assertTrue(taskUtil.cleanup(config));
 

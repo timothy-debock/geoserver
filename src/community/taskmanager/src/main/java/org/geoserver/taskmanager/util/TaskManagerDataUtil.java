@@ -28,7 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
+ * 
  * Implementation independent helper methods.
+ * 
  */
 @Service
 public class TaskManagerDataUtil {
@@ -50,7 +52,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Set parameter of a task.
-     *
+     * 
      * @param task the task.
      * @param name the parameter name.
      * @param attName the attribute name.
@@ -68,7 +70,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Set parameter of a task associated with an attribute.
-     *
+     * 
      * @param task the task.
      * @param name the parameter name.
      * @param attName the attribute name.
@@ -80,7 +82,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Set attribute of a configuration.
-     *
+     * 
      * @param config the configuration.
      * @param name the attribute name.
      * @param value the attribute value.
@@ -99,7 +101,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Add a task to configuration.
-     *
+     * 
      * @param config the configuration.
      * @param task the task.
      */
@@ -113,7 +115,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Add a batch to configuration.
-     *
+     * 
      * @param config the configuration.
      * @param batch the batch.
      */
@@ -128,7 +130,7 @@ public class TaskManagerDataUtil {
     /**
      * Add a batch element to a batch at the end of the batch. If a batch element with this combination batch/task already exists, (even if it has been
      * soft removed) this batch element will be activated if necessary and returned.
-     *
+     * 
      * @param batch the batch.
      * @param task the task.
      * @return the new or existing batch element.
@@ -144,7 +146,7 @@ public class TaskManagerDataUtil {
     /**
      * Add a batch element to a batch on a particular position. If a batch element with this combination batch/task already exists, (even if it has been
      * soft removed) this batch element will be activated if necessary and returned.
-     *
+     * 
      * @param batch the batch.
      * @param task the task.
      * @param position the position.
@@ -185,7 +187,7 @@ public class TaskManagerDataUtil {
 
     /**
      * List all associated parameters of attribute
-     *
+     * 
      * @param att the attribute
      * @return the parameters
      */
@@ -229,7 +231,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Initialize lazy collection(s) in Task
-     *
+     * 
      * @param task the task to be initialized
      * @return return the initialized task
      */
@@ -242,7 +244,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Initialize lazy collection(s) in BatchElement
-     *
+     * 
      * @param be the BatchElement to be initialized
      * @return return the initialized BatchElement
      */
@@ -255,7 +257,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Initialize lazy collection(s) in Batch
-     *
+     * 
      * @param be the Batch to be initialized
      * @return return the initialized Batch
      */
@@ -268,7 +270,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Run a batch element if possible (i.e. if the task is not being run already).
-     *
+     * 
      * @param element the batch element.
      * @return the run, or null if the task is being run elsewhere)
      */
@@ -288,7 +290,7 @@ public class TaskManagerDataUtil {
 
     /**
      * Commit a batch element if possible (i.e. if the task is not being committed already).
-     *
+     * 
      * @param element the batch element.
      * @return the run, or null if the task is being committed elsewhere)
      */

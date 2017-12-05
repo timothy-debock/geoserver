@@ -5,20 +5,21 @@
 package org.geoserver.taskmanager.report;
 
 /**
+ * 
  * A report is the result of a certain batch run, that can be used to email or notify otherwise.
- *
+ * 
  * @author Niels Charlier
+ *
  */
 public class Report {
 
     /**
      * Enumeration for over-all result of the report.
+     * 
      */
     public enum Type {
         FAILED, CANCELLED, SUCCESS
-    }
-
-    ;
+    };
 
     /**
      * Title of report.

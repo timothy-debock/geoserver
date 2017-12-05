@@ -1,13 +1,6 @@
 package org.geoserver.taskmanager.tasks;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.net.MalformedURLException;
-import java.sql.SQLException;
-
-import javax.xml.namespace.QName;
-
+import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
@@ -28,19 +21,23 @@ import org.junit.Test;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.quartz.Trigger.TriggerState;
+import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import it.geosolutions.geoserver.rest.GeoServerRESTManager;
+import javax.xml.namespace.QName;
+import java.net.MalformedURLException;
+import java.sql.SQLException;
 
-//@Ignore
+import static org.junit.Assert.assertFalse;
+
+@Ignore
 public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
 
     // configure these constants
     private static final String DB_NAME = "mydb";
 
-    private static final String TABLE_NAME = "vw_horizonten";
+    private static final String TABLE_NAME = "grondwaterlichamen_new";
 
     private static QName MY_TYPE = new QName(DB_NAME, TABLE_NAME, DB_NAME);
 
@@ -119,35 +116,34 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
         dao.delete(batch);
         dao.delete(config);
     }
-
-    @Test
-    public void testSuccessAndCleanup()
-            throws SchedulerException, SQLException, MalformedURLException {
-        dataUtil.setConfigurationAttribute(config, ATT_DB_NAME, DB_NAME);
-        dataUtil.setConfigurationAttribute(config, ATT_LAYER, TABLE_NAME);
-        dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
-        config = dao.save(config);
-
-        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
-                .build();
-        scheduler.scheduleJob(trigger);
-
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
-        }
-
-        GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
-
-        assertTrue(restManager.getReader().existsDatastore(DB_NAME, DB_NAME));
-        assertTrue(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
-        assertTrue(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
-
-        assertTrue(taskUtil.cleanup(config));
-
-        assertFalse(restManager.getReader().existsDatastore(DB_NAME, DB_NAME));
-        assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
-        assertFalse(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
-    }
+    /*
+     * 
+     * @Test public void testSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
+     * dataUtil.setConfigurationAttribute(config, ATT_DB_NAME, DB_NAME); dataUtil.setConfigurationAttribute(config, ATT_LAYER, TABLE_NAME);
+     * dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs"); config = dao.save(config);
+     * 
+     * Trigger trigger = TriggerBuilder.newTrigger() .forJob(batch.getFullName()) .startNow() .build(); scheduler.scheduleJob(trigger);
+     * 
+     * while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+     * //burn the cpu }
+     * 
+     * GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
+     * 
+     * assertTrue(restManager.getReader().existsDatastore(DB_NAME, DB_NAME)); assertTrue(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME,
+     * TABLE_NAME)); assertTrue(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
+     * 
+     * String result = HTTPUtils.get(
+     * "http://localhost:9090/geoserver/mydb/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mydb:grondwaterlichamen_new&maxFeatures=50");
+     * assertFalse(result.contains("Exception"));
+     * 
+     * assertTrue(taskUtil.cleanup(config));
+     * 
+     * assertFalse(restManager.getReader().existsDatastore(DB_NAME, DB_NAME)); assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME,
+     * TABLE_NAME)); assertFalse(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
+     * 
+     * 
+     * }
+     */
 
     @Test
     public void testRollback() throws SchedulerException, SQLException, MalformedURLException {

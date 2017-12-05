@@ -60,7 +60,7 @@ public abstract class SimpleAjaxSubmitLink extends Panel {
 
     /**
      * Subclasses should override and provide the behaviour for
-     *
+     * 
      * @param target
      */
     protected abstract void onSubmit(AjaxRequestTarget target, Form<?> form);

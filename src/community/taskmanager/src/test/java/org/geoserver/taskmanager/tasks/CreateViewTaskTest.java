@@ -1,15 +1,5 @@
 package org.geoserver.taskmanager.tasks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
@@ -30,14 +20,25 @@ import org.junit.Test;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.quartz.Trigger.TriggerState;
+import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
- * Databases must be set up and configured in app context before this test can be run.
+ * Databases must be set up and configured in app context before this test can be run. mv
  *
  * @author Niels Charlier
+ *
  */
 @Ignore
 public class CreateViewTaskTest extends AbstractTaskManagerTest {
@@ -45,15 +46,15 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
     // configure these constants
     private static final String DB_NAME = "mydb";
 
-    private static final String TABLE_NAME = "public.vw_horizonten";
+    private static final String TABLE_NAME = "gw_beleid.grondwaterlichamen_new";
 
-    private static final String VIEW_NAME = "public.view_vw_horizonten";
+    private static final String VIEW_NAME = "public.vw_grondwaterlichamen";
 
-    private static final String SELECT = " gid, geom";
+    private static final String SELECT = " dataengine_id, shape";
 
-    private static final String WHERE = "horizontnummer = '3'";
+    private static final String WHERE = "gwl like 'BL%'";
 
-    private static final int NUMBER_OF_RECORDS = 6995;
+    private static final int NUMBER_OF_RECORDS = 7;
 
     private static final int NUMBER_OF_COLUMNS = 2;
 

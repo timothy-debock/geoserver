@@ -20,8 +20,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -105,7 +114,9 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         // create the temp table structure
                         StringBuilder sb = new StringBuilder("CREATE TABLE ").append(tempTableName)
                                 .append(" ( ");
-                        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                        int columnCount = rsmd.getColumnCount();
+
+                        for (int i = 1; i <= columnCount; i++) {
                             sb.append(rsmd.getColumnLabel(i)).append(" ")
                                     // .append(targetType(rsmd.getColumnTypeName(i), typeSchemaMapping));
                                     .append(rsmd.getColumnTypeName(i));
@@ -120,9 +131,16 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             }
                             sb.append(", ");
                         }
-                        sb.append("PRIMARY KEY (")
-                                .append(getPrimaryKey(sourceConn, table.getTableName()))
-                                .append("), ");
+                        String primaryKey = getPrimaryKey(sourceConn, table.getTableName());
+                        boolean hasPrimaryKeyColumn = !primaryKey.isEmpty();
+                        if (hasPrimaryKeyColumn) {
+                            sb.append("PRIMARY KEY (").append(primaryKey).append("), ");
+                        } else {
+                            // create a Primary key column if none exist.
+                            sb.append("generated_id int, PRIMARY KEY (generated_id), ");
+                            columnCount++;
+                        }
+
                         for (String unique : getUniques(sourceConn, table.getTableName())) {
                             sb.append("UNIQUE (").append(unique).append("), ");
                         }
@@ -138,7 +156,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         // copy the data
                         sb = new StringBuilder("INSERT INTO ").append(tempTableName)
                                 .append(" VALUES (");
-                        for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                        for (int i = 0; i < columnCount; i++) {
                             if (i > 0) {
                                 sb.append(",");
                             }
@@ -150,9 +168,14 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
                         try (PreparedStatement pstmt = destConn.prepareStatement(sb.toString())) {
                             int batchSize = 0;
+                            int primaryKeyValue = 0;
                             while (rs.next()) {
                                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                                     pstmt.setObject(i, rs.getObject(i));
+                                }
+                                // generate the primary key value
+                                if (!hasPrimaryKeyColumn) {
+                                    pstmt.setObject(columnCount, primaryKeyValue);
                                 }
                                 pstmt.addBatch();
                                 batchSize++;
@@ -160,6 +183,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                                     pstmt.executeBatch();
                                     batchSize = 0;
                                 }
+                                primaryKeyValue++;
                             }
                             if (batchSize > 0) {
                                 pstmt.executeBatch();
@@ -259,7 +283,9 @@ public class CopyTableTaskTypeImpl implements TaskType {
             while (rsPrimaryKeys.next()) {
                 sb.append(rsPrimaryKeys.getString("COLUMN_NAME")).append(", ");
             }
-            sb.setLength(sb.length() - 2);
+            if (sb.length() >= 2) {
+                sb.setLength(sb.length() - 2);
+            }
             return sb.toString();
         }
     }
