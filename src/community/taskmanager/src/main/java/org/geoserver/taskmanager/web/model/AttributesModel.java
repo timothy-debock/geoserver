@@ -28,6 +28,17 @@ public class AttributesModel extends GeoServerDataProvider<Attribute> {
 
     public static final Property<Attribute> VALUE = new BeanProperty<Attribute>("value", "value");
 
+    public static final Property<Attribute> ACTIONS = new AbstractProperty<Attribute>("actions") {
+
+        private static final long serialVersionUID = -978472501994535469L;
+
+        @Override
+        public Object getPropertyValue(Attribute item) {
+            return null;
+        }
+        
+    };
+    
     private IModel<Configuration> configurationModel;
 
     private Map<String, Attribute> attributes = new HashMap<String, Attribute>();
@@ -38,7 +49,7 @@ public class AttributesModel extends GeoServerDataProvider<Attribute> {
 
     @Override
     protected List<Property<Attribute>> getProperties() {
-        return Arrays.asList(NAME, VALUE);
+        return Arrays.asList(NAME, VALUE, ACTIONS);
     }
 
     @Override

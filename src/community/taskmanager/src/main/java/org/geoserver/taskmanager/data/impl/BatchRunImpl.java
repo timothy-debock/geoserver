@@ -23,6 +23,8 @@ import javax.persistence.Table;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Run;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table
@@ -42,6 +44,7 @@ public class BatchRunImpl extends BaseImpl implements BatchRun {
     @OneToMany(fetch = FetchType.EAGER, targetEntity = RunImpl.class, mappedBy = "batchRun", 
             cascade = CascadeType.ALL)
     @OrderBy("start")
+    @Fetch(FetchMode.SUBSELECT)
     List<Run> runs = new ArrayList<Run>();
 
     @Override

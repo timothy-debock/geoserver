@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Attribute;
+import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
@@ -346,6 +348,48 @@ public class TaskManagerTaskUtil {
             Map<String, String> rawParameters = getRawParameterValues(task);
             //first check all required (except if template)
             if (!configuration.isTemplate()) {
+                validateRequired(taskType, rawParameters, validationErrors);
+            }
+            
+            for (Entry<String, String> parameter : rawParameters.entrySet()) {
+                ParameterInfo info = taskType.getParameterInfo().get(parameter.getKey());
+                if (info == null) {
+                    validationErrors.add(new ValidationError(ValidationErrorType.INVALID_PARAM, 
+                            parameter.getKey(), null, taskType.getName()));
+                    break;
+                }
+                ParameterType pt = info.getType();
+                List<String> dependsOnValues = new ArrayList<String>();
+                for (ParameterInfo dependsOn : info.getDependsOn()) {
+                    dependsOnValues.add(rawParameters.get(dependsOn.getName()));
+                }
+                if (!pt.validate(parameter.getValue(), dependsOnValues)) {
+                    validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
+                            parameter.getKey(), parameter.getValue(), taskType.getName()));
+                    break;
+                }
+            }
+            
+        }
+        
+        return validationErrors;
+    }
+    
+    /**
+     * Validate batch (at configuration time)
+     * 
+     * @param configuration the configuration
+     * @throws TaskException
+     */
+    public List<ValidationError> validate(Batch batch) {
+        List<ValidationError> validationErrors = new ArrayList<ValidationError>();
+        
+        for (BatchElement element : batch.getElements()) {
+            Task task = element.getTask();
+            TaskType taskType = taskTypes.get(task.getType());
+            Map<String, String> rawParameters = getRawParameterValues(task);
+            //first check all required (except if template)
+            if (!task.getConfiguration().isTemplate()) {
                 validateRequired(taskType, rawParameters, validationErrors);
             }
             

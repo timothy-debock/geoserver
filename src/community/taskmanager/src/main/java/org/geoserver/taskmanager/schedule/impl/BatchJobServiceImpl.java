@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.BatchJobService;
@@ -105,7 +106,22 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         } catch (SchedulerException e) {
             throw new IllegalArgumentException(e);
         }
-        return batch;        
+        return batch;
+    }
+    
+    @Override
+    @Transactional
+    public Configuration saveAndSchedule(Configuration config) {
+        config = dao.save(config);
+
+        try {
+            for (Batch batch : config.getBatches().values()) {
+                schedule(batch);
+            }
+        } catch (SchedulerException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return config;
     }
     
     @Override

@@ -34,6 +34,8 @@ import org.hibernate.annotations.FilterDef;
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "configuration", "removeStamp" }) })
 @FilterDef(name="activeTaskElementFilter", defaultCondition="removeStamp = 0")
+//TODO: need alias support for filters, for now need to filter this out manually
+//@FilterDef(name="activeTaskElementFilter", defaultCondition="removeStamp = 0 and batch.removeStamp = 0")
 public class TaskImpl extends BaseImpl implements Task {
     
     private static final long serialVersionUID = -4050889394621568829L;

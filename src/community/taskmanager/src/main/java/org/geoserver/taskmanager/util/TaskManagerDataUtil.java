@@ -209,8 +209,9 @@ public class TaskManagerDataUtil {
     // -----------------------
     
     @Transactional 
-    public Configuration saveAndRemove(Configuration config, Collection<Task> tasks, Collection<Batch> batches) {
-        config = dao.save(config);
+    public Configuration saveAndRemove(Configuration config, Collection<Task> tasks, 
+            Collection<Batch> batches) {
+        config = bjService.saveAndSchedule(config);
         for (Task task : tasks) {
             dao.remove(task);
         }

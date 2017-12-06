@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.TaskManagerDao;
+import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
@@ -37,11 +38,14 @@ public class ImportTool {
 
     @Autowired
     private TaskManagerTaskUtil taskUtil;
+
+    @Autowired
+    private BatchJobService bjService;
     
     private static final String SPLIT_BY = ";";
     
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/{template}")
+    @RequestMapping(value = "/{template}", method = RequestMethod.POST)
     public void doImportWithTemplate(@PathVariable String template, @RequestBody String csvFile) throws IOException {
               
         if (!SecurityContextHolder.getContext().getAuthentication().getAuthorities()
@@ -88,7 +92,7 @@ public class ImportTool {
                         }
                     } else {    
                         try {
-                            dao.save(config);
+                            bjService.saveAndSchedule(config);
                         } catch (Exception e) {
                             LOGGER.log(Level.WARNING, 
                                     "Failed to import configuration " + config.getName(), e);

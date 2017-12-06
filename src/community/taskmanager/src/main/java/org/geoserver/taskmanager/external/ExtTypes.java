@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -122,6 +123,11 @@ public class ExtTypes {
         @Override
         public LayerInfo parse(String value, List<String> dependsOnRawValues) {
             return geoServer.getCatalog().getLayerByName(value);
+        }
+        
+        @Override
+        public List<String> getActions() {
+            return Collections.singletonList("LayerEdit");
         }
         
     };

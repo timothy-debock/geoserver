@@ -315,8 +315,10 @@ public class ConfigurationPage extends GeoServerSecuredPage {
     private BatchElement taskInUse(Task task) {
         if (task.getId() != null) {
             task = TaskManagerBeans.get().getDataUtil().init(task);
-            if (!task.getBatchElements().isEmpty()) {
-                return task.getBatchElements().get(0);
+            for (BatchElement element : task.getBatchElements()) {
+                if (element.getBatch().isActive()) {
+                    return element;
+                }
             }
         } else {
             for (Batch batch : configurationModel.getObject().getBatches().values()) {
@@ -445,6 +447,8 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                             
                             return ddp;
                         }
+                    } else if (property.equals(AttributesModel.ACTIONS)) {
+                        
                     }
                     return null;
                 }

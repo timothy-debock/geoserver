@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.schedule;
 
 import java.net.MalformedURLException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -139,6 +140,15 @@ public interface ParameterType {
      */
     public default boolean validate(String value, List<String> dependsOnRawValues) {
         return parse(value, dependsOnRawValues) != null;
+    }
+    
+    /**
+     * Returns a list of web actions related to this type
+     * 
+     * @return list of web actions
+     */
+    public default List<String> getActions() {
+        return Collections.emptyList();
     }
 
 }

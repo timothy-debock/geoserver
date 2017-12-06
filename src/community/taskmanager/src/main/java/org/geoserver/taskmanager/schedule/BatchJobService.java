@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.schedule;
 
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.Configuration;
 
 /**
  * The batch job is responsible for scheduling the batches.
@@ -33,5 +34,13 @@ public interface BatchJobService {
      * Refreshes the scheduler completely based on all of the batches in the database.
      */
     void reloadFromData();
+
+    /**
+     * Saves this configuration and update the schedule according to its new settings of each batch.
+     * 
+     * @param config the Configuration.
+     * @return the saved config.
+     */
+    Configuration saveAndSchedule(Configuration config);
 
 }

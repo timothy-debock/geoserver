@@ -59,9 +59,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends Identifiable> T reload(T object) {
-        return (T) getSession().createCriteria(object.getClass())
-                .add(Restrictions.idEq(object.getId()))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).uniqueResult();
+        return (T) getSession().get(object.getClass(), object.getId());
     }
 
     @Override
