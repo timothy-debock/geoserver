@@ -228,7 +228,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @Override
     public void delete(Task task) {
         task = (Task) getSession().get(TaskImpl.class, task.getId());
-        task.getConfiguration().getTasks().remove(task);
+        task.getConfiguration().getTasks().remove(task.getName());
         getSession().delete(task);
     }
     
