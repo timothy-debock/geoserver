@@ -87,10 +87,13 @@ import org.geoserver.platform.resource.Resource;
 import org.geoserver.util.CacheProvider;
 import org.geoserver.util.DefaultCacheProvider;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.util.Converters;
 import org.geotools.util.logging.Logging;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
+import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 import org.opengis.filter.sort.SortBy;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -291,6 +294,38 @@ public class ConfigDatabase {
         checkNotNull(filter);
         checkArgument(offset == null || offset.intValue() >= 0);
         checkArgument(limit == null || limit.intValue() >= 0);
+                
+        final SimplifyingFilterVisitor filterSimplifier = new SimplifyingFilterVisitor();
+        final Filter simplifiedFilter = (Filter) filter.accept(filterSimplifier, null);
+        if (simplifiedFilter instanceof PropertyIsEqualTo) {
+            String id = null;
+            PropertyIsEqualTo isEqualTo = (PropertyIsEqualTo) simplifiedFilter;
+            if (isEqualTo.getExpression1() instanceof PropertyName
+                    && isEqualTo.getExpression2() instanceof Literal
+                    && ((PropertyName) isEqualTo.getExpression1()).getPropertyName().equals("id")) {
+                id = ((Literal) isEqualTo.getExpression2()).getValue().toString();
+            }
+            if (isEqualTo.getExpression2() instanceof PropertyName
+                    && isEqualTo.getExpression1() instanceof Literal
+                    && ((PropertyName) isEqualTo.getExpression2()).getPropertyName().equals("id")) {
+                id = ((Literal) isEqualTo.getExpression1()).getValue().toString();                
+            }
+            
+            if (id != null) {            
+                List<T> lazyTransformed = Lists.transform(Collections.singletonList(id), new Function<String, T>() {
+                    @Nullable
+                    @Override
+                    public T apply(String id) {
+                        return getById(id, of);
+                    }
+                });
+                
+                Iterator<T> iterator = Iterators.filter(lazyTransformed.iterator(),
+                        com.google.common.base.Predicates.notNull());
+
+                return new CloseableIteratorAdapter<T>(iterator);
+            }
+        }
 
         QueryBuilder<T> sqlBuilder = QueryBuilder.forIds(dialect, of, dbMappings).filter(filter)
                 .offset(offset).limit(limit).sortOrder(sortOrder);
@@ -330,7 +365,6 @@ public class ConfigDatabase {
             }
         });
 
-
         CloseableIterator<T> result;
         Iterator<T> iterator = Iterators.filter(lazyTransformed.iterator(),
                 com.google.common.base.Predicates.notNull());
@@ -341,7 +375,7 @@ public class ConfigDatabase {
             // Apply the filter
             result = CloseableIteratorAdapter.filter(iterator, filter);
             // The offset and limit should not have been applied as part of the query
-            assert(!sqlBuilder.isOffsetLimitApplied());
+            assert (!sqlBuilder.isOffsetLimitApplied());
             // Apply offset and limits after filtering
             result = applyOffsetLimit(result, offset, limit);
         }
