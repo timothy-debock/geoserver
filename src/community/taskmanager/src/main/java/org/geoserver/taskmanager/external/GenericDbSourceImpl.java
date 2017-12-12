@@ -34,7 +34,7 @@ public class GenericDbSourceImpl extends NamedImpl implements DbSource {
 
     private String schema;
 
-    private Dialect dialect = new DefaultDialectImpl();
+    private Dialect dialect = new GenericDialectImpl();
 
     public String getConnectionUrl() {
         return connectionUrl;
@@ -89,35 +89,21 @@ public class GenericDbSourceImpl extends NamedImpl implements DbSource {
 
     @Override
     public GSAbstractStoreEncoder getStoreEncoder(String name) {
-        GSPostGISDatastoreEncoder encoder = new GSPostGISDatastoreEncoder(name);
-        encoder.setUser(username);
-        encoder.setPassword(password);
-        return encoder;
+        throw new UnsupportedOperationException("Generic datasource cannot be used as a store.");
     }
 
     @Override
     public Map<String, Object> getParameters() {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
-        params.put(PostgisNGDataStoreFactory.SCHEMA.key, schema);
-        params.put(PostgisNGDataStoreFactory.USER.key, username);
-        params.put(PostgisNGDataStoreFactory.PASSWD.key, password);
-        return params;
+      throw new UnsupportedOperationException("Generic datasource cannot be used as a store.");
     }
 
     @Override
     public GSAbstractStoreEncoder postProcess(GSAbstractStoreEncoder encoder, DbTable table) {
-        if (table != null) {
-            String schema = SqlUtil.schema(table.getTableName());
-            if (schema != null) {
-                ((GSPostGISDatastoreEncoder) encoder).setSchema(schema);
-            }
-        }
-        return encoder;
+        throw new UnsupportedOperationException("Generic datasource cannot be used as a store.");
     }
 
     @Override
     public Dialect getDialect() {
-        return new GenericDialectImpl();
+        return dialect;
     }
 }
