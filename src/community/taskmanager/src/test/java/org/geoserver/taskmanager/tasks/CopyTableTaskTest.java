@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Niels Charlier
  *
  */
-@Ignore 
+
 public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     //configure these constants

@@ -16,24 +16,23 @@
     </bean> -->
     
     <!--H2 setup -->
-    <!-- <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
+     <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
         <property name="name" value="mydb"/>
         <property name="path" value="mem" />
         <property name="db" value="mydb" />
-        <property name="createDBSqlResource" value="classpath:create-source.sql"/>
-        <property name="createDataSqlResource" value="classpath:${h2.database.script.create}"/>
+        <property name="createDBSqlResource" value="classpath:postgres/imdbsource/create-source.sql"/>
+        <!--<property name="createDataSqlResource" value="classpath:${h2.database.script.create}"/>-->
     </bean>
-    
     <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
         <property name="name" value="myotherdb"/>
         <property name="path" value="mem" />
         <property name="db" value="myotherdb" />
-        <property name="createDBSqlResource" value="classpath:create-target.sql"/>
-        <property name="createDataSqlResource" value="classpath:${h2.database.script.create}"/>
-    </bean> -->
+        <property name="createDBSqlResource" value="classpath:postgres/imdbtarget/create-target.sql"/>
+        <property name="createDataSqlResource" value=""/>
+    </bean>
     
-    <!-- postgis databases for testing -->
-	<bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
+    <!-- postgis databases for testing task on you local machine-->
+	<!--<bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
 		<property name="name" value="mydb" />
 		<property name="host" value="localhost" />
 		<property name="db" value="mydb" />
@@ -47,7 +46,7 @@
 		<property name="db" value="myotherdb" />
 		<property name="username" value="postgres" />
 		<property name="password" value="postgres" />
-	</bean>
+	</bean>-->
 
     <!-- external geoserver for testing -->
     <bean class="org.geoserver.taskmanager.external.ExternalGSImpl">
