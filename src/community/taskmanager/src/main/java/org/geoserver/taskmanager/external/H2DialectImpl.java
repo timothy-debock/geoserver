@@ -4,12 +4,10 @@
  */
 package org.geoserver.taskmanager.external;
 
-
 /**
- * Generic implementation for the Dialect interface.
- * This should work with moest databases. But is also limits the functionality of the taskmanager;
+ * Generic implementation for the Dialect interface. This should work with moest databases. But is also limits the functionality of the taskmanager;
  */
-public class GenericDialectImpl implements Dialect {
+public class H2DialectImpl implements Dialect {
 
     /**
      * Do not quote table names since this not supported by all db's.
@@ -22,9 +20,8 @@ public class GenericDialectImpl implements Dialect {
         return tableName;
     }
 
-
     @Override
     public String sqlRenameView(String currentViewName, String newViewName) {
-        return "ALTER VIEW " + currentViewName + " RENAME TO " + newViewName;
+        return "ALTER TABLE " + currentViewName + " RENAME TO " + newViewName;
     }
 }

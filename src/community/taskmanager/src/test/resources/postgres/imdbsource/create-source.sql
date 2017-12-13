@@ -1,7 +1,7 @@
 --
 -- Create the database for the in memory tests
 --
-
+Drop schema IF EXISTS gw_beleid;
 CREATE SCHEMA gw_beleid;
 
 
@@ -22,7 +22,6 @@ CREATE VIEW gw_beleid.vw_grondwaterlichamen AS
 
 ALTER TABLE  gw_beleid.grondwaterlichamen_new
     ADD CONSTRAINT gw_beleid.grondwaterlichamen_new_pkey PRIMARY KEY (dataengine_id);
-
 
 
 
