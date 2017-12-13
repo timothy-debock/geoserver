@@ -25,7 +25,7 @@ import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+
 import org.junit.Test;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -51,22 +51,22 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
     private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
 
     private static final String TARGET_VIEW_NAME = "temp.grondwaterlichamen_vw_copy";
-
+    
     //attributes
     private static final String ATT_TABLE_NAME = "table_name";
     private static final String ATT_TARGET_DB = "target_db";
     private static final String ATT_SOURCE_DB = "source_db";
     private static final String ATT_TARGET_TABLE_NAME = "target_table_name";
-
+    
     @Autowired
     private TaskManagerDao dao;
-
+    
     @Autowired
     private TaskManagerFactory fac;
-
+    
     @Autowired
     private TaskManagerDataUtil dataUtil;
-
+    
     @Autowired
     private TaskManagerTaskUtil taskUtil;
 
