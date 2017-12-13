@@ -30,8 +30,8 @@ public class AttributeImpl extends BaseImpl implements Attribute {
     
     @Column(nullable = false)
     private String name;
-    
-    @Column(nullable = false)
+
+    @Column(nullable = false, columnDefinition="TEXT")
     private String value;
     
     @ManyToOne
