@@ -18,6 +18,7 @@ import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
+import org.geoserver.taskmanager.external.DbTableImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
@@ -93,6 +94,8 @@ public class CreateViewTaskTypeImpl implements TaskType {
         final String viewName = (String) parameterValues.get(PARAM_VIEW_NAME);
         final String tempViewName = SqlUtil.qualified(SqlUtil.schema(viewName),
                 "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
+        tempValues.put(new DbTableImpl(db, viewName), new DbTableImpl(db, tempViewName));
+        
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
                 StringBuilder sb = new StringBuilder("CREATE VIEW ")
