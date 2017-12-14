@@ -13,13 +13,13 @@
         <property name="name" value="mydb"/>
         <property name="path" value="mem"/>
         <property name="db" value="mydb"/>
-        <property name="createDBSqlResource" value="classpath:postgres/imdbsource/create-source.sql"/>
+        <property name="createDBSqlResource" value="classpath:h2/dbsource/create-source.sql"/>
     </bean>
     <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
         <property name="name" value="myotherdb"/>
         <property name="path" value="mem"/>
         <property name="db" value="myotherdb"/>
-        <property name="createDBSqlResource" value="classpath:postgres/imdbtarget/create-target.sql"/>
+        <property name="createDBSqlResource" value="classpath:h2/dbtarget/create-target.sql"/>
         <property name="createDataSqlResource" value=""/>
     </bean>
 
