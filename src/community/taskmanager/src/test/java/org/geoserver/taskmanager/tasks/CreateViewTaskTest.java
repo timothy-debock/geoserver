@@ -40,13 +40,13 @@ import static org.junit.Assert.assertTrue;
  * @author Niels Charlier
  *
  */
-@Ignore 
+//@Ignore 
 public class CreateViewTaskTest extends AbstractTaskManagerTest {
 
     //configure these constants
     private static final String DB_NAME = "mydb";
     private static final String TABLE_NAME = "gw_beleid.grondwaterlichamen_new";
-    private static final String VIEW_NAME = "public.vw_grondwaterlichamen";
+    private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
     private static final String SELECT = " dataengine_id, shape";
     private static final String WHERE = "gwl like 'BL%'";
     private static final int NUMBER_OF_RECORDS = 7;

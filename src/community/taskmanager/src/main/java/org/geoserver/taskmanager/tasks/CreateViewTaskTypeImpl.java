@@ -91,7 +91,8 @@ public class CreateViewTaskTypeImpl implements TaskType {
         final String select = (String) parameterValues.get(PARAM_SELECT);
         final String where = (String) parameterValues.get(PARAM_WHERE);
         final String viewName = (String) parameterValues.get(PARAM_VIEW_NAME);
-        final String tempViewName = "_temp_" + UUID.randomUUID().toString().replace('-', '_');
+        final String tempViewName = SqlUtil.qualified(SqlUtil.schema(viewName),
+                "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
                 StringBuilder sb = new StringBuilder("CREATE VIEW ")
