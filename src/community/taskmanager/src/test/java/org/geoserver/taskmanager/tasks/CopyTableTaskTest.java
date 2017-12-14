@@ -51,6 +51,8 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
 
+    private static final String VIEW_W_GENERATED_ID = "gw_beleid.vw_grondwaterlichamen_generated_ID";
+
     private static final String TARGET_VIEW_NAME = "temp.grondwaterlichamen_vw_copy";
     
     //attributes
@@ -188,6 +190,52 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         
         assertTrue(taskUtil.cleanup(config)); 
         
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
+        }
+    }
+
+
+    /**
+     * Use the existing generated_id column if it exists.
+     * @throws SchedulerException
+     * @throws SQLException
+     */
+    @Test
+    public void testCopyViewWithGeneratedIdColumn() throws SchedulerException, SQLException {
+        dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, VIEW_W_GENERATED_ID);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_VIEW_NAME);
+        config = dao.save(config);
+
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+                .build();
+        scheduler.scheduleJob(trigger);
+
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+            // waiting to be done.
+        }
+
+        String[] split = TARGET_VIEW_NAME.split("\\.", 2);
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_VIEW_NAME));
+        }
+        assertEquals(getNumberOfRecords(SOURCEDB_NAME, VIEW_NAME),
+                getNumberOfRecords(TARGETDB_NAME, TARGET_VIEW_NAME));
+        // a primary key column was added
+        assertEquals(getNumberOfColumns(SOURCEDB_NAME, VIEW_NAME) + 1,
+                getNumberOfColumns(TARGETDB_NAME, TARGET_VIEW_NAME));
+
+        assertTrue(taskUtil.cleanup(config));
+
         if (split.length == 2) {
             assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
         } else {
