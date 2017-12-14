@@ -40,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Niels Charlier
  *
  */
-@Ignore 
 public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     //configure these constants
@@ -51,7 +50,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
 
-    private static final String VIEW_W_GENERATED_ID = "gw_beleid.vw_grondwaterlichamen_generated_ID";
+    private static final String VIEW_W_GENERATED_ID = "gw_beleid.vw_grondwaterlichamen_generated_id";
 
     private static final String TARGET_VIEW_NAME = "temp.grondwaterlichamen_vw_copy";
     
@@ -230,8 +229,8 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         }
         assertEquals(getNumberOfRecords(SOURCEDB_NAME, VIEW_NAME),
                 getNumberOfRecords(TARGETDB_NAME, TARGET_VIEW_NAME));
-        // a primary key column was added
-        assertEquals(getNumberOfColumns(SOURCEDB_NAME, VIEW_NAME) + 1,
+        // a primary key column was not added
+        assertEquals(getNumberOfColumns(SOURCEDB_NAME, VIEW_NAME),
                 getNumberOfColumns(TARGETDB_NAME, TARGET_VIEW_NAME));
 
         assertTrue(taskUtil.cleanup(config));

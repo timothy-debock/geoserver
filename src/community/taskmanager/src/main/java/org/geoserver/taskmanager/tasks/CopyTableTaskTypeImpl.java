@@ -53,6 +53,8 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public static final String PARAM_TABLE_NAME = "table-name";
 
     public static final String PARAM_TARGET_TABLE_NAME = "target-table-name";
+
+    public static final String GENERATE_ID_COLUMN_NAME = "generated_id";
         
     private static final Logger LOGGER = Logging.getLogger(CopyTableTaskTypeImpl.class);
     
@@ -101,7 +103,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
             try (Connection destConn = targetdb.getDataSource().getConnection()) {
                 try (Statement stmt = sourceConn.createStatement()) {
                     try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + 
-                            sourcedb.getDialect().quote(table.getTableName()) + "")) {
+                            sourcedb.getDialect().quote(table.getTableName()))) {
 
                         ResultSetMetaData rsmd = rs.getMetaData();
 
@@ -129,7 +131,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             sb.append("PRIMARY KEY (").append(primaryKey).append("), ");
                         } else {
                             // create a Primary key column if none exist.
-                            sb.append("generated_id int, PRIMARY KEY (generated_id), ");
+                            sb.append(GENERATE_ID_COLUMN_NAME + "int, PRIMARY KEY (" + GENERATE_ID_COLUMN_NAME + "), ");
                             columnCount++;
                         }
 
@@ -262,6 +264,16 @@ public class CopyTableTaskTypeImpl implements TaskType {
             if (sb.length() > 2) {
                 sb.setLength(sb.length() - 2);
             }
+            //if there is no primary key column defined. Check if there is a generated key column available
+            if(sb.length()<2){
+                ResultSet rsColumns = conn.getMetaData().getColumns(null, schema, tableName, null);
+                while (rsColumns.next()){
+                    if(GENERATE_ID_COLUMN_NAME.equals(rsColumns.getString("COLUMN_NAME"))){
+                        return GENERATE_ID_COLUMN_NAME;
+                    }
+                }
+            }
+
             return sb.toString();
         }
     }
