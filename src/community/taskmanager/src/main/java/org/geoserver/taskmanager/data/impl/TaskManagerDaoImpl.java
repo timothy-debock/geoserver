@@ -160,10 +160,13 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         if (splitName.length > 1) {
             criteria.createAlias("configuration", "configuration")
                 .add(Restrictions.eq("configuration.name", splitName[0]))
-                .add(Restrictions.eq("name", splitName[1]));
+                .add(Restrictions.eq("name", splitName[1]))
+                .add(Restrictions.eq("removeStamp", 0L))
+                .add(Restrictions.eq("configuration.removeStamp", 0L));
         } else {
             criteria.add(Restrictions.isNull("configuration"))
-            .add(Restrictions.eq("name", splitName[0]));
+                .add(Restrictions.eq("name", splitName[0]))
+                .add(Restrictions.eq("removeStamp", 0L));
         }
         
         return (Batch) criteria.uniqueResult();   
