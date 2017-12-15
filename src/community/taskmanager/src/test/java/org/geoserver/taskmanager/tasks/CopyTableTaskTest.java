@@ -248,6 +248,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
     /**
      * keep the case of columns.
      */
+    @Ignore("This test is not tested for H2")
     @Test
     public void testCopyKeepCase() throws SchedulerException, SQLException {
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
