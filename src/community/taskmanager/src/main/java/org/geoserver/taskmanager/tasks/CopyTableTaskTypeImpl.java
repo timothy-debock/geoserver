@@ -25,6 +25,7 @@ import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.DbTableImpl;
+import org.geoserver.taskmanager.external.Dialect;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskException;
@@ -113,8 +114,8 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         int columnCount = rsmd.getColumnCount();
 
                         for (int i = 1; i <= columnCount; i++) {
-                            sb.append(rsmd.getColumnLabel(i)).append(" ")
-                                    .append(rsmd.getColumnTypeName(i));
+                            String columnName = quoteMixedCase(destConn, targetdb.getDialect(), rsmd.getColumnLabel(i));
+                            sb.append(columnName).append(" ").append(rsmd.getColumnTypeName(i));
                             switch (rsmd.isNullable(i)) {
                             case ResultSetMetaData.columnNoNulls:
                                  sb.append(" NOT NULL");   
@@ -131,7 +132,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             sb.append("PRIMARY KEY (").append(primaryKey).append("), ");
                         } else {
                             // create a Primary key column if none exist.
-                            sb.append(GENERATE_ID_COLUMN_NAME + "int, PRIMARY KEY (" + GENERATE_ID_COLUMN_NAME + "), ");
+                            sb.append(GENERATE_ID_COLUMN_NAME + " int, PRIMARY KEY (" + GENERATE_ID_COLUMN_NAME + "), ");
                             columnCount++;
                         }
 
@@ -276,6 +277,22 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
             return sb.toString();
         }
+    }
+
+    /**
+     * If the default case is different from the tablename case, try to qoute is.
+     * @param conn
+     * @param dialect
+     * @param name
+     * @return
+     */
+    private static String quoteMixedCase(Connection conn, Dialect dialect, String name) throws SQLException {
+        if( conn.getMetaData().storesUpperCaseIdentifiers() && !name.equals(name.toUpperCase())){
+            return dialect.quote(name);
+        } else if( conn.getMetaData().storesLowerCaseIdentifiers() && !name.equals(name.toLowerCase())){
+            return dialect.quote(name);
+        }
+        return name;
     }
     
     private static List<String> getUniques(Connection conn, String tableName) throws SQLException {
