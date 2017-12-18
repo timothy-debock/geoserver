@@ -52,6 +52,9 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     private static final String VIEW_W_GENERATED_ID = "gw_beleid.vw_grondwaterlichamen_generated_id";
 
+    private static final String VIEW_CAMEL_CASE = "gw_beleid.vw_GrondwaterlichamenCamelCase";
+    private static final String TARGET_TABLE_CAMELCASE_NAME = "temp.Grondwaterlichamen_Copy";
+
     private static final String TARGET_VIEW_NAME = "temp.grondwaterlichamen_vw_copy";
     
     //attributes
@@ -241,7 +244,52 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
             assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
         }
     }
-    
+
+    /**
+     * keep the case of columns.
+     */
+    @Ignore("This test is not tested for H2")
+    @Test
+    public void testCopyKeepCase() throws SchedulerException, SQLException {
+        dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, VIEW_CAMEL_CASE);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_CAMELCASE_NAME);
+        config = dao.save(config);
+
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+                .build();
+        scheduler.scheduleJob(trigger);
+
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+            // waiting to be done.
+        }
+
+        String[] split = TARGET_TABLE_CAMELCASE_NAME.split("\\.", 2);
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
+            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_TABLE_CAMELCASE_NAME));
+        }
+        //column names are the same
+        assertEquals(getColumnName(SOURCEDB_NAME, VIEW_CAMEL_CASE, 1),
+                getColumnName(TARGETDB_NAME, TARGET_TABLE_CAMELCASE_NAME, 1));
+        assertEquals(getColumnName(SOURCEDB_NAME, VIEW_CAMEL_CASE, 2),
+                getColumnName(TARGETDB_NAME, TARGET_TABLE_CAMELCASE_NAME, 2));
+
+        assertTrue(taskUtil.cleanup(config));
+
+        if (split.length == 2) {
+            assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
+        } else {
+            assertFalse(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
+        }
+    }
+
+
     @Test
     public void testRollback() throws SchedulerException, SQLException {
         Task task2 = fac.createTask();
@@ -269,8 +317,8 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), "_temp%"));
-        assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), 
-                    SqlUtil.notQualified(TARGET_TABLE_NAME))); 
+        assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME),
+                SqlUtil.notQualified(TARGET_TABLE_NAME)));
     }
     
     private int getNumberOfRecords(String db, String tableName) throws SQLException {
@@ -292,6 +340,18 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
                     return rs.getMetaData().getColumnCount();
                 }                    
+            }
+        }
+    }
+
+
+    private String getColumnName(String db, String tableName, int columnIndex) throws SQLException {
+        DbSource ds = dbSources.get(db);
+        try (Connection conn = ds.getDataSource().getConnection()) {
+            try (Statement stmt = conn.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + ds.getDialect().quote(tableName))) {
+                    return rs.getMetaData().getColumnName(columnIndex);
+                }
             }
         }
     }
