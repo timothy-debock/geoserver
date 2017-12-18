@@ -483,7 +483,7 @@ public class JDBCQueryHelper {
                     if(rs.next()) {                
                         assert(rs.isLast());
                         InputStream is = field.getValue(rs);
-                        return is == null ? null : new ClosingInputStreamWrapper(is, c);
+                        return is == null ? null : new ClosingInputStreamWrapper(is, c, query.toString());
                     } else {
                         closeConnection = true;
                         return null;
@@ -520,8 +520,9 @@ public class JDBCQueryHelper {
      */
     static protected class ClosingInputStreamWrapper extends ProxyInputStream {
         Connection conn;
+        String queryStr;
         
-        public ClosingInputStreamWrapper(InputStream proxy, Connection conn) {
+        public ClosingInputStreamWrapper(InputStream proxy, Connection conn, String queryStr) {
             super(proxy);
             this.conn = conn;
         }
@@ -536,6 +537,15 @@ public class JDBCQueryHelper {
                 } catch (SQLException ex) {
                     throw new IOException("Exception while closing connection",ex);
                 }
+            }
+        }
+        
+        @Override
+        public void finalize() throws SQLException {
+            if (!conn.isClosed()) {
+                conn.close();
+                LOGGER.warning("NOT GOOD: A JDBC connection is being automatically closed, this should have been done explicitely"
+                        +" - this connection was opened for query " + queryStr);
             }
         }
     }
