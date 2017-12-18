@@ -114,7 +114,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         int columnCount = rsmd.getColumnCount();
 
                         for (int i = 1; i <= columnCount; i++) {
-                            String columnName = quoteMixedCase(destConn, targetdb.getDialect(), rsmd.getColumnLabel(i));
+                            String columnName = targetdb.getDialect().quote(rsmd.getColumnLabel(i));
                             sb.append(columnName).append(" ").append(rsmd.getColumnTypeName(i));
                             switch (rsmd.isNullable(i)) {
                             case ResultSetMetaData.columnNoNulls:
@@ -279,21 +279,6 @@ public class CopyTableTaskTypeImpl implements TaskType {
         }
     }
 
-    /**
-     * If the default case is different from the tablename case, try to qoute is.
-     * @param conn
-     * @param dialect
-     * @param name
-     * @return
-     */
-    private static String quoteMixedCase(Connection conn, Dialect dialect, String name) throws SQLException {
-        if( conn.getMetaData().storesUpperCaseIdentifiers() && !name.equals(name.toUpperCase())){
-            return dialect.quote(name);
-        } else if( conn.getMetaData().storesLowerCaseIdentifiers() && !name.equals(name.toLowerCase())){
-            return dialect.quote(name);
-        }
-        return name;
-    }
     
     private static List<String> getUniques(Connection conn, String tableName) throws SQLException {
         try (ResultSet rsUnique = conn.getMetaData().getIndexInfo(null, null, tableName, true, false)) {
