@@ -101,8 +101,10 @@ public class CopyTableTaskTypeImpl implements TaskType {
         tempValues.put(targetTable, new DbTableImpl(targetdb, tempTableName));
         
         try (Connection sourceConn = sourcedb.getDataSource().getConnection()) {
+            sourceConn.setAutoCommit(false);
             try (Connection destConn = targetdb.getDataSource().getConnection()) {
                 try (Statement stmt = sourceConn.createStatement()) {
+                    stmt.setFetchSize(BATCH_SIZE);
                     try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + 
                             sourcedb.getDialect().quote(table.getTableName()))) {
 
