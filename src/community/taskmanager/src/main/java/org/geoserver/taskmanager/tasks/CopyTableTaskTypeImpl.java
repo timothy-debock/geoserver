@@ -193,7 +193,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
             //clean-up if necessary 
             try (Connection conn = targetdb.getDataSource().getConnection()) {
                 try (Statement stmt = conn.createStatement()){
-                    stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(tempTableName));
+                    stmt.executeUpdate("DROP TABLE IF EXISTS " + targetdb.getDialect().quote(tempTableName));
                 }
             } catch (SQLException e2) {}
 
@@ -205,10 +205,10 @@ public class CopyTableTaskTypeImpl implements TaskType {
             public void commit() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(
+                        stmt.executeUpdate("DROP TABLE IF EXISTS " + targetdb.getDialect().quote(
                                 targetTable.getTableName()));
-                        stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " + 
-                                SqlUtil.quote(SqlUtil.notQualified(targetTable.getTableName())));
+                        stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " +
+                                targetdb.getDialect().quote(SqlUtil.notQualified(targetTable.getTableName())));
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -219,7 +219,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
             public void rollback() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP TABLE "+ SqlUtil.quote(tempTableName) + "");
+                        stmt.executeUpdate("DROP TABLE "+ targetdb.getDialect().quote(tempTableName) + "");
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -239,7 +239,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
         
         try (Connection conn = targetDb.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + SqlUtil.quote(targetTable.getTableName()));
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + targetDb.getDialect().quote(targetTable.getTableName()));
             }
         } catch (SQLException e) {
             throw new TaskException(e);
@@ -257,6 +257,12 @@ public class CopyTableTaskTypeImpl implements TaskType {
         if (split.length == 2) {
             schema = split[0];
             tableName = split[1];
+        }
+        if(conn.getMetaData().storesUpperCaseIdentifiers()){
+            if (schema != null) {
+                schema = schema.toUpperCase();
+            }
+            tableName = tableName.toUpperCase();
         }
         try (ResultSet rsPrimaryKeys = conn.getMetaData().getPrimaryKeys(null, schema, tableName)) {
             StringBuilder sb = new StringBuilder();            

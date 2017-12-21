@@ -80,20 +80,20 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
     @Autowired
     private LookupService<DbSource> dbSources;
-        
+
     @Autowired
     private Scheduler scheduler;
-    
+
     private Configuration config;
-    
+
     private Batch batch;
-                
+
     @Before
     public void setupBatch() {
-        config = fac.createConfiguration();  
+        config = fac.createConfiguration();
         config.setName("my_config");
         config.setWorkspace("some_ws");
-        
+
         Task task1 = fac.createTask();
         task1.setName("task1");
         task1.setType(CopyTableTaskTypeImpl.NAME);
@@ -102,15 +102,15 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TABLE_NAME, ATT_TABLE_NAME);;
         dataUtil.setTaskParameterToAttribute(task1, CopyTableTaskTypeImpl.PARAM_TARGET_TABLE_NAME, ATT_TARGET_TABLE_NAME);
         dataUtil.addTaskToConfiguration(config, task1);
-        
+
         config = dao.save(config);
         task1 = config.getTasks().get("task1");
-        
+
         batch = fac.createBatch();
-        
+
         batch.setName("my_batch");
         dataUtil.addBatchElement(batch, task1);
-        
+
         batch = bjService.saveAndSchedule(batch);
     }
 
@@ -119,7 +119,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dao.delete(batch);
         dao.delete(config);
     }
-    
+
     @Test
     public void testTableSuccess() throws SchedulerException, SQLException {
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
@@ -127,28 +127,28 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_NAME);
         config = dao.save(config);
-        
+
         Trigger trigger = TriggerBuilder.newTrigger()
                 .forJob(batch.getFullName())
-                .startNow()        
+                .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
-        
+
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
-        
+
         String[] split = TARGET_TABLE_NAME.split("\\.", 2);
         if (split.length == 2) {
             assertFalse(tableExists(TARGETDB_NAME, split[0], "_temp%"));
             assertTrue(tableExists(TARGETDB_NAME, split[0], split[1]));
         } else {
             assertFalse(tableExists(TARGETDB_NAME, null, "_temp%"));
-            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));            
+            assertTrue(tableExists(TARGETDB_NAME, null, TARGET_TABLE_NAME));
         }
-        assertEquals(getNumberOfRecords(SOURCEDB_NAME, TABLE_NAME), 
-                getNumberOfRecords(TARGETDB_NAME, TARGET_TABLE_NAME)); 
-        assertEquals(getNumberOfColumns(SOURCEDB_NAME, TABLE_NAME), 
-                getNumberOfColumns(TARGETDB_NAME, TARGET_TABLE_NAME));   
+        assertEquals(getNumberOfRecords(SOURCEDB_NAME, TABLE_NAME),
+                getNumberOfRecords(TARGETDB_NAME, TARGET_TABLE_NAME));
+        assertEquals(getNumberOfColumns(SOURCEDB_NAME, TABLE_NAME),
+                getNumberOfColumns(TARGETDB_NAME, TARGET_TABLE_NAME));
 
         assertTrue(taskUtil.cleanup(config));
 
@@ -189,9 +189,9 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         // a primary key column was added
         assertEquals(getNumberOfColumns(SOURCEDB_NAME, VIEW_NAME) + 1,
                 getNumberOfColumns(TARGETDB_NAME, TARGET_VIEW_NAME));
-        
-        assertTrue(taskUtil.cleanup(config)); 
-        
+
+        assertTrue(taskUtil.cleanup(config));
+
         if (split.length == 2) {
             assertFalse(tableExists(TARGETDB_NAME, split[0], split[1]));
         } else {
@@ -296,7 +296,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         task2.setName("task2");
         task2.setType(TestTaskTypeImpl.NAME);
         dataUtil.setTaskParameterToAttribute(task2, TestTaskTypeImpl.PARAM_FAIL, "fail");
-        dataUtil.addTaskToConfiguration(config, task2);  
+        dataUtil.addTaskToConfiguration(config, task2);
         dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
@@ -306,21 +306,21 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         task2 = config.getTasks().get("task2");
         dataUtil.addBatchElement(batch, task2);
         batch = bjService.saveAndSchedule(batch);
-        
+
         Trigger trigger = TriggerBuilder.newTrigger()
                 .forJob(batch.getFullName())
-                .startNow()        
+                .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
-        
+
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
-        
+
         assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), "_temp%"));
         assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME),
                 SqlUtil.notQualified(TARGET_TABLE_NAME)));
     }
-    
+
     private int getNumberOfRecords(String db, String tableName) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
@@ -328,18 +328,18 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
                     rs.next();
                     return rs.getInt(1);
-                }                    
+                }
             }
         }
     }
-    
+
     private int getNumberOfColumns(String db, String tableName) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
                     return rs.getMetaData().getColumnCount();
-                }                    
+                }
             }
         }
     }
@@ -355,12 +355,18 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
             }
         }
     }
-    
+
     private boolean tableExists(String db, String schema, String pattern) throws SQLException {
         DbSource ds = dbSources.get(db);
         try (Connection conn = ds.getDataSource().getConnection()) {
             DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getTables(null, schema, pattern, new String[] {"TABLE"});
+            ResultSet rs;
+            if(md.storesUpperCaseIdentifiers()) {
+                 rs = md.getTables(null, schema.toUpperCase(), pattern.toUpperCase(), new String[]{"TABLE"});
+            } else {
+                 rs = md.getTables(null, schema, pattern, new String[] {"TABLE"});
+            }
+
             return (rs.next());
         }
     }
