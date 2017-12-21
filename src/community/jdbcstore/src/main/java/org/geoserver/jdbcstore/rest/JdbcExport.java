@@ -36,10 +36,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+<<<<<<< fcd5ebbc9712cad16ccadbb68b8160e4fcc9012c
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
+=======
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller("jdbcexport")
+>>>>>>> jdbcexport mapping (2)
 public class JdbcExport {
 
     static Logger LOGGER = Logging.getLogger( "org.geoserver" );
