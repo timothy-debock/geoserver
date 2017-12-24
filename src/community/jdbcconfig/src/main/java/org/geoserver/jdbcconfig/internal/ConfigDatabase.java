@@ -297,6 +297,7 @@ public class ConfigDatabase {
          
         QueryBuilder<T> sqlBuilder = QueryBuilder.forIds(dialect, of, dbMappings).filter(filter)
                 .offset(offset).limit(limit).sortOrder(sortOrder);
+        final StringBuilder sql = sqlBuilder.build();
         
         List<String> ids = null;
         
@@ -321,7 +322,6 @@ public class ConfigDatabase {
         final boolean fullySupported = Filter.INCLUDE.equals(unsupportedFilter);
 
         if (ids == null) {
-            final StringBuilder sql = sqlBuilder.build();
             final Map<String, Object> namedParameters = sqlBuilder.getNamedParameters();
     
             if (LOGGER.isLoggable(Level.FINER)) {
