@@ -36,11 +36,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
-@Controller
-@RequestMapping("/jdbcexport")
+@Controller("/jdbcexport")
 public class JdbcExport {
 
     static Logger LOGGER = Logging.getLogger( "org.geoserver" );
@@ -67,25 +66,14 @@ public class JdbcExport {
         }
     }
     
-    void cache(Resource res) throws IOException {
-        if (res.getType() == Type.DIRECTORY) {
-            res.dir();
-            for (Resource child : res.list()) {
-                cache(child);
-            };
-        } else {
-           res.file();   
-        }    
-    }
-    
-    @GetMapping
-    public String execute() throws IOException {
+    @RequestMapping(value = "/config", method = RequestMethod.GET)
+    public String executeConfig() throws IOException {
         if (!SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                 .contains(GeoServerRole.ADMIN_ROLE)) {
             throw new AccessDeniedException("You must be administrator.");
         }                
         
-        //export jdbc config to jdbc store 
+        //export jdbc config 
 
         GeoServerPersister gp = new GeoServerPersister(loader, 
                 new XStreamPersisterFactory().createXMLPersister());
@@ -117,12 +105,33 @@ public class JdbcExport {
         for (ServiceInfo si : gs.getServices()) {
             sp.handlePostServiceChange(si);
         }        
-
-        //export jdbc store to hard drive
+        
+        return "/";
+    }   
+    
+    @RequestMapping(value = "/store", method = RequestMethod.GET)
+    public String executeStore() throws IOException {
+        if (!SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .contains(GeoServerRole.ADMIN_ROLE)) {
+            throw new AccessDeniedException("You must be administrator.");
+        }
+        
+        //export jdbc store
         
         cache(loader.get("/"));
         
         return "/";
     }    
+    
+    private void cache(Resource res) throws IOException {
+        if (res.getType() == Type.DIRECTORY) {
+            res.dir();
+            for (Resource child : res.list()) {
+                cache(child);
+            };
+        } else {
+           res.file();   
+        }    
+    }
     
 }
