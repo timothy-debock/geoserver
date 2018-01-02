@@ -23,10 +23,7 @@ public abstract class AbstractStatusPage extends ServerAdminPage {
 
     protected AjaxTabbedPanel<ITab> tabbedPanel;
 
-    protected FeedbackPanel feedbackPanel;
-    
     public AbstractStatusPage() {
-        this.feedbackPanel = super.feedbackPanel;
         initUI();
     }
     
