@@ -19,6 +19,7 @@ import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.web.GeoServerWicketTestSupport;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,28 +28,34 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
     private TaskManagerFactory fac;
     private TaskManagerDao dao;
     
+    private Batch batch;
+    
     @Before
     public void init() {
         fac = TaskManagerBeans.get().getFac();
         dao = TaskManagerBeans.get().getDao();
         
-        if (dao.getBatches().isEmpty()) {
-            Batch batch = fac.createBatch();  
-            batch.setName("my_batch");
-            dao.save(batch);
-        }
+        batch = fac.createBatch();
+        batch.setName("my_batch");
+        batch = dao.save(batch);
+    }
+    
+
+    @After
+    public void clearDataFromDatabase() {
+        dao.delete(batch);
     }
     
     private Batch dummyBatch1() {
-        Batch config = fac.createBatch();
-        config.setName("Z-CONFIG");
-        return config;
+        Batch batch = fac.createBatch();
+        batch.setName("Z-BATCH");
+        return batch;
     }
     
     private Batch dummyBatch2() {
-        Batch config = fac.createBatch();
-        config.setName("A-CONFIG");
-        return config;
+        Batch batch = fac.createBatch();
+        batch.setName("A-BATCH");
+        return batch;
     }
     
     @Test

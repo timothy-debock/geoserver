@@ -32,7 +32,7 @@ public class TaskManagerSecurityUtil {
     public boolean isReadable(Authentication user, Configuration config) {
         WorkspaceInfo wi = getWorkspace(config.getWorkspace());
         if (wi == null) {
-            return false;
+            return config.getWorkspace() == null;
         } else {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
             return limits == null || limits.isReadable();
@@ -45,14 +45,18 @@ public class TaskManagerSecurityUtil {
         if (batch.getConfiguration() != null) {
             wif = getWorkspace(batch.getConfiguration().getWorkspace());
         }
-        boolean check1 = false, check2 = batch.getConfiguration() == null;
+        boolean check1, check2;
         if (wi != null) {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
             check1 = limits == null || limits.isReadable();
+        } else {
+            check1 = batch.getWorkspace() == null;
         }
         if (wif != null) {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wif);
             check2 = limits == null || limits.isReadable();
+        } else {
+            check2 = batch.getConfiguration() == null || batch.getConfiguration().getWorkspace() == null;
         }
         return check1 && check2;
     }
@@ -60,7 +64,7 @@ public class TaskManagerSecurityUtil {
     public boolean isWritable(Authentication user, Configuration config) {
         WorkspaceInfo wi = getWorkspace(config.getWorkspace());
         if (wi == null) {
-            return false;
+            return config.getWorkspace() == null;
         } else {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
             return limits == null || limits.isWritable();
@@ -73,14 +77,18 @@ public class TaskManagerSecurityUtil {
         if (batch.getConfiguration() != null) {
             wif = getWorkspace(batch.getConfiguration().getWorkspace());
         }
-        boolean check1 = false, check2 = batch.getConfiguration() == null;
+        boolean check1, check2;
         if (wi != null) {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
             check1 = limits == null || limits.isWritable();
+        } else {
+            check1 = batch.getWorkspace() == null;
         }
         if (wif != null) {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wif);
             check2 = limits == null || limits.isWritable();
+        } else {
+            check2 = batch.getConfiguration() == null || batch.getConfiguration().getWorkspace() == null;
         }
         return check1 && check2;
     }

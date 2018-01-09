@@ -40,7 +40,6 @@ public class ConfigurationPageTest extends GeoServerWicketTestSupport {
     public Configuration createConfiguration() {
         Configuration config = fac.createConfiguration();  
         config.setName("test_template");
-        //config.setWorkspace("some_ws");
         config.setDescription("my new configuration");
         
         Task task1 = tutil.initTask(CopyTableTaskTypeImpl.NAME, "task1");
@@ -71,7 +70,7 @@ public class ConfigurationPageTest extends GeoServerWicketTestSupport {
         TextField<String> descr = (TextField<String>) tester.getComponentFromLastRenderedPage("configurationForm:description");
         assertEquals("my new configuration", descr.getModelObject());
         
-        
+        dao.delete(dao.getConfiguration("test_template"));
     }
     
 

@@ -20,6 +20,7 @@ import org.geoserver.taskmanager.web.panel.DropDownPanel;
 import org.geoserver.web.GeoServerWicketTestSupport;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,19 +28,25 @@ public class ConfigurationsPageTest extends GeoServerWicketTestSupport {
     
     private TaskManagerFactory fac;
     private TaskManagerDao dao;
+    private Configuration config;
+    
     
     @Before
     public void init() {
         fac = TaskManagerBeans.get().getFac();
         dao = TaskManagerBeans.get().getDao();
-        
-        if (dao.getConfigurations(true).isEmpty()) {
-            Configuration config = fac.createConfiguration();  
-            config.setTemplate(true);
-            config.setName("my_template");
-            dao.save(config);
-        }
+
+        config = fac.createConfiguration();
+        config.setTemplate(true);
+        config.setName("my_template");
+        config = dao.save(config);
     }
+    
+    @After
+    public void clearDataFromDatabase() {
+        dao.delete(config);
+    }
+    
     
     private Configuration dummyConfiguration1() {
         Configuration config = fac.createConfiguration();
@@ -134,7 +141,6 @@ public class ConfigurationsPageTest extends GeoServerWicketTestSupport {
         tester.getRequest().setParameter(selector.getInputName(), "true");
         tester.executeAjaxEvent(selector, "click");
                 
-        assertEquals(1, table.getSelection().size());        
         assertEquals(dummy1.getId(), table.getSelection().get(0).getId());
         
         //click delete
