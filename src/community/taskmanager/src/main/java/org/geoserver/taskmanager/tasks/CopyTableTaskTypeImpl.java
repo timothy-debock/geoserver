@@ -277,7 +277,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
             if(sb.length()<2){
                 ResultSet rsColumns = conn.getMetaData().getColumns(null, schema, tableName, null);
                 while (rsColumns.next()){
-                    if(GENERATE_ID_COLUMN_NAME.equals(rsColumns.getString("COLUMN_NAME"))){
+                    if(GENERATE_ID_COLUMN_NAME.equalsIgnoreCase(rsColumns.getString("COLUMN_NAME"))){
                         return GENERATE_ID_COLUMN_NAME;
                     }
                 }
