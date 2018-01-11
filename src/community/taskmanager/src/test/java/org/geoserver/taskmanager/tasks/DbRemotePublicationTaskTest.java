@@ -33,12 +33,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 
+/**
+ * To run these tests you should have a geoserver running on http://localhost:9090/geoserver.
+ */
 @Ignore
 public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
     private static final String DB_NAME = "mydb";
-    private static final String TABLE_NAME = "vw_horizonten";
+    private static final String TABLE_NAME = "vw_grondwaterlichamen";
 
     private static QName MY_TYPE = new QName(DB_NAME, TABLE_NAME, DB_NAME);
     
