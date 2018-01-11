@@ -19,7 +19,7 @@ CREATE VIEW gw_beleid.vw_grondwaterlichamen AS
   WHERE (gw_beleid.grondwaterlichamen_new.gwl like 'BL%');
 
 
-CREATE VIEW gw_beleidvw_grondwaterlichamen_generated_id AS
+CREATE VIEW gw_beleid.vw_grondwaterlichamen_generated_id AS
   SELECT gw_beleid.grondwaterlichamen_new.dataengine_id as generated_id,
     gw_beleid.grondwaterlichamen_new.gwl
   FROM gw_beleid.grondwaterlichamen_new
@@ -29,9 +29,6 @@ CREATE VIEW gw_beleidvw_grondwaterlichamen_generated_id AS
 
 ALTER TABLE  gw_beleid.grondwaterlichamen_new
     ADD CONSTRAINT gw_beleid.grondwaterlichamen_new_pkey PRIMARY KEY (dataengine_id);
-
-
-
 
 --
 -- Data for Name: grondwaterlichamen_new;
