@@ -23,7 +23,16 @@ public interface BatchRun extends Serializable, Identifiable {
     }
 
     default Status getStatus() {
-        return getRuns().isEmpty() ? null : getRuns().get(getRuns().size() - 1).getStatus();
+        if (getRuns().isEmpty()) {
+            return null;
+        } else {
+            for (int i = getRuns().size() - 1; i >= 0; i++) {
+                if (getRuns().get(i).getStatus() != Status.COMMITTED) {
+                    return getRuns().get(i).getStatus();
+                }
+            }
+            return Status.COMMITTED;            
+        }
     }
 
     default String getMessage() {

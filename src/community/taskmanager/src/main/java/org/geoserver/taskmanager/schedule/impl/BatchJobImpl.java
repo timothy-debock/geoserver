@@ -105,6 +105,7 @@ public class BatchJobImpl implements InterruptableJob {
 
                 run.setEnd(new Date());   
                 run = beans.getDao().save(run);
+                batchRun = run.getBatchRun();
                 runStack.push(run);                
             } catch(Exception e) {
                 LOGGER.log(Level.SEVERE, "Task " + task.getFullName() + " failed in batch "
@@ -113,6 +114,7 @@ public class BatchJobImpl implements InterruptableJob {
                 run.setEnd(new Date());
                 run.setStatus(Run.Status.FAILED);
                 run = beans.getDao().save(run);
+                batchRun = run.getBatchRun();
                 rollback = true;
             }
             
@@ -123,7 +125,7 @@ public class BatchJobImpl implements InterruptableJob {
                         
             if (rollback) {
                 while (!resultStack.isEmpty()) {
-                    Run runPop = runStack.pop();
+                    Run runPop = beans.getDao().reload(runStack.pop());
                     try {                    
                         resultStack.pop().rollback();
                         runPop.setStatus(Run.Status.ROLLED_BACK);
@@ -135,6 +137,7 @@ public class BatchJobImpl implements InterruptableJob {
                                 " failed to rollback in batch " + batch.getFullName() + "", e);
                     }
                     runPop = beans.getDao().save(runPop);
+                    batchRun = runPop.getBatchRun();
                 }
                 break; //leave for-loop           
             }             
@@ -144,8 +147,17 @@ public class BatchJobImpl implements InterruptableJob {
             LOGGER.log(Level.SEVERE, "Committing batch " + batch.getFullName());
         }
         
+        Stack<Run> reverseRunStack = new Stack<Run>();
+        while (!runStack.isEmpty()) {
+            reverseRunStack.push(runStack.pop());
+        }
+        Stack<TaskResult> reverseResultStack = new Stack<TaskResult>();
         while (!resultStack.isEmpty()) {
-            Run runPop = runStack.pop();
+            reverseResultStack.push(resultStack.pop());
+        }
+        
+        while (!reverseRunStack.isEmpty()) {
+            Run runPop = beans.getDao().reload(reverseRunStack.pop());
             Run runTemp;
             //to avoid concurrent commit, if this task is currently still waiting for a commit, wait
             while ((runTemp = beans.getDataUtil().startCommitIfPossible(runPop)) == null) {
@@ -153,24 +165,26 @@ public class BatchJobImpl implements InterruptableJob {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {}
             }
+            batchRun = runTemp.getBatchRun();
             runPop = runTemp;
             try {
-                resultStack.pop().commit();
+                reverseResultStack.pop().commit();
                 runPop.setStatus(Run.Status.COMMITTED);
             } catch (Exception e) {
                 Task task = runPop.getBatchElement().getTask();
                 LOGGER.log(Level.SEVERE, "Task " + task.getFullName() + 
                         " failed to commit in batch " + batch.getFullName() + "", e);
                 runPop.setMessage(e.getMessage());
-                runPop.setStatus(Run.Status.NOT_COMMITTED);                
+                runPop.setStatus(Run.Status.NOT_COMMITTED);
             }
             runPop = beans.getDao().save(runPop);
+            batchRun = runPop.getBatchRun();
         }
         
         LOGGER.log(Level.SEVERE, "Finished batch " + batch.getFullName());
         
         //send the report
-        Report report = beans.getReportBuilder().buildBatchRunReport(beans.getDao().reload(batchRun));
+        Report report = beans.getReportBuilder().buildBatchRunReport(batchRun);
         for (ReportService reportService : beans.getReportServices()) {
             if (reportService.getFilter().matches(report.getType())) {
                 reportService.sendReport(report);
