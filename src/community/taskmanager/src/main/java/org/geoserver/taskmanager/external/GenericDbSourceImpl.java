@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * @author Timothy De Bock
  */
-public class DefaultDbSourceImpl extends NamedImpl implements DbSource {
+public class GenericDbSourceImpl extends NamedImpl implements DbSource {
 
     private String connectionUrl;
 
