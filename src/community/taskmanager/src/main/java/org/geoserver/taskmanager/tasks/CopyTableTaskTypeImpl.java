@@ -25,7 +25,6 @@ import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.DbTableImpl;
-import org.geoserver.taskmanager.external.Dialect;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskException;

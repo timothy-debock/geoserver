@@ -5,25 +5,18 @@
 package org.geoserver.taskmanager.external;
 
 import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
-import it.geosolutions.geoserver.rest.encoder.datastore.GSPostGISDatastoreEncoder;
 import org.geoserver.taskmanager.util.NamedImpl;
-import org.geoserver.taskmanager.util.SqlUtil;
-import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.h2.tools.RunScript;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.util.StreamUtils;
-
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

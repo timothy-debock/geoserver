@@ -5,14 +5,10 @@
 package org.geoserver.taskmanager.external;
 
 import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
-import it.geosolutions.geoserver.rest.encoder.datastore.GSPostGISDatastoreEncoder;
 import org.geoserver.taskmanager.util.NamedImpl;
-import org.geoserver.taskmanager.util.SqlUtil;
-import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

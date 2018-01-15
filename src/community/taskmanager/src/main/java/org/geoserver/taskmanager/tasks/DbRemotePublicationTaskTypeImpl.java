@@ -9,7 +9,6 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
