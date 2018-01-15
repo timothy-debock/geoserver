@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,7 +19,9 @@ import javax.annotation.PostConstruct;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
+import org.geoserver.catalog.KeywordInfo;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.catalog.MetadataLinkInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.config.GeoServerDataDirectory;
@@ -165,9 +168,23 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                         re = fte;
                     }
                     postProcess(re, parameterValues);
+                    
+                    //sync metadata
                     re.setName(resource.getName());
-                    re.setTitle(resource.getName());
+                    re.setTitle(resource.getTitle());
+                    re.setAbstract(resource.getAbstract());
+                    re.setDescription(resource.getAbstract());
                     re.setSRS(resource.getSRS());
+                    for (KeywordInfo ki : resource.getKeywords()) {
+                        re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
+                    }
+                    for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
+                        re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(), mdli.getContent());
+                    }
+                    for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
+                        //TODO: dimension info
+                        re.setMetadataString(entry.getKey(), entry.getValue().toString());
+                    }
                     re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE :
                         ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
                     re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
