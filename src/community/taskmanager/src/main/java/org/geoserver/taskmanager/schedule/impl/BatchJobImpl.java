@@ -103,10 +103,11 @@ public class BatchJobImpl implements InterruptableJob {
                 Map<String, Object> parameterValues = beans.getTaskUtil().parseParameters(type, rawParameterValues);
                 resultStack.push(type.run(batch, task, parameterValues, tempValues));
 
+                run.setStatus(Run.Status.READY_TO_COMMIT);
                 run.setEnd(new Date());   
                 run = beans.getDao().save(run);
                 batchRun = run.getBatchRun();
-                runStack.push(run);                
+                runStack.push(run);
             } catch(Exception e) {
                 LOGGER.log(Level.SEVERE, "Task " + task.getFullName() + " failed in batch "
                         + batch.getFullName() + ", rolling back.", e);
@@ -146,18 +147,9 @@ public class BatchJobImpl implements InterruptableJob {
         if (!rollback) {
             LOGGER.log(Level.SEVERE, "Committing batch " + batch.getFullName());
         }
-        
-        Stack<Run> reverseRunStack = new Stack<Run>();
+               
         while (!runStack.isEmpty()) {
-            reverseRunStack.push(runStack.pop());
-        }
-        Stack<TaskResult> reverseResultStack = new Stack<TaskResult>();
-        while (!resultStack.isEmpty()) {
-            reverseResultStack.push(resultStack.pop());
-        }
-        
-        while (!reverseRunStack.isEmpty()) {
-            Run runPop = beans.getDao().reload(reverseRunStack.pop());
+            Run runPop = beans.getDao().reload(runStack.pop());
             Run runTemp;
             //to avoid concurrent commit, if this task is currently still waiting for a commit, wait
             while ((runTemp = beans.getDataUtil().startCommitIfPossible(runPop)) == null) {
@@ -168,7 +160,7 @@ public class BatchJobImpl implements InterruptableJob {
             batchRun = runTemp.getBatchRun();
             runPop = runTemp;
             try {
-                reverseResultStack.pop().commit();
+                resultStack.pop().commit();
                 runPop.setStatus(Run.Status.COMMITTED);
             } catch (Exception e) {
                 Task task = runPop.getBatchElement().getTask();

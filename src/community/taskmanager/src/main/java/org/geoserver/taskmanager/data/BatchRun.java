@@ -40,7 +40,16 @@ public interface BatchRun extends Serializable, Identifiable {
     }
 
     default String getMessage() {
-        return getRuns().isEmpty() ? null : getRuns().get(getRuns().size() - 1).getMessage();
+        if (getRuns().isEmpty()) {
+            return null;
+        } else {
+            for (int i = getRuns().size() - 1; i >= 0; i--) {
+                if (getRuns().get(i).getMessage() != null) {
+                    return getRuns().get(i).getMessage();
+                }
+            }
+            return null;            
+        }
     }
 
 }

@@ -42,11 +42,16 @@ public class SimpleReportBuilderImpl implements ReportBuilder {
         Type type;
         
         switch (batchRun.getRuns().get(batchRun.getRuns().size() - 1).getStatus()) {
-        case FAILED: case NOT_COMMITTED: case RUNNING /*shouldn't happen*/: case COMMITTING /*shouldn't happen*/:
+        case FAILED: 
+        case NOT_COMMITTED: 
+        case /* shouldn't happen */ READY_TO_COMMIT:
+        case /* shouldn't happen */ RUNNING : 
+        case /* shouldn't happen */ COMMITTING :
             reportTitle.append("has failed");
             type = Type.FAILED;
             break;
-        case ROLLED_BACK: case NOT_ROLLED_BACK:
+        case ROLLED_BACK: 
+        case NOT_ROLLED_BACK:
             reportTitle.append("was cancelled");
             type = Type.CANCELLED;
             break;

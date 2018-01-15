@@ -109,6 +109,9 @@ public class RunImpl extends BaseImpl implements Run {
 
     @Override
     public void setMessage(String message) {
+        if (message.length() > 1024) {
+            message = message.substring(0, 1024);
+        }
         this.message = message;
     }
 
