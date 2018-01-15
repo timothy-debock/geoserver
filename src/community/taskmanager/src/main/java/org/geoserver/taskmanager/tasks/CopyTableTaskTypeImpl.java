@@ -12,20 +12,23 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.DbTableImpl;
-import org.geoserver.taskmanager.external.Dialect;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskException;
@@ -38,13 +41,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * The copy table task type.
- * 
- * @author Niels Charlier
  *
+ * @author Niels Charlier
  */
 @Component
 public class CopyTableTaskTypeImpl implements TaskType {
-    
+
     public static final String NAME = "CopyTable";
 
     public static final String PARAM_SOURCE_DB_NAME = "source-database";
@@ -56,11 +58,11 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public static final String PARAM_TARGET_TABLE_NAME = "target-table-name";
 
     public static final String GENERATE_ID_COLUMN_NAME = "generated_id";
-        
+
     private static final Logger LOGGER = Logging.getLogger(CopyTableTaskTypeImpl.class);
-    
+
     private static final int BATCH_SIZE = 1000;
-    
+
     @Autowired
     ExtTypes extTypes;
 
@@ -82,30 +84,30 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public Map<String, ParameterInfo> getParameterInfo() {
         return paramInfo;
     }
-    
+
     @Override
     public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues) throws TaskException {
+                          Map<Object, Object> tempValues) throws TaskException {
         final DbSource sourcedb = (DbSource) parameterValues.get(PARAM_SOURCE_DB_NAME);
         final DbSource targetdb = (DbSource) parameterValues.get(PARAM_TARGET_DB_NAME);
         final DbTable table = tempValues.containsKey(parameterValues.get(PARAM_TABLE_NAME)) ?
                 (DbTable) tempValues.get(parameterValues.get(PARAM_TABLE_NAME)) :
                 (DbTable) parameterValues.get(PARAM_TABLE_NAME);
-        
+
         final DbTable targetTable = parameterValues.containsKey(PARAM_TARGET_TABLE_NAME) ?
-                        (DbTable) parameterValues.get(PARAM_TARGET_TABLE_NAME) :
-                            new DbTableImpl(targetdb, table.getTableName());
+                (DbTable) parameterValues.get(PARAM_TARGET_TABLE_NAME) :
+                new DbTableImpl(targetdb, table.getTableName());
         final String tempTableName = SqlUtil.qualified(
                 SqlUtil.schema(targetTable.getTableName()),
                 "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
         tempValues.put(targetTable, new DbTableImpl(targetdb, tempTableName));
-        
+
         try (Connection sourceConn = sourcedb.getDataSource().getConnection()) {
             sourceConn.setAutoCommit(false);
             try (Connection destConn = targetdb.getDataSource().getConnection()) {
                 try (Statement stmt = sourceConn.createStatement()) {
                     stmt.setFetchSize(BATCH_SIZE);
-                    try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + 
+                    try (ResultSet rs = stmt.executeQuery("SELECT * FROM " +
                             sourcedb.getDialect().quote(table.getTableName()))) {
 
                         ResultSetMetaData rsmd = rs.getMetaData();
@@ -119,33 +121,57 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             String columnName = targetdb.getDialect().quote(rsmd.getColumnLabel(i));
                             sb.append(columnName).append(" ").append(rsmd.getColumnTypeName(i));
                             switch (rsmd.isNullable(i)) {
-                            case ResultSetMetaData.columnNoNulls:
-                                 sb.append(" NOT NULL");   
-                                 break;
-                            case ResultSetMetaData.columnNullable:
-                                sb.append(" NULL");
-                                break;
+                                case ResultSetMetaData.columnNoNulls:
+                                    sb.append(" NOT NULL");
+                                    break;
+                                case ResultSetMetaData.columnNullable:
+                                    sb.append(" NULL");
+                                    break;
                             }
                             sb.append(", ");
                         }
                         String primaryKey = getPrimaryKey(sourceConn, table.getTableName());
                         boolean hasPrimaryKeyColumn = !primaryKey.isEmpty();
-                        if (hasPrimaryKeyColumn) {
-                            sb.append("PRIMARY KEY (").append(primaryKey).append("), ");
-                        } else {
+                        if (!hasPrimaryKeyColumn) {
                             // create a Primary key column if none exist.
-                            sb.append(GENERATE_ID_COLUMN_NAME + " int, PRIMARY KEY (" + GENERATE_ID_COLUMN_NAME + "), ");
+                            sb.append(GENERATE_ID_COLUMN_NAME + " int PRIMARY KEY, ");
                             columnCount++;
                         }
 
-                        for (String unique : getUniques(sourceConn, table.getTableName())) {
-                            sb.append("UNIQUE (").append(unique).append("), ");
-                        }
                         sb.setLength(sb.length() - 2);
-                        sb.append(" ) ");
+                        sb.append(" ); ");
+
+                        //creating indexes
+                        Map<String, Set<String>> indexAndColumnMap = getIndexesColumns(sourceConn, table.getTableName());
+                        Set<String> uniqueIndexes = getUniqueIndexes(sourceConn, table.getTableName());
+                        Set<String> spatialColumns = sourcedb.getDialect().getSpatialColumns(sourceConn,
+                                geTableName(sourceConn, table.getTableName()));
+
+
+                        for (String indexName : indexAndColumnMap.keySet()) {
+                            Set<String> columnNames = indexAndColumnMap.get(indexName);
+                            boolean isSpatialIndex =
+                                    columnNames.size() == 1
+                                    && spatialColumns.contains(columnNames.iterator().next());
+
+                            sb.append(sourcedb.getDialect().createIndex(
+                                    tempTableName,
+                                    columnNames,
+                                    isSpatialIndex,
+                                    uniqueIndexes.contains(indexName)));
+                        }
+                        //we are copying a view and need to create the spatial index.
+                        if(indexAndColumnMap.isEmpty() && !spatialColumns.isEmpty()){
+                            sb.append(sourcedb.getDialect().createIndex(
+                                    tempTableName,
+                                    spatialColumns,
+                                    true,
+                                    false));
+                        }
+
                         String dump = sb.toString();
                         LOGGER.log(Level.FINE, "creating temporary table: " + dump);
-
+                        System.out.println(dump);
                         try (Statement stmt2 = destConn.createStatement()) {
                             stmt2.executeUpdate(dump);
                         }
@@ -192,19 +218,20 @@ public class CopyTableTaskTypeImpl implements TaskType {
         } catch (SQLException e) {
             //clean-up if necessary 
             try (Connection conn = targetdb.getDataSource().getConnection()) {
-                try (Statement stmt = conn.createStatement()){
+                try (Statement stmt = conn.createStatement()) {
                     stmt.executeUpdate("DROP TABLE IF EXISTS " + targetdb.getDialect().quote(tempTableName));
                 }
-            } catch (SQLException e2) {}
+            } catch (SQLException e2) {
+            }
 
             throw new TaskException(e);
         }
-        
-        return new TaskResult() {            
+
+        return new TaskResult() {
             @Override
             public void commit() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
-                    try (Statement stmt = conn.createStatement()){
+                    try (Statement stmt = conn.createStatement()) {
                         stmt.executeUpdate("DROP TABLE IF EXISTS " + targetdb.getDialect().quote(
                                 targetTable.getTableName()));
                         stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " +
@@ -218,8 +245,8 @@ public class CopyTableTaskTypeImpl implements TaskType {
             @Override
             public void rollback() throws TaskException {
                 try (Connection conn = targetdb.getDataSource().getConnection()) {
-                    try (Statement stmt = conn.createStatement()){
-                        stmt.executeUpdate("DROP TABLE "+ targetdb.getDialect().quote(tempTableName) + "");
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.executeUpdate("DROP TABLE " + targetdb.getDialect().quote(tempTableName) + "");
                     }
                 } catch (SQLException e) {
                     throw new TaskException(e);
@@ -229,16 +256,17 @@ public class CopyTableTaskTypeImpl implements TaskType {
         };
     }
 
+
     @Override
     public void cleanup(Task task, Map<String, Object> parameterValues) throws TaskException {
         final DbTable table = (DbTable) parameterValues.get(PARAM_TABLE_NAME);
         final DbSource targetDb = (DbSource) parameterValues.get(PARAM_TARGET_DB_NAME);
         final DbTable targetTable = parameterValues.containsKey(PARAM_TARGET_TABLE_NAME) ?
                 (DbTable) parameterValues.get(PARAM_TARGET_TABLE_NAME) :
-                    new DbTableImpl(targetDb, table.getTableName());
-        
+                new DbTableImpl(targetDb, table.getTableName());
+
         try (Connection conn = targetDb.getDataSource().getConnection()) {
-            try (Statement stmt = conn.createStatement()){
+            try (Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate("DROP TABLE IF EXISTS " + targetDb.getDialect().quote(targetTable.getTableName()));
             }
         } catch (SQLException e) {
@@ -252,32 +280,23 @@ public class CopyTableTaskTypeImpl implements TaskType {
     }
 
     private static String getPrimaryKey(Connection conn, String tableName) throws SQLException {
-        String schema = null;
-        String[] split = tableName.split("\\.", 2);
-        if (split.length == 2) {
-            schema = split[0];
-            tableName = split[1];
-        }
-        if(conn.getMetaData().storesUpperCaseIdentifiers()){
-            if (schema != null) {
-                schema = schema.toUpperCase();
-            }
-            tableName = tableName.toUpperCase();
-        }
-        try (ResultSet rsPrimaryKeys = conn.getMetaData().getPrimaryKeys(null, schema, tableName)) {
-            StringBuilder sb = new StringBuilder();            
+        String schema = getSchema(conn, tableName);
+        String name = geTableName(conn, tableName);
+
+        try (ResultSet rsPrimaryKeys = conn.getMetaData().getPrimaryKeys(null, schema, name)) {
+            StringBuilder sb = new StringBuilder();
             while (rsPrimaryKeys.next()) {
                 sb.append(rsPrimaryKeys.getString("COLUMN_NAME"))
-                    .append(", ");
+                        .append(", ");
             }
             if (sb.length() > 2) {
                 sb.setLength(sb.length() - 2);
             }
             //if there is no primary key column defined. Check if there is a generated key column available
-            if(sb.length()<2){
-                ResultSet rsColumns = conn.getMetaData().getColumns(null, schema, tableName, null);
-                while (rsColumns.next()){
-                    if(GENERATE_ID_COLUMN_NAME.equalsIgnoreCase(rsColumns.getString("COLUMN_NAME"))){
+            if (sb.length() < 2) {
+                ResultSet rsColumns = conn.getMetaData().getColumns(null, schema, name, null);
+                while (rsColumns.next()) {
+                    if (GENERATE_ID_COLUMN_NAME.equalsIgnoreCase(rsColumns.getString("COLUMN_NAME"))) {
                         return GENERATE_ID_COLUMN_NAME;
                     }
                 }
@@ -287,26 +306,64 @@ public class CopyTableTaskTypeImpl implements TaskType {
         }
     }
 
-    
-    private static List<String> getUniques(Connection conn, String tableName) throws SQLException {
-        try (ResultSet rsUnique = conn.getMetaData().getIndexInfo(null, null, tableName, true, false)) {
-            List<String> pkColumns = new ArrayList<>();
-            String lastIndexName = null;
-            StringBuilder sb = null;
-            while (rsUnique.next()) {
-                String indexName = rsUnique.getString("INDEX_NAME");
-                if (lastIndexName == null || !indexName.equals(lastIndexName)) {
-                    if (sb != null) {
-                        pkColumns.add(sb.toString());
-                    }
-                    sb = new StringBuilder(rsUnique.getString("COLUMN_NAME"));
-                    lastIndexName = indexName;
-                } else {
-                    sb.append(",").append(rsUnique.getString("COLUMN_NAME"));
-                }
+    private Set<String> getUniqueIndexes(Connection conn, String tableName) throws SQLException {
+        String schema = getSchema(conn, tableName);
+        String name = geTableName(conn, tableName);
+
+
+        Set<String> result = new HashSet<String>();
+
+        try (ResultSet rs = conn.getMetaData().getIndexInfo(null, schema, name, true, false)) {
+            while (rs.next()) {
+                String indexName = rs.getString("INDEX_NAME");
+                result.add(indexName);
             }
-            return pkColumns;
         }
+        return result;
+    }
+
+    private Map<String, Set<String>> getIndexesColumns(Connection conn, String tableName) throws SQLException {
+        String schema = getSchema(conn, tableName);
+        String name = geTableName(conn, tableName);
+
+        HashMap<String, Set<String>> result = new HashMap<>();
+
+        try (ResultSet rs = conn.getMetaData().getIndexInfo(null, schema, name, false, false)) {
+            while (rs.next()) {
+                String indexName = rs.getString("INDEX_NAME");
+                String dbColumnName = rs.getString("COLUMN_NAME");
+                if (!result.containsKey(indexName)) {
+                    result.put(indexName, new HashSet<>());
+                }
+                result.get(indexName).add(dbColumnName);
+            }
+        }
+        return result;
+    }
+
+
+    private static String geTableName(Connection conn, String tableName) throws SQLException {
+        String name = tableName;
+        String[] split = tableName.split("\\.", 2);
+        if (split.length == 2) {
+            name = split[1];
+        }
+        if (conn.getMetaData().storesUpperCaseIdentifiers()) {
+            name = name.toUpperCase();
+        }
+        return name;
+    }
+
+    private static String getSchema(Connection conn, String tableName) throws SQLException {
+        String schema = null;
+        String[] split = tableName.split("\\.", 2);
+        if (split.length == 2) {
+            schema = split[0];
+        }
+        if (schema != null && conn.getMetaData().storesUpperCaseIdentifiers()) {
+            schema = schema.toUpperCase();
+        }
+        return schema;
     }
 
 }
