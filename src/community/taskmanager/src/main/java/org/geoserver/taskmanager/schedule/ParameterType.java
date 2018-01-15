@@ -112,6 +112,27 @@ public interface ParameterType {
         }
 
     };
+
+    /**
+     * SQL Type
+     */
+    public ParameterType SQL = new ParameterType() {
+        
+        @Override
+        public List<String> getDomain(List<String> dependsOnRawValues) {
+            return null;
+        }
+    
+        @Override
+        public String parse(String value, List<String> dependsOnRawValues) {
+            //protection against sneaking in extra statement
+            if (value.contains(";")) {
+                return null;
+            }
+            return value;
+        }
+    
+    };
     
     /**
      * List possible values for this parameter (when applicable).

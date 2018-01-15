@@ -58,13 +58,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     private static final Logger LOGGER = Logging.getLogger(DbRemotePublicationTaskTypeImpl.class);
     
     @Autowired
-    GeoServerDataDirectory geoServerDataDirectory;
+    protected GeoServerDataDirectory geoServerDataDirectory;
     
     @Autowired
-    Catalog catalog;
+    protected Catalog catalog;
 
     @Autowired
-    ExtTypes extTypes;
+    protected ExtTypes extTypes;
     
     @PostConstruct
     public void initParamInfo() {

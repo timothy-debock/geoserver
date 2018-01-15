@@ -46,7 +46,7 @@ public class RunImpl extends BaseImpl implements Run {
     @Enumerated
     private Status status = Status.RUNNING;
     
-    @Column
+    @Column(length = 1024)
     private String message;
 
     @ManyToOne(cascade = CascadeType.MERGE)

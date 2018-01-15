@@ -61,7 +61,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
     private static final int BATCH_SIZE = 1000;
     
     @Autowired
-    ExtTypes extTypes;
+    protected ExtTypes extTypes;
 
     private final Map<String, ParameterInfo> paramInfo = new LinkedHashMap<String, ParameterInfo>();
 

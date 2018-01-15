@@ -12,12 +12,10 @@ import javax.annotation.PostConstruct;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
-import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.util.SqlUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
@@ -32,9 +30,6 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     public static final String PARAM_DB_NAME = "database";
 
     public static final String PARAM_TABLE_NAME = "table-name";
-
-    @Autowired
-    ExtTypes extTypes;
 
     @PostConstruct
     @Override

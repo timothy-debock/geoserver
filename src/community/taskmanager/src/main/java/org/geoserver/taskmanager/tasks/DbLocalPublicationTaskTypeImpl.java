@@ -25,10 +25,10 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
     public static final String PARAM_TABLE_NAME = "table-name";
     
     protected final Map<String, ParameterInfo> paramInfo = new LinkedHashMap<String, ParameterInfo>();
-    
-    @Autowired
-    ExtTypes extTypes;
 
+    @Autowired
+    protected ExtTypes extTypes;
+    
     @Override
     public String getName() {
         return NAME;
