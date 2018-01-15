@@ -170,7 +170,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
                         String dump = sb.toString();
                         LOGGER.log(Level.FINE, "creating temporary table: " + dump);
-                        System.out.println(dump);
+
                         try (Statement stmt2 = destConn.createStatement()) {
                             stmt2.executeUpdate(dump);
                         }
