@@ -183,7 +183,9 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     }
                     for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
                         //TODO: dimension info
-                        re.setMetadataString(entry.getKey(), entry.getValue().toString());
+                        if (entry.getValue() != null) {
+                            re.setMetadataString(entry.getKey(), entry.getValue().toString());
+                        }
                     }
                     re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE :
                         ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
@@ -198,37 +200,48 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                                 resource.getNativeBoundingBox().getMaxY(), resource.getSRS());  
                     }
                     
-                    if (!restManager.getPublisher().createResource(ws, storeType, store.getName(), re)) {
-                        throw new TaskException(
-                                "Failed to create resource " + ws + ":" + resource.getName());
+                    //resource might have already been created together with store
+                    if ((storeType == StoreType.DATASTORES ?
+                            restManager.getReader().existsFeatureType(ws, store.getName(), resource.getName()) :
+                            restManager.getReader().existsCoverage(ws, store.getName(), resource.getName()))) {                    
+                        if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
+                            throw new TaskException(
+                                    "Failed to configure resource " + ws + ":" + resource.getName());
+                        }
+                    } else {
+                        if (!restManager.getPublisher().createResource(ws, storeType, store.getName(), re)) {
+                            throw new TaskException(
+                                    "Failed to create resource " + ws + ":" + resource.getName());
+                        }
+                    }
+                                        
+                    if (createStyle) { //style doesn't exist yet, publish
+                        LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
+                                " on " + extGS.getName() +
+                                ", creating.");
+                        if (!restManager.getPublisher().publishStyle(
+                                geoServerDataDirectory.style(layer.getDefaultStyle()).file(),
+                                layer.getDefaultStyle().getName())) {
+                            throw new TaskException("Failed to create style " + ws);
+                        }
+                    }
+                    
+                    // config layer
+                    final GSLayerEncoder layerEncoder = new GSLayerEncoder();
+                    layerEncoder.setAdvertised(false);
+                    layerEncoder.setDefaultStyle(layer.getDefaultStyle().getWorkspace() == null ? null : 
+                            layer.getDefaultStyle().getWorkspace().getName(),
+                            layer.getDefaultStyle().getName());
+                    
+                    if (!restManager.getPublisher().configureLayer(ws, resource.getName(), layerEncoder)) {
+                       throw new TaskException(
+                                "Failed to configure layer " + ws + ":" + resource.getName());
                     }
                 } else {
                     LOGGER.log(Level.INFO, "Resource exists: " + layer.getName() + " on " + extGS.getName() +
                             ", skipping creation.");
                 }
-                
-                if (createStyle) { //style doesn't exist yet, publish
-                    LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
-                            " on " + extGS.getName() +
-                            ", creating.");
-                    if (!restManager.getPublisher().publishStyle(
-                            geoServerDataDirectory.style(layer.getDefaultStyle()).file(),
-                            layer.getDefaultStyle().getName())) {
-                        throw new TaskException("Failed to create style " + ws);
-                    }
-                }
 
-                // config layer
-                final GSLayerEncoder layerEncoder = new GSLayerEncoder();
-                layerEncoder.setAdvertised(false);
-                layerEncoder.setDefaultStyle(layer.getDefaultStyle().getWorkspace() == null ? null : 
-                        layer.getDefaultStyle().getWorkspace().getName(),
-                        layer.getDefaultStyle().getName());
-                
-                if (!restManager.getPublisher().configureLayer(ws, resource.getName(), layerEncoder)) {
-                   throw new TaskException(
-                            "Failed to publish layer " + ws + ":" + resource.getName());
-                }
             } catch (TaskException e) {
                 //clean-up if necessary 
                 restManager.getPublisher().removeLayer(ws, layer.getName());

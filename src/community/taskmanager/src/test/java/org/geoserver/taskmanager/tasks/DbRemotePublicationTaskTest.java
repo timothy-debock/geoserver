@@ -40,9 +40,9 @@ import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
-    private static final String DB_NAME = "mydb";
+    private static final String DB_NAME = "mypostgresdb";
     private static final String TABLE_NAME = "vw_grondwaterlichamen";
-
+    
     private static QName MY_TYPE = new QName(DB_NAME, TABLE_NAME, DB_NAME);
     
     private static final String ATT_LAYER = "layer";

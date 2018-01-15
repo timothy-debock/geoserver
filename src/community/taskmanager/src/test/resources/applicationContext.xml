@@ -22,6 +22,15 @@
         <property name="createDBSqlResource" value="classpath:h2/dbtarget/create-target.sql"/>
         <property name="createDataSqlResource" value=""/>
     </bean>
+    
+    <!-- for pub test, postgres -->
+    <bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
+        <property name="name" value="mypostgresdb" />
+        <property name="host" value="localhost" />
+        <property name="db" value="mydb" />
+        <property name="username" value="postgres" />
+        <property name="password" value="postgres" />
+    </bean>
 
     <!-- postgis databases for testing task on you local machine-->
 
