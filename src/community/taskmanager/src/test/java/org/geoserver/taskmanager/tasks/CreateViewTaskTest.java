@@ -34,9 +34,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Databases must be set up and configured in app context before this test can be run. mv
  * 
  * @author Niels Charlier
+ * @author Timothy De Bock
  *
  */
 public class CreateViewTaskTest extends AbstractTaskManagerTest {

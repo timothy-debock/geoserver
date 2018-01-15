@@ -31,6 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 
+/**
+ * To run this test you should have a geoserver running on http://localhost:9090/geoserver.
+ * 
+ * @author Niels Charlier
+ */
 @Ignore
 public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
 

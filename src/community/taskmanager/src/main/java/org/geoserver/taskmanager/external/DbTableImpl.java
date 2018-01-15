@@ -4,6 +4,12 @@
  */
 package org.geoserver.taskmanager.external;
 
+/**
+ * Represents a table in a db (implementation).
+ * 
+ * @author Niels Charlier
+ *
+ */
 public class DbTableImpl implements DbTable {
     
     private DbSource dbSource;

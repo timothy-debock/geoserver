@@ -4,6 +4,12 @@
  */
 package org.geoserver.taskmanager.external;
 
+/**
+ * Represents a table in a db.
+ * 
+ * @author Niels Charlier
+ *
+ */
 public interface DbTable {
     
     DbSource getDbSource();

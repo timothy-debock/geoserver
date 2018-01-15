@@ -28,9 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 
  * Implementation independent helper methods.
  * 
+ * @author Niels Charlier
+ *
  */
 @Service
 public class TaskManagerDataUtil {

@@ -39,8 +39,6 @@ public class PostgisDbSourceImpl extends NamedImpl implements DbSource {
     
     private String password;
 
-    private Dialect dialect = new DefaultDialectImpl();
-
     public String getHost() {
         return host;
     }
@@ -153,7 +151,7 @@ public class PostgisDbSourceImpl extends NamedImpl implements DbSource {
 
     @Override
     public Dialect getDialect() {
-        return dialect;
+        return new PostgisDialectImpl();
     }
 
     /*

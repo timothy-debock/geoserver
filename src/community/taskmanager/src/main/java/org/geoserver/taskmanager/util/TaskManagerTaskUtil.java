@@ -33,9 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * 
- * Implementation independent helper methods.
- * 
+ *  Implementation independent helper methods.
+ *  
+ * @author Niels Charlier
+ *
  */
 @Service
 public class TaskManagerTaskUtil {

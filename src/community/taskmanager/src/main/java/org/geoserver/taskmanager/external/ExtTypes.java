@@ -1,3 +1,7 @@
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
 package org.geoserver.taskmanager.external;
 
 import java.sql.Connection;
@@ -20,6 +24,12 @@ import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Parameter types refering to external resources.
+ * 
+ * @author Niels Charlier
+ *
+ */
 @Service
 public class ExtTypes {
     private static final Logger LOGGER = Logging.getLogger(ExtTypes.class);
