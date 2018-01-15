@@ -26,7 +26,7 @@ public interface BatchRun extends Serializable, Identifiable {
         if (getRuns().isEmpty()) {
             return null;
         } else {
-            for (int i = getRuns().size() - 1; i >= 0; i++) {
+            for (int i = getRuns().size() - 1; i >= 0; i--) {
                 if (getRuns().get(i).getStatus() != Status.COMMITTED) {
                     return getRuns().get(i).getStatus();
                 }
