@@ -34,8 +34,6 @@ public class H2DbSourceImpl extends NamedImpl implements DbSource {
 
     private Resource createDataSqlResource;
 
-    private Dialect dialect = new H2DialectImpl();
-
     public String getPath() {
         return path;
     }
@@ -125,6 +123,6 @@ public class H2DbSourceImpl extends NamedImpl implements DbSource {
 
     @Override
     public Dialect getDialect() {
-        return dialect;
+        return new H2DialectImpl();
     }
 }
