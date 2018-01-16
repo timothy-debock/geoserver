@@ -42,7 +42,7 @@ public class CreateViewTaskTypeImpl extends AbstractCreateViewTaskTypeImpl {
                 (DbTable) parameterValues.get(PARAM_TABLE_NAME);
         final String select = (String) parameterValues.get(PARAM_SELECT);
         final String where = (String) parameterValues.get(PARAM_WHERE);
-        StringBuilder sb = new StringBuilder("SELECT").
+        StringBuilder sb = new StringBuilder("SELECT ").
             append(select).append(" FROM ").append(table.getTableName());
         if (where != null) {
             sb.append(" WHERE ").append(where);

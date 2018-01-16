@@ -45,7 +45,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
     private static final String DB_NAME = "mydb";
     private static final String TABLE_NAME = "gw_beleid.grondwaterlichamen_new";
     private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
-    private static final String SELECT = " dataengine_id";
+    private static final String SELECT = "dataengine_id";
     private static final String WHERE = "gwl like 'BL%'";
     private static final int NUMBER_OF_RECORDS = 7;
     private static final int NUMBER_OF_COLUMNS = 1;
