@@ -62,8 +62,8 @@ public class PostgisDialectImpl extends DefaultDialectImpl {
     public Set<String> getSpatialColumns(Connection sourceConn, String tableName) {
         HashSet<String> spatialColumns = new HashSet<>();
         try (Statement stmt = sourceConn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM public.geometry_columns " +
-                    " WHERE public.geometry_columns.f_table_name='" + tableName + "' ")) {
+            try (ResultSet rs = stmt.executeQuery("SELECT * FROM geometry_columns " +
+                    " WHERE geometry_columns.f_table_name='" + tableName + "' ")) {
                 if (rs.next()) {
                     spatialColumns.add(rs.getString("f_geometry_column"));
                 }
