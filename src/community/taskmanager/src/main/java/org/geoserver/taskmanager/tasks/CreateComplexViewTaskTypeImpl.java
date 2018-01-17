@@ -11,7 +11,9 @@ import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 
 import org.geoserver.taskmanager.data.Attribute;
+import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
+import org.geoserver.taskmanager.external.DbTableImpl;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.springframework.stereotype.Component;
@@ -38,11 +40,14 @@ public class CreateComplexViewTaskTypeImpl extends AbstractCreateViewTaskTypeImp
         
         Matcher m = PATTERN_PLACEHOLDER.matcher(definition);
 
+        final DbSource db = (DbSource) parameterValues.get(PARAM_DB_NAME);
+
         while (m.find()) {
             Object o = attributes.get(m.group(1)).getValue();
             if (o != null) {
-                if (tempValues.containsKey(m.group(1))) {
-                    o = tempValues.get(m.group(1));
+                DbTableImpl key = new DbTableImpl(db, (String) o);
+                if (tempValues.containsKey(key)) {
+                    o = tempValues.get(key);
                 }                
                 definition = m.replaceFirst(o instanceof DbTable ? 
                         ((DbTable) o).getTableName() : o.toString());
