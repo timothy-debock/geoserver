@@ -48,4 +48,6 @@ public interface Dialect {
      * @return
      */
     Set<String> getSpatialColumns(Connection sourceConn, String tableName);
+
+    int isNullable(int nullable);
 }

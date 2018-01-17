@@ -51,4 +51,9 @@ public class DefaultDialectImpl implements Dialect {
     public Set<String> getSpatialColumns(Connection sourceConn, String tableName) {
         return Collections.emptySet();
     }
+
+    @Override
+    public int isNullable(int nullable) {
+        return nullable;
+    }
 }
