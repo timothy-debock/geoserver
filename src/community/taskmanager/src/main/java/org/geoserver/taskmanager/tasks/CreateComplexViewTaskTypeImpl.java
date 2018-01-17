@@ -41,8 +41,8 @@ public class CreateComplexViewTaskTypeImpl extends AbstractCreateViewTaskTypeImp
         while (m.find()) {
             Object o = attributes.get(m.group(1)).getValue();
             if (o != null) {
-                if (tempValues.containsKey(o)) {
-                    o = tempValues.get(o);
+                if (tempValues.containsKey(m.group(1))) {
+                    o = tempValues.get(m.group(1));
                 }                
                 definition = m.replaceFirst(o instanceof DbTable ? 
                         ((DbTable) o).getTableName() : o.toString());
