@@ -28,6 +28,6 @@ public class InformixDialectImpl extends DefaultDialectImpl {
      */
     @Override
     public int isNullable(int nullable) {
-        return ResultSetMetaData.columnNullable;
+        return -1;
     }
 }

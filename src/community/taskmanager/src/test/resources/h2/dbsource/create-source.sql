@@ -14,7 +14,7 @@ ALTER TABLE gw_beleid.codetable_country
 
 CREATE TABLE gw_beleid.grondwaterlichamen_new (
     dataengine_id integer NOT NULL,
-    gwl character varying,
+    gwl character varying (2058),
     CONSTRAINT unique_on_gwl UNIQUE (gwl)
 );
 

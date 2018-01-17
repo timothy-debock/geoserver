@@ -116,7 +116,13 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
                         for (int i = 1; i <= columnCount; i++) {
                             String columnName = targetdb.getDialect().quote(rsmd.getColumnLabel(i));
-                            sb.append(columnName).append(" ").append(rsmd.getColumnTypeName(i));
+                            String typeName = rsmd.getColumnTypeName(i);
+                            sb.append(columnName).append(" ").append(typeName);
+                            if(("char".equals(typeName) || "varchar".equals(typeName))
+                                    && rsmd.getColumnDisplaySize(i) > 0
+                                    && rsmd.getColumnDisplaySize(i) < Integer.MAX_VALUE) {
+                                sb.append(" (").append(rsmd.getColumnDisplaySize(i)).append(" ) ");
+                            }
                             switch (sourcedb.getDialect().isNullable(rsmd.isNullable(i))) {
                             case ResultSetMetaData.columnNoNulls:
                                 sb.append(" NOT NULL");
