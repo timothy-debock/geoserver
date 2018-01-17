@@ -43,7 +43,14 @@ public class CreateComplexViewTaskTypeImpl extends AbstractCreateViewTaskTypeImp
         final DbSource db = (DbSource) parameterValues.get(PARAM_DB_NAME);
 
         while (m.find()) {
-            Object o = attributes.get(m.group(1)).getValue();
+            Attribute attribute = attributes.get(m.group(1));
+            Object o = null;
+            if (attribute != null) {
+                o = attribute.getValue();
+            } else {
+                //TODO should we trow an error here?
+                LOGGER.severe("Attribute not found for placeholder:" + m.group(1));
+            }
             if (o != null) {
                 DbTableImpl key = new DbTableImpl(db, (String) o);
                 if (tempValues.containsKey(key)) {
