@@ -77,7 +77,7 @@ public class JDBCDirectoryStructure {
      */
     public class Entry {
 
-        private final List<String> path;
+        private final ArrayList<String> path;
         private EntryMetaData md;
                 
         protected Entry(List<String> path, EntryMetaData md) {
@@ -149,6 +149,8 @@ public class JDBCDirectoryStructure {
             md.dir = null;
             md.lastModified = null;
             
+            entryCache.put(path, md);
+            
             return true;
         }
 
@@ -197,6 +199,8 @@ public class JDBCDirectoryStructure {
             md.dir = null;
             md.lastModified = null;            
 
+            entryCache.put(path, md);
+            
             return true;
         }
 
@@ -223,6 +227,8 @@ public class JDBCDirectoryStructure {
                     LOGGER.warning("Unable to update last modified for directory " + toString());
                 }
             }
+
+            entryCache.put(path, md);
         }
 
         public void createDirectory() {
@@ -247,6 +253,8 @@ public class JDBCDirectoryStructure {
             
             md.oid = parentOid;
             md.dir = true;
+
+            entryCache.put(path, md);
         }
 
         public boolean createResource() {
@@ -282,7 +290,9 @@ public class JDBCDirectoryStructure {
                 throw new IllegalStateException("Did not get OID for new entry " + toString());
             }
             
-            md.dir = false;            
+            md.dir = false;
+
+            entryCache.put(path, md);
 
             return true;
         }
