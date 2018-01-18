@@ -5,10 +5,16 @@ Drop schema IF EXISTS gw_beleid;
 CREATE SCHEMA gw_beleid;
 
 
+CREATE TABLE gw_beleid.codetable_country (
+    code character varying  NOT NULL,
+    country character varying NOT NULL
+);
+ALTER TABLE gw_beleid.codetable_country
+    ADD CONSTRAINT codetable_country_pkey PRIMARY KEY (code);
 
 CREATE TABLE gw_beleid.grondwaterlichamen_new (
     dataengine_id integer NOT NULL,
-    gwl character varying,
+    gwl character varying (2058),
     CONSTRAINT unique_on_gwl UNIQUE (gwl)
 );
 
@@ -20,15 +26,19 @@ CREATE INDEX multipleColumns ON gw_beleid.grondwaterlichamen_new (dataengine_id,
 
 CREATE VIEW gw_beleid.vw_grondwaterlichamen AS
  SELECT gw_beleid.grondwaterlichamen_new.dataengine_id,
-    gw_beleid.grondwaterlichamen_new.gwl
+    gw_beleid.grondwaterlichamen_new.gwl,
+    country
    FROM gw_beleid.grondwaterlichamen_new
+   LEFT JOIN gw_beleid.codetable_country ON( gw_beleid.codetable_country.code = 'BE')
   WHERE (gw_beleid.grondwaterlichamen_new.gwl like 'BL%');
 
 
 CREATE VIEW gw_beleid.vw_grondwaterlichamen_generated_id AS
   SELECT gw_beleid.grondwaterlichamen_new.dataengine_id as generated_id,
-    gw_beleid.grondwaterlichamen_new.gwl
+    gw_beleid.grondwaterlichamen_new.gwl,
+    country
   FROM gw_beleid.grondwaterlichamen_new
+  LEFT JOIN gw_beleid.codetable_country ON( gw_beleid.codetable_country.code = 'X')
   WHERE (gw_beleid.grondwaterlichamen_new.gwl like 'BL%');
 
 
@@ -230,3 +240,7 @@ INSERT INTO gw_beleid.grondwaterlichamen_new VALUES (189, '                     
 INSERT INTO gw_beleid.grondwaterlichamen_new VALUES (190, '                                         <BR> CVS_0600_GWL_1 Ledo-Paniseliaan Aquifersysteem, Freatisch');
 INSERT INTO gw_beleid.grondwaterlichamen_new VALUES (191, '         <BR> BLKS_0600_GWL_1 Brusseliaan Aquifer, Freatisch');
 
+--
+-- Data for Name: codetable_country;
+--
+INSERT INTO  gw_beleid.codetable_country VALUES ('BE', 'BELGIUM');

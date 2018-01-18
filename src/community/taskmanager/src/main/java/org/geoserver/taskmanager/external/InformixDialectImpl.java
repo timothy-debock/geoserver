@@ -4,6 +4,8 @@
  */
 package org.geoserver.taskmanager.external;
 
+import java.sql.ResultSetMetaData;
+
 /**
  * Informix implementation.
  *
@@ -17,4 +19,15 @@ public class InformixDialectImpl extends DefaultDialectImpl {
         return tableName;
     }
 
+
+    /**
+     * Override because in a view informix returns the value of the underlying column definition of the table.
+     * Even when performing left join in the create view statement.
+     * @param nullable
+     * @return
+     */
+    @Override
+    public int isNullable(int nullable) {
+        return -1;
+    }
 }

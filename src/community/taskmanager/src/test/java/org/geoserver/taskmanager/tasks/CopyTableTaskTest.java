@@ -204,7 +204,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
 
         int numberOfColumnsTarget = getNumberOfColumns(TARGETDB_NAME, TARGET_TABLE_FROM_VIEW_NAME);
         // We did not add Geometry support on the H2 DB. So only check the index on the shape
-        if (numberOfColumnsTarget == 4) {
+        if (numberOfColumnsTarget == 5) {
             assertEquals(2, numberOfindexesTarget);
             assertEquals("shape", getColumnName(TARGETDB_NAME, TARGET_TABLE_FROM_VIEW_NAME, 3));
         } else {
