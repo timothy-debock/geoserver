@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -46,7 +47,8 @@ public class RunImpl extends BaseImpl implements Run {
     @Enumerated
     private Status status = Status.RUNNING;
     
-    @Column(length = 1024)
+    @Column(length = Integer.MAX_VALUE)
+    @Lob
     private String message;
 
     @ManyToOne(cascade = CascadeType.MERGE)
@@ -109,9 +111,6 @@ public class RunImpl extends BaseImpl implements Run {
 
     @Override
     public void setMessage(String message) {
-        if (message.length() > 1024) {
-            message = message.substring(0, 1024);
-        }
         this.message = message;
     }
 
