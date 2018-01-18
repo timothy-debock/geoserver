@@ -25,6 +25,8 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
     public static final Property<Batch> ENABLED = new BeanProperty<Batch>("enabled", "enabled");
     public static final Property<Batch> NAME = new BeanProperty<Batch>("name", "name");
     public static final Property<Batch> STARTED = new AbstractProperty<Batch>("started") {
+        private static final long serialVersionUID = 6588177543318699677L;
+
         @Override
         public Object getPropertyValue(Batch batch) {
             if (batch.getId() != null) {

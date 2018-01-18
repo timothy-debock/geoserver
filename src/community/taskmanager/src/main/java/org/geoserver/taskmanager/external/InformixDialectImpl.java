@@ -4,8 +4,6 @@
  */
 package org.geoserver.taskmanager.external;
 
-import java.sql.ResultSetMetaData;
-
 /**
  * Informix implementation.
  *
