@@ -56,6 +56,8 @@ public class BatchPage extends GeoServerSecuredPage {
     
     private IModel<Batch> batchModel;
     
+    private List<BatchElement> oldElements;
+    
     private Set<BatchElement> removedElements = new HashSet<BatchElement>();
     
     private Set<Task> addedTasks = new HashSet<Task>();
@@ -73,6 +75,7 @@ public class BatchPage extends GeoServerSecuredPage {
             throw new RestartResponseException(UnauthorizedPage.class); 
         } 
         this.batchModel = batchModel;
+        oldElements = new ArrayList<>(batchModel.getObject().getElements());
         setReturnPage(parentPage);
     }
     
@@ -137,8 +140,11 @@ public class BatchPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
+                //restore elements
+                batchModel.getObject().getElements().clear();
+                batchModel.getObject().getElements().addAll(oldElements);
                 doReturn();
-            }            
+            }
         });
         
         if (batchModel.getObject().getId() != null

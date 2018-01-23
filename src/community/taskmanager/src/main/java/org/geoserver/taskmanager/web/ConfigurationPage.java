@@ -7,6 +7,7 @@ package org.geoserver.taskmanager.web;
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -61,6 +62,10 @@ public class ConfigurationPage extends GeoServerSecuredPage {
         
     private IModel<Configuration> configurationModel;
     
+    private Map<String, Batch> oldBatches;
+
+    private Map<String, Task> oldTasks;
+        
     private List<Task> removedTasks = new ArrayList<Task>();
     
     private GeoServerDialog dialog;
@@ -84,6 +89,8 @@ public class ConfigurationPage extends GeoServerSecuredPage {
              throw new RestartResponseException(UnauthorizedPage.class); 
         } 
         this.configurationModel = configurationModel;
+        oldTasks = new HashMap<>(configurationModel.getObject().getTasks());
+        oldBatches = new HashMap<>(configurationModel.getObject().getBatches());
         if (configurationModel.getObject().isTemplate()) {
             setReturnPage(TemplatesPage.class);
         } else {
@@ -160,6 +167,12 @@ public class ConfigurationPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
+                //restore tasks
+                configurationModel.getObject().getTasks().clear();
+                configurationModel.getObject().getTasks().putAll(oldTasks);
+                //restore batches
+                configurationModel.getObject().getBatches().clear();
+                configurationModel.getObject().getBatches().putAll(oldBatches);
                 doReturn();
             }            
         });
