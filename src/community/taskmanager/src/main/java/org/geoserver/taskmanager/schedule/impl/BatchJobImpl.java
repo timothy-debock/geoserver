@@ -61,7 +61,7 @@ public class BatchJobImpl implements InterruptableJob {
         String batchName = (String) context.getJobDetail().getKey().getName();
         Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchName)); 
         
-        LOGGER.log(Level.SEVERE, "Starting batch " + batch.getFullName());
+        LOGGER.log(Level.INFO, "Starting batch " + batch.getFullName());
         
         //start new batch run
         BatchRun batchRun = beans.getFac().createBatchRun();
@@ -145,7 +145,7 @@ public class BatchJobImpl implements InterruptableJob {
         }
         
         if (!rollback) {
-            LOGGER.log(Level.SEVERE, "Committing batch " + batch.getFullName());
+            LOGGER.log(Level.INFO, "Committing batch " + batch.getFullName());
         }
                
         while (!runStack.isEmpty()) {
@@ -173,7 +173,7 @@ public class BatchJobImpl implements InterruptableJob {
             batchRun = runPop.getBatchRun();
         }
         
-        LOGGER.log(Level.SEVERE, "Finished batch " + batch.getFullName());
+        LOGGER.log(Level.INFO, "Finished batch " + batch.getFullName());
         
         //send the report
         Report report = beans.getReportBuilder().buildBatchRunReport(batchRun);

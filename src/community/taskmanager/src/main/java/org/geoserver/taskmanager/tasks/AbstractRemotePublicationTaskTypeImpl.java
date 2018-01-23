@@ -99,7 +99,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             throw new TaskException("Failed to connect to geoserver " + extGS.getUrl());
         }
                  
-        final boolean createLayer = !restManager.getReader().existsLayer(ws, resource.getName(), true);
+        final boolean createLayer = !restManager.getReader().existsLayer(ws, layer.getName(), true);
         final boolean createResource;
         final boolean createStore;
         final boolean createWorkspace;
@@ -107,7 +107,10 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         if (createLayer) { 
             //layer doesn't exist yet, publish                  
             createWorkspace = !restManager.getReader().existsWorkspace(ws);
-            createStyle = !restManager.getReader().existsStyle(layer.getDefaultStyle().getName());
+            String wsStyle = layer.getDefaultStyle().getWorkspace() == null ? null : 
+                layer.getDefaultStyle().getWorkspace().getName();
+            createStyle = !restManager.getReader().existsStyle(wsStyle,
+                    layer.getDefaultStyle().getName());
             createStore = !(storeType == StoreType.DATASTORES ?
                     restManager.getReader().existsDatastore(ws, store.getName()) :
                     restManager.getReader().existsCoveragestore(ws, store.getName()));
@@ -214,32 +217,31 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                                     "Failed to create resource " + ws + ":" + resource.getName());
                         }
                     }
-                                        
-                    if (createStyle) { //style doesn't exist yet, publish
-                        LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
-                                " on " + extGS.getName() +
-                                ", creating.");
-                        if (!restManager.getPublisher().publishStyle(
-                                geoServerDataDirectory.style(layer.getDefaultStyle()).file(),
-                                layer.getDefaultStyle().getName())) {
-                            throw new TaskException("Failed to create style " + ws);
-                        }
-                    }
-                    
-                    // config layer
-                    final GSLayerEncoder layerEncoder = new GSLayerEncoder();
-                    layerEncoder.setAdvertised(false);
-                    layerEncoder.setDefaultStyle(layer.getDefaultStyle().getWorkspace() == null ? null : 
-                            layer.getDefaultStyle().getWorkspace().getName(),
-                            layer.getDefaultStyle().getName());
-                    
-                    if (!restManager.getPublisher().configureLayer(ws, resource.getName(), layerEncoder)) {
-                       throw new TaskException(
-                                "Failed to configure layer " + ws + ":" + resource.getName());
-                    }
                 } else {
                     LOGGER.log(Level.INFO, "Resource exists: " + layer.getName() + " on " + extGS.getName() +
                             ", skipping creation.");
+                }
+                
+                if (createStyle) { //style doesn't exist yet, publish
+                    LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
+                            " on " + extGS.getName() +
+                            ", creating.");
+                    if (!restManager.getPublisher().publishStyleInWorkspace(wsStyle,
+                            geoServerDataDirectory.style(layer.getDefaultStyle()).file(),
+                            layer.getDefaultStyle().getName())) {
+                        throw new TaskException("Failed to create style " + 
+                            layer.getDefaultStyle().getName());
+                    }
+                }
+                
+                // config layer
+                final GSLayerEncoder layerEncoder = new GSLayerEncoder();
+                layerEncoder.setAdvertised(false);
+                layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
+                
+                if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
+                   throw new TaskException(
+                            "Failed to configure layer " + ws + ":" + resource.getName());
                 }
 
             } catch (TaskException e) {
