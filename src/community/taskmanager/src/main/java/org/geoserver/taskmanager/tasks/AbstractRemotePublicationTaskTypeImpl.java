@@ -104,6 +104,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         final boolean createStore;
         final boolean createWorkspace;
         final boolean createStyle;
+        
         if (createLayer) { 
             //layer doesn't exist yet, publish                  
             createWorkspace = !restManager.getReader().existsWorkspace(ws);
@@ -119,6 +120,15 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     restManager.getReader().existsCoverage(ws, store.getName(), resource.getName()));
 
             try {
+                
+                if (!createResource) {
+                    //we are in the awkward situation where the resource exists, but not the layer
+                    //the only solution is to delete the rogue resource, otherwise we cannot create the layer
+                    if (!restManager.getPublisher().removeResource(ws, storeType, store.getName(), resource.getName())) {
+                        throw new TaskException("Failed to delete resource " + ws + ":" + resource.getName());
+                    }
+                }
+                
                 if (createWorkspace) { //workspace doesn't exist yet, publish
                     LOGGER.log(Level.INFO, "Workspace doesn't exist: " + ws + " on " + extGS.getName() +
                             ", creating.");
@@ -145,81 +155,82 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             ", skipping creation.");
                 }
                 
-                if (createResource) { //resource doesn't exist yet, publish
-                    // config resource 
-                    final GSResourceEncoder re;
-                    if (resource instanceof CoverageInfo) {
-                        CoverageInfo coverage = (CoverageInfo) resource;
-                        final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
-                        coverageEncoder.setNativeFormat(coverage.getNativeFormat());
-                        for (String format : coverage.getSupportedFormats()) {
-                            coverageEncoder.addSupportedFormats(format);
-                        }
-                        for (String srs : coverage.getRequestSRS()) {
-                            coverageEncoder.setRequestSRS(srs); //wrong: should be add                        
-                        }
-                        for (String srs : coverage.getResponseSRS()) {                        
-                            coverageEncoder.setResponseSRS(srs); //wrong: should be add
-                        }
-                        coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
-                        coverageEncoder.setNativeFormat(coverage.getNativeFormat());                    
-                        re = coverageEncoder;
-                    } else {
-                        GSFeatureTypeEncoder fte = new GSFeatureTypeEncoder();
-                        fte.setSRS(resource.getSRS());
-                        fte.setNativeName(resource.getNativeName());
-                        re = fte;
+                // create resource (and layer)
+                final GSResourceEncoder re;
+                if (resource instanceof CoverageInfo) {
+                    CoverageInfo coverage = (CoverageInfo) resource;
+                    final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
+                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());
+                    for (String format : coverage.getSupportedFormats()) {
+                        coverageEncoder.addSupportedFormats(format);
                     }
-                    postProcess(re, parameterValues);
-                    
-                    //sync metadata
-                    re.setName(resource.getName());
-                    re.setTitle(resource.getTitle());
-                    re.setAbstract(resource.getAbstract());
-                    re.setDescription(resource.getAbstract());
-                    re.setSRS(resource.getSRS());
-                    for (KeywordInfo ki : resource.getKeywords()) {
-                        re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
+                    for (String srs : coverage.getRequestSRS()) {
+                        coverageEncoder.setRequestSRS(srs); // wrong: should be add
                     }
-                    for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
-                        re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(), mdli.getContent());
+                    for (String srs : coverage.getResponseSRS()) {
+                        coverageEncoder.setResponseSRS(srs); // wrong: should be add
                     }
-                    for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
-                        //TODO: dimension info
-                        if (entry.getValue() != null) {
-                            re.setMetadataString(entry.getKey(), entry.getValue().toString());
-                        }
+                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
+                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());
+                    re = coverageEncoder;
+                } else {
+                    GSFeatureTypeEncoder fte = new GSFeatureTypeEncoder();
+                    fte.setSRS(resource.getSRS());
+                    fte.setNativeName(resource.getNativeName());
+                    re = fte;
+                }
+                postProcess(re, parameterValues);
+
+                // sync metadata
+                re.setName(resource.getName());
+                re.setTitle(resource.getTitle());
+                re.setAbstract(resource.getAbstract());
+                re.setDescription(resource.getAbstract());
+                re.setSRS(resource.getSRS());
+                for (KeywordInfo ki : resource.getKeywords()) {
+                    re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
+                }
+                for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
+                    re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(),
+                            mdli.getContent());
+                }
+                for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
+                    // TODO: dimension info
+                    if (entry.getValue() != null) {
+                        re.setMetadataString(entry.getKey(), entry.getValue().toString());
                     }
-                    re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE :
-                        ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
-                    re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
-                            resource.getLatLonBoundingBox().getMinY(),
-                            resource.getLatLonBoundingBox().getMaxX(),
-                            resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
-                    if(resource.getNativeBoundingBox() != null) {
-                        re.setNativeBoundingBox(resource.getNativeBoundingBox().getMinX(),
-                                resource.getNativeBoundingBox().getMinY(),
-                                resource.getNativeBoundingBox().getMaxX(),
-                                resource.getNativeBoundingBox().getMaxY(), resource.getSRS());  
-                    }
-                    
-                    //resource might have already been created together with store
-                    if ((storeType == StoreType.DATASTORES ?
-                            restManager.getReader().existsFeatureType(ws, store.getName(), resource.getName()) :
-                            restManager.getReader().existsCoverage(ws, store.getName(), resource.getName()))) {                    
-                        if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
-                            throw new TaskException(
-                                    "Failed to configure resource " + ws + ":" + resource.getName());
-                        }
-                    } else {
-                        if (!restManager.getPublisher().createResource(ws, storeType, store.getName(), re)) {
-                            throw new TaskException(
-                                    "Failed to create resource " + ws + ":" + resource.getName());
-                        }
+                }
+                re.setProjectionPolicy(resource.getProjectionPolicy() == null
+                        ? ProjectionPolicy.NONE
+                        : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
+                re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
+                        resource.getLatLonBoundingBox().getMinY(),
+                        resource.getLatLonBoundingBox().getMaxX(),
+                        resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
+                if (resource.getNativeBoundingBox() != null) {
+                    re.setNativeBoundingBox(resource.getNativeBoundingBox().getMinX(),
+                            resource.getNativeBoundingBox().getMinY(),
+                            resource.getNativeBoundingBox().getMaxX(),
+                            resource.getNativeBoundingBox().getMaxY(), resource.getSRS());
+                }
+
+                // resource might have already been created together with store
+                if ((storeType == StoreType.DATASTORES
+                        ? restManager.getReader().existsFeatureType(ws, store.getName(),
+                                resource.getName())
+                        : restManager.getReader().existsCoverage(ws, store.getName(),
+                                resource.getName()))) {
+                    if (!restManager.getPublisher().configureResource(ws, storeType,
+                            store.getName(), re)) {
+                        throw new TaskException(
+                                "Failed to configure resource " + ws + ":" + resource.getName());
                     }
                 } else {
-                    LOGGER.log(Level.INFO, "Resource exists: " + layer.getName() + " on " + extGS.getName() +
-                            ", skipping creation.");
+                    if (!restManager.getPublisher().createResource(ws, storeType, store.getName(),
+                            re)) {
+                        throw new TaskException(
+                                "Failed to create resource " + ws + ":" + resource.getName());
+                    }
                 }
                 
                 if (createStyle) { //style doesn't exist yet, publish
@@ -234,16 +245,17 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     }
                 }
                 
-                // config layer
+                // config layer                
                 final GSLayerEncoder layerEncoder = new GSLayerEncoder();
                 layerEncoder.setAdvertised(false);
                 layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
                 
+                // resource might have already been created together with store
                 if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
-                   throw new TaskException(
+                    throw new TaskException(
                             "Failed to configure layer " + ws + ":" + resource.getName());
                 }
-
+                
             } catch (TaskException e) {
                 //clean-up if necessary 
                 restManager.getPublisher().removeLayer(ws, layer.getName());

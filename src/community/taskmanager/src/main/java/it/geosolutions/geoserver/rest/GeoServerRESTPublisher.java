@@ -2871,19 +2871,19 @@ public class GeoServerRESTPublisher {
         final String resourceName = re.getName();
         if (resourceName == null) {
             throw new IllegalArgumentException(
-                    "Unable to configure a coverage using unnamed coverage encoder");
+                    "Unable to configure a resource using unnamed resource encoder");
         }
 
         final String xmlBody = re.toString();
         final String sendResult = HTTPUtils.postXml(sbUrl.toString(), xmlBody, gsuser, gspass);
         if (sendResult != null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(dsType + " successfully created " + workspace + ":" + storeName + ":"
+                LOGGER.debug(dsType + " successfully created resource " + workspace + ":" + storeName + ":"
                         + resourceName);
             }
         } else {
             if (LOGGER.isErrorEnabled())
-                LOGGER.error("Error creating coverage " + workspace + ":" + storeName + ":"
+                LOGGER.error("Error creating resource " + workspace + ":" + storeName + ":"
                         + resourceName + " (" + sendResult + ")");
         }
 
@@ -2891,7 +2891,49 @@ public class GeoServerRESTPublisher {
     }
     
     /**
-     * Create a new resource in a given workspace and store
+     * Configure resource in a given workspace and store
+     * 
+     * @param wsname the workspace to search for existent coverage
+     * @param storeName an existent store name to use as data source
+     * @param re contains the coverage name to create and the configuration to apply
+     * 
+     * @TODO For FeatureType: The list parameter is used to control the category of feature types that are returned. It can take one of the three
+     *       values configured, available, or all.
+     * 
+     *       configured - Only setup or configured feature types are returned. This is the default value. available - Only unconfigured feature types
+     *       (not yet setup) but are available from the specified datastore will be returned. available_with_geom - Same as available but only
+     *       includes feature types that have a geometry granule. all - The union of configured and available.
+     * 
+     * 
+     * @return true if success
+     * @throws IllegalArgumentException if arguments are null or empty
+     */
+    public boolean removeResource(String workspace, StoreType dsType, String storeName, String resName) throws IllegalArgumentException {
+        if (workspace == null || dsType == null || storeName == null) {
+            throw new IllegalArgumentException("Null argument");
+        }        
+        StringBuilder sbUrl = new StringBuilder(restURL).append("/rest/workspaces/")
+                .append(workspace).append("/").append(dsType).append("/").append(storeName)
+                .append("/").append(dsType.getTypeName()).append("/").append(resName)
+                .append(".xml");
+
+        final boolean sendResult = HTTPUtils.delete(sbUrl.toString(), gsuser, gspass);
+        if (sendResult) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(dsType + " successfully delete " + workspace + ":" + storeName + ":"
+                        + resName);
+            }
+        } else {
+            if (LOGGER.isErrorEnabled())
+                LOGGER.error("Error deleting coverage " + workspace + ":" + storeName + ":"
+                        + resName + " (" + sendResult + ")");
+        }
+
+        return sendResult;
+    }
+    
+    /**
+     * Delete a resource 
      * 
      * @param wsname the workspace to search for existent coverage
      * @param storeName an existent store name to use as data source
@@ -2913,16 +2955,17 @@ public class GeoServerRESTPublisher {
         if (workspace == null || dsType == null || storeName == null || re == null) {
             throw new IllegalArgumentException("Null argument");
         }        
-        StringBuilder sbUrl = new StringBuilder(restURL).append("/rest/workspaces/")
-                .append(workspace).append("/").append(dsType).append("/").append(storeName)
-                .append("/").append(dsType.getTypeName()).append("/").append(re.getName())
-                .append(".xml");
 
         final String resourceName = re.getName();
         if (resourceName == null) {
             throw new IllegalArgumentException(
                     "Unable to configure a coverage using unnamed coverage encoder");
         }
+
+        StringBuilder sbUrl = new StringBuilder(restURL).append("/rest/workspaces/")
+                .append(workspace).append("/").append(dsType).append("/").append(storeName)
+                .append("/").append(dsType.getTypeName()).append("/").append(resourceName)
+                .append(".xml");
 
         final String xmlBody = re.toString();
         final String sendResult = HTTPUtils.putXml(sbUrl.toString(), xmlBody, gsuser, gspass);
