@@ -1,11 +1,13 @@
 package org.geoserver.taskmanager.tasks;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 
+import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
@@ -30,6 +32,7 @@ import org.quartz.Trigger.TriggerState;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
+import it.geosolutions.geoserver.rest.decoder.RESTCoverage;
 
 /**
  * To run this test you should have a geoserver running on http://localhost:9090/geoserver.
@@ -106,6 +109,12 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     @Test
     public void testSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
+        //set some metadata
+        CoverageInfo ci = geoServer.getCatalog().getCoverageByName("DEM");
+        ci.setTitle("my title ë");
+        ci.setAbstract("my abstract ë");
+        geoServer.getCatalog().save(ci);
+        
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, "DEM");
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
         config = dao.save(config);
@@ -124,6 +133,10 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         assertTrue(restManager.getReader().existsCoveragestore("wcs", "DEM"));
         assertTrue(restManager.getReader().existsCoverage("wcs", "DEM", "DEM"));
         assertTrue(restManager.getReader().existsLayer("wcs", "DEM", true));
+        
+        RESTCoverage cov = restManager.getReader().getCoverage("wcs", "DEM", "DEM");
+        assertEquals(ci.getTitle(), cov.getTitle());
+        assertEquals(ci.getAbstract(), cov.getAbstract());
         
         assertTrue(taskUtil.cleanup(config));      
         

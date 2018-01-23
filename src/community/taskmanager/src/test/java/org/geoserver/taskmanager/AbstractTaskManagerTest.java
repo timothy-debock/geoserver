@@ -24,7 +24,7 @@ public abstract class AbstractTaskManagerTest {
     protected static MockData DATA_DIRECTORY;
 
     @Autowired
-    private GeoServer geoServer;
+    protected GeoServer geoServer;
 
     @BeforeClass
     public static void init() throws Exception {
