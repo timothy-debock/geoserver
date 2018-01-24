@@ -70,39 +70,21 @@ public class BatchRunImpl extends BaseImpl implements BatchRun {
 
     @Override
     public Date getStart() {
-        return getRuns().isEmpty() ? null : getRuns().get(0).getStart();
+        return BatchRun.super.getStart();
     }
 
     @Override
     public Date getEnd() {
-        return getRuns().isEmpty() ? null : getRuns().get(getRuns().size() - 1).getEnd();
+        return BatchRun.super.getEnd();
     }
 
     @Override
     public Run.Status getStatus() {
-        if (getRuns().isEmpty()) {
-            return null;
-        } else {
-            for (int i = getRuns().size() - 1; i >= 0; i--) {
-                if (getRuns().get(i).getStatus() != Run.Status.COMMITTED) {
-                    return getRuns().get(i).getStatus();
-                }
-            }
-            return Run.Status.COMMITTED;
-        }
+        return BatchRun.super.getStatus();
     }
 
     @Override
     public String getMessage() {
-        if (getRuns().isEmpty()) {
-            return null;
-        } else {
-            for (int i = getRuns().size() - 1; i >= 0; i--) {
-                if (getRuns().get(i).getMessage() != null) {
-                    return getRuns().get(i).getMessage();
-                }
-            }
-            return null;
-        }
+        return BatchRun.super.getMessage();
     }
 }
