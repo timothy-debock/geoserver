@@ -39,7 +39,7 @@ import it.geosolutions.geoserver.rest.decoder.RESTCoverage;
  * 
  * @author Niels Charlier
  */
-@Ignore
+//@Ignore
 public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
 
     private static final String ATT_LAYER = "layer";

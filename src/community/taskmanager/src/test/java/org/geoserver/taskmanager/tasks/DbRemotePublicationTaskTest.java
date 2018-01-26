@@ -38,7 +38,7 @@ import it.geosolutions.geoserver.rest.GeoServerRESTManager;
  * 
  * @author Niels Charlier
  */
-@Ignore
+//@Ignore
 public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
