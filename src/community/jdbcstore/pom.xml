@@ -31,6 +31,13 @@
       <scope>provided</scope>
     </dependency>
 
+
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-web</artifactId>
+		<version>4.3.7.RELEASE</version>
+	</dependency>
+
     <!-- Google common libraries, featuring great utility classes for collections, io, concurrency, and more -->
     <dependency>
       <groupId>com.google.guava</groupId>
