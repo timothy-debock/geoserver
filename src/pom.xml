@@ -1790,7 +1790,7 @@
 </modules>
 
  <properties>
-  <gs.version>2.11.2</gs.version>
+  <gs.version>${project.parent.version}</gs.version>
   <gt.version>17.2</gt.version>
   <gwc.version>1.11.1</gwc.version>
   <spring.version>4.2.5.RELEASE</spring.version>
