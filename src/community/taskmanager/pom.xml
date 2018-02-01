@@ -61,7 +61,7 @@
         <dependency>
             <groupId>it.geosolutions</groupId>
             <artifactId>geoserver-manager</artifactId>
-            <version>1.7.0</version>
+            <version>1.8-dov-0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>			
 				
@@ -236,6 +236,6 @@
             </build>
         </profile>
     </profiles>
-
+    
 </project>
 
