@@ -76,7 +76,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
                     scheduler.addJob(jobDetail, true);
                 }
 
-                TriggerKey triggerKey = TriggerKey.triggerKey(batch.getName());
+                TriggerKey triggerKey = TriggerKey.triggerKey(batch.getFullName());
                 scheduler.unscheduleJob(triggerKey);
                
                 if (batch.isEnabled() && batch.getFrequency() != null
