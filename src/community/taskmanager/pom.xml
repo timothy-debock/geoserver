@@ -61,7 +61,7 @@
         <dependency>
             <groupId>it.geosolutions</groupId>
             <artifactId>geoserver-manager</artifactId>
-            <version>1.8-dov-0.1-SNAPSHOT</version>
+            <version>1.8-dov-0.1</version>
             <scope>compile</scope>
         </dependency>			
 				
@@ -137,7 +137,15 @@
             </resource>
         </resources>
     </build>
-
+    
+    <repositories>
+	  <repository>
+	   <id>acd</id>
+	   <name>ACD Maven Repository</name>
+	   <url>https://www.milieuinfo.be/artifactory/acd</url>
+	 </repository>
+	</repositories>
+	
     <profiles>
         <profile>
             <id>mydb</id>
