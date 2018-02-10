@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Run;
 import org.geoserver.taskmanager.data.Task;
@@ -17,7 +18,6 @@ import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -198,7 +198,10 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         while (testTaskType.getStatus().get("my_batch:my_config/task3") == null) {}
         
         Thread.sleep(1000);
-        scheduler.interrupt(new JobKey(batch.getFullName()));
+        batch = util.init(batch);
+        BatchRun br = batch.getBatchRuns().get(batch.getBatchRuns().size() - 1);
+        br.setInterruptMe(true);
+        br = dao.save(br);
         
         while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
                 && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}

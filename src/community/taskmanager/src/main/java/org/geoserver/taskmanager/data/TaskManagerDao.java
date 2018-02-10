@@ -22,6 +22,14 @@ public interface TaskManagerDao {
      * @return the saved run
      */
     Run save(Run run);
+    
+    /**
+     * Save a batch run.
+     * 
+     * @param run the batch run
+     * @return the saved batch run
+     */
+    BatchRun save(BatchRun br);
 
     /**
      * List all active configurations.
@@ -53,14 +61,14 @@ public interface TaskManagerDao {
      * @param config the configuration.
      * @return the saved configuration.
      */
-    Configuration save(Configuration config);    
+    Configuration save(Configuration config);   
 
     /**
      * List all active non-template batches.
      * 
      * @return the list of active batches.
      */
-    List<Batch> getBatches();
+    List<Batch> getBatches(boolean hideSpecialBatches);
     
     /**
      * Get a batch by its full name.
@@ -185,6 +193,15 @@ public interface TaskManagerDao {
      * @return the reloaded object
      */
     <T extends Identifiable>  T reload(T object);
+
+    /**
+     * Copy task
+     * 
+     * @param taskName the name of the task you wish to copy
+     * @return copied task
+     */
+    Task copyTask(String taskName);
+
 
 
 }
