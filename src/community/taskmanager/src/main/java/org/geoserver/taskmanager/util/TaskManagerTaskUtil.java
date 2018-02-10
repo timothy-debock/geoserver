@@ -28,6 +28,7 @@ import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.ValidationError.ValidationErrorType;
+import org.geoserver.taskmanager.web.action.Action;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,9 @@ public class TaskManagerTaskUtil {
     
     @Autowired
     private LookupService<TaskType> taskTypes;
+
+    @Autowired
+    private LookupService<Action> actions;
     
     @Autowired
     private TaskManagerFactory fac;
@@ -150,6 +154,26 @@ public class TaskManagerTaskUtil {
     }
     
     /**
+     * Clean-up a task.
+     * 
+     * @param task the task.
+     * @return true if the cleanup was entirely successful, false if one or more task clean-ups failed,
+     * in which case the logs should be checked.
+     */
+    public boolean cleanup(Task task) {
+        Map<String, String> rawParameterValues = getRawParameterValues(task);
+        TaskType type = taskTypes.get(task.getType());
+        try {
+            Map<String, Object> parameterValues = parseParameters(type, rawParameterValues);
+            type.cleanup(task, parameterValues);
+            return true;
+        } catch (TaskException e) {
+            LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
+            return false;
+        }      
+    }
+    
+    /**
      * Clean-up a configuration.
      * 
      * @param config the configuration.
@@ -159,15 +183,7 @@ public class TaskManagerTaskUtil {
     public boolean cleanup(Configuration config) {
         boolean success = true;
         for (Task task : config.getTasks().values()) {
-            Map<String, String> rawParameterValues = getRawParameterValues(task);
-            TaskType type = taskTypes.get(task.getType());
-            try {
-                Map<String, Object> parameterValues = parseParameters(type, rawParameterValues);
-                type.cleanup(task, parameterValues);
-            } catch (TaskException e) {
-                LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
-                success = false;                
-            }
+            success = success && cleanup(task);
         }
         return success;        
     }
@@ -228,8 +244,8 @@ public class TaskManagerTaskUtil {
      * @param string 
      * @return the task
      */
-    private List<String> mergeDomain(Attribute attribute) {
-        List<Parameter> params = dataUtil.getAssociatedParameters(attribute);
+    private List<String> mergeDomain(Attribute attribute, Configuration config) {
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
         
         Set<AttributeInfo> attInfos = new HashSet<AttributeInfo>();
         for (Parameter param : params) {
@@ -278,7 +294,7 @@ public class TaskManagerTaskUtil {
     public Map<String, List<String>> getDomains(Configuration configuration) {
         Map<String, List<String>> domains = new HashMap<String, List<String>>();
         for (Attribute att : configuration.getAttributes().values()) {
-            domains.put(att.getName(), mergeDomain(att));
+            domains.put(att.getName(), mergeDomain(att, configuration));
         }
         return domains;
     }
@@ -289,17 +305,19 @@ public class TaskManagerTaskUtil {
      * @param configuration the configuration
      * @param the domains
      */
-    public void updateDomains(Configuration configuration, Map<String, List<String>> domains) {
+    public void updateDomains(Configuration configuration, Map<String, List<String>> domains,
+            Set<String> updateAttributes) {
         Iterator<String> it = domains.keySet().iterator();
         while(it.hasNext()) {
             String attName = it.next();
             if (!configuration.getAttributes().containsKey(attName)) {
                 it.remove();
-            }
+            } 
         }
         for (Attribute att : configuration.getAttributes().values()) {
-            if (!domains.containsKey(att.getName())) {
-                domains.put(att.getName(), mergeDomain(att));
+            if (!domains.containsKey(att.getName()) ||
+                    updateAttributes != null && updateAttributes.contains(att.getName())) {
+                domains.put(att.getName(), mergeDomain(att, configuration));
             }
         }
     }
@@ -310,9 +328,10 @@ public class TaskManagerTaskUtil {
      * @param attribute the attribute.
      * @param domains the domains.
      */
-    public void updateDependentDomains(Attribute attribute, Map<String, List<String>> domains) {
+    public void updateDependentDomains(Attribute attribute, Configuration config,
+            Map<String, List<String>> domains) {
         Set<String> dependentAttributes = new HashSet<String>();
-        List<Parameter> params = dataUtil.getAssociatedParameters(attribute);
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
         for (Parameter param : params) {
             TaskType taskType = taskTypes.get(param.getTask().getType());
             ParameterInfo info = taskType.getParameterInfo().get(param.getName());
@@ -330,7 +349,7 @@ public class TaskManagerTaskUtil {
         for (String attName : dependentAttributes) {
             Attribute att = attribute.getConfiguration().getAttributes().get(attName);
             if (att != null) {
-                domains.put(attName, mergeDomain(att));
+                domains.put(attName, mergeDomain(att, config));
             }
         }
     }
@@ -416,6 +435,28 @@ public class TaskManagerTaskUtil {
         }
         
         return validationErrors;
+    }
+    
+    /**
+     * Get attribute domain based on associated parameters.
+     * 
+     * @param type the type
+     * @param string 
+     * @return the task
+     */
+    public List<Action> getActionsForAttribute(Attribute attribute, Configuration config) {
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
+        
+        Set<Action> result = new HashSet<Action>();
+        for (Parameter param : params) {
+            TaskType taskType = taskTypes.get(param.getTask().getType());
+            ParameterInfo info = taskType.getParameterInfo().get(param.getName());
+            for (String actionName : info.getType().getActions()) {
+                result.add(actions.get(actionName));
+            }
+        }
+        
+        return new ArrayList<Action>(result);
     }
     
 

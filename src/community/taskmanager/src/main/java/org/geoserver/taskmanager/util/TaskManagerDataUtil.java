@@ -7,7 +7,9 @@ package org.geoserver.taskmanager.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -187,15 +189,26 @@ public class TaskManagerDataUtil {
         return null;
     }
     
+    public Set<String> getAssociatedAttributeNames(Task task) {
+        Set<String> attNames = new HashSet<String>();
+        for (Parameter pam : task.getParameters().values()) {
+            String attName = getAssociatedAttributeName(pam);
+            if (attName != null) {
+                attNames.add(attName);
+            }
+        }
+        return attNames;
+    }
+    
     /**
      * List all associated parameters of attribute
      * 
      * @param att the attribute
      * @return the parameters
      */
-    public List<Parameter> getAssociatedParameters(Attribute att) {
+    public List<Parameter> getAssociatedParameters(Attribute att, Configuration config) {
         List<Parameter> result = new ArrayList<Parameter>();
-        for (Task task : att.getConfiguration().getTasks().values()) {
+        for (Task task : config.getTasks().values()) {
             for (Parameter param : task.getParameters().values()) {
                 if (att.getName().equals(getAssociatedAttributeName(param))) {
                     result.add(param);
@@ -210,7 +223,7 @@ public class TaskManagerDataUtil {
     // -----------------------
     
     @Transactional 
-    public Configuration saveAndRemove(Configuration config, Collection<Task> tasks, 
+    public Configuration saveScheduleAndRemove(Configuration config, Collection<Task> tasks, 
             Collection<Batch> batches) {
         config = bjService.saveAndSchedule(config);
         for (Task task : tasks) {

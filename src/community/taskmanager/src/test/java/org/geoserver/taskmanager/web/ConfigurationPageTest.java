@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.model.Model;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Task;
@@ -62,7 +61,7 @@ public class ConfigurationPageTest extends GeoServerWicketTestSupport {
     @SuppressWarnings("unchecked")
     @Test
     public void testCreate() {        
-        ConfigurationPage page = new ConfigurationPage(new Model<>(createConfiguration()));
+        ConfigurationPage page = new ConfigurationPage(createConfiguration());
         
         tester.startPage(page);
         tester.assertRenderedPage(ConfigurationPage.class);

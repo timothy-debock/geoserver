@@ -72,7 +72,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                     Configuration configuration = TaskManagerBeans.get().getFac().createConfiguration();
                     configuration.setTemplate(templates);
 
-                    setResponsePage(new ConfigurationPage(new Model<Configuration>(configuration)));
+                    setResponsePage(new ConfigurationPage(configuration));
 
                 } else {
                     dialog.setTitle(new ParamResourceModel("addNewDialog.title", getPage()));
@@ -110,7 +110,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                             }
 
                             setResponsePage(
-                                    new ConfigurationPage(new Model<Configuration>(configuration)));
+                                    new ConfigurationPage(configuration));
 
                             return true;
                         }
@@ -188,7 +188,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                 Configuration copy = TaskManagerBeans.get().getDao().copyConfiguration(
                         configurationsPanel.getSelection().get(0).getName());
                 
-                setResponsePage(new ConfigurationPage(new Model<Configuration>(copy)));
+                setResponsePage(new ConfigurationPage(copy));
             }
         });
         copy.setOutputMarkupId(true);

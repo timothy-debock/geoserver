@@ -22,6 +22,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -84,6 +85,9 @@ public class BatchPage extends GeoServerSecuredPage {
         super.onInitialize();
         
         add(dialog = new GeoServerDialog("dialog"));
+        
+        add(new WebMarkupContainer("notvalidated").setVisible(batchModel.getObject().getConfiguration() != null
+                && !batchModel.getObject().getConfiguration().isValidated()));
                 
         Form<Batch> form = new Form<Batch>("batchForm", batchModel);
         add(form);
