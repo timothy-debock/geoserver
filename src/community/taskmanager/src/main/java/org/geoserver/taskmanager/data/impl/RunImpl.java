@@ -6,7 +6,6 @@ package org.geoserver.taskmanager.data.impl;
 
 import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
@@ -51,7 +50,7 @@ public class RunImpl extends BaseImpl implements Run {
     @Lob
     private String message;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(/* cascade = CascadeType.MERGE */)
     @JoinColumn(name = "batchRun")
     private BatchRunImpl batchRun;
 
