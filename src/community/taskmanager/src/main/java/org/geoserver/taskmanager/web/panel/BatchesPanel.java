@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -84,6 +85,10 @@ public class BatchesPanel extends Panel {
         return removedBatches;
     }
     
+    public BatchesModel getBatchesModel() {
+        return batchesModel;
+    }
+
     @Override
     public void onInitialize() {
         super.onInitialize();
@@ -176,6 +181,17 @@ public class BatchesPanel extends Panel {
         });
         remove.setOutputMarkupId(true);
         remove.setEnabled(false);
+        
+        add(new AjaxLink<Object>("refresh") {
+
+            private static final long serialVersionUID = 3905640474193868255L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                ((MarkupContainer) batchesPanel.get("listContainer").get("items")).removeAll();
+                target.add(batchesPanel);
+            }
+        });
                         
         //the panel
         add(new Form<>("form").add(batchesPanel = 

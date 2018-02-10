@@ -17,6 +17,10 @@ public interface BatchRun extends Serializable, Identifiable {
     void setBatch(Batch batch);
     
     List<Run> getRuns();
+
+    boolean isInterruptMe();
+
+    void setInterruptMe(boolean interruptMe);
     
     default Date getStart() {
         return getRuns().isEmpty() ? null : getRuns().get(0).getStart();
@@ -51,5 +55,6 @@ public interface BatchRun extends Serializable, Identifiable {
             return null;            
         }
     }
+
 
 }

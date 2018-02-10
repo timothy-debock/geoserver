@@ -80,7 +80,8 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
                 scheduler.unscheduleJob(triggerKey);
                
                 if (batch.isEnabled() && batch.getFrequency() != null
-                        && !batch.getElements().isEmpty()) {
+                        && !batch.getElements().isEmpty()
+                        && (batch.getConfiguration() == null || batch.getConfiguration().isValidated())) {
                     Trigger trigger = TriggerBuilder.newTrigger()
                             .withIdentity(triggerKey)
                             .forJob(jobKey)
@@ -101,10 +102,13 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     @Transactional
     public Batch saveAndSchedule(Batch batch) {
         batch = dao.save(batch);
-        try {
-            schedule(batch);
-        } catch (SchedulerException e) {
-            throw new IllegalArgumentException(e);
+        if (batch.getConfiguration() == null
+                || !batch.getConfiguration().isTemplate()) {
+            try {
+                schedule(batch);
+            } catch (SchedulerException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
         return batch;
     }
@@ -114,12 +118,14 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     public Configuration saveAndSchedule(Configuration config) {
         config = dao.save(config);
 
-        try {
-            for (Batch batch : config.getBatches().values()) {
-                schedule(batch);
+        if (!config.isTemplate()) {
+            try {
+                for (Batch batch : config.getBatches().values()) {
+                    schedule(batch);
+                }
+            } catch (SchedulerException e) {
+                throw new IllegalArgumentException(e);
             }
-        } catch (SchedulerException e) {
-            throw new IllegalArgumentException(e);
         }
         return config;
     }
@@ -135,7 +141,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
             throw new IllegalStateException(e);
         }
                 
-        for (Batch batch : dao.getBatches()) {
+        for (Batch batch : dao.getBatches(false)) {
             try {
                 schedule(batch);
             } catch (SchedulerException e) {
@@ -153,7 +159,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         } catch (SchedulerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-    }
+    }    
 
 
 }

@@ -110,6 +110,11 @@ public interface ParameterType {
         public java.io.File parse(String value, List<String> dependsOnRawValues) {
             return new java.io.File(value);
         }
+        
+        @Override
+        public List<String> getActions() {
+            return Collections.singletonList("FileUpload");
+        }
 
     };
 
