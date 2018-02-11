@@ -5,7 +5,6 @@
 package org.geoserver.taskmanager.schedule.impl;
 
 import java.util.Date;
-import java.util.HashMap;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -15,7 +14,6 @@ import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +25,7 @@ import org.geoserver.taskmanager.data.Run;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.report.Report;
 import org.geoserver.taskmanager.report.ReportService;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
@@ -63,6 +62,7 @@ public class BatchJobImpl implements Job {
         //start new batch run
         BatchRun batchRun = beans.getFac().createBatchRun();
         batchRun.setBatch(batch);
+        batchRun.setSchedulerReference(context.getTrigger().getKey().getName());
         batchRun = beans.getDao().save(batchRun);
         
         //get batch elements
@@ -72,7 +72,6 @@ public class BatchJobImpl implements Job {
         Stack<TaskResult> resultStack = new Stack<TaskResult>();
         Stack<Run> runStack = new Stack<Run>();
 
-        Map<Object, Object> tempValues = new HashMap<Object, Object>();
         boolean rollback = false;        
                 
         for (int i = 0 ;  i < elements.size() ; i++) {
@@ -87,23 +86,19 @@ public class BatchJobImpl implements Job {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {}
             }
-            
-            //make sure we are working with the 'good' batchRun
-            //batchRun = run.getBatchRun();
-            
+                        
             //OK, let's go
-            Task task = element.getTask();                        
+            Task task = element.getTask();     
+            TaskContext ctx = beans.getTaskUtil().createContext(task, batchRun);
+            
             TaskType type = beans.getTaskTypes().get(task.getType());
-            Map<String, String> rawParameterValues = beans.getTaskUtil().getRawParameterValues(task);            
             
             try {
-                Map<String, Object> parameterValues = beans.getTaskUtil().parseParameters(type, rawParameterValues);
-                resultStack.push(type.run(batch, task, parameterValues, tempValues));
+                resultStack.push(type.run(ctx));
 
                 run.setStatus(Run.Status.READY_TO_COMMIT);
                 run.setEnd(new Date());   
                 run = beans.getDao().save(run);
-               // batchRun = run.getBatchRun();
                 runStack.push(run);
             } catch(Exception e) {
                 LOGGER.log(Level.SEVERE, "Task " + task.getFullName() + " failed in batch "
@@ -112,10 +107,10 @@ public class BatchJobImpl implements Job {
                 run.setEnd(new Date());
                 run.setStatus(Run.Status.FAILED);
                 run = beans.getDao().save(run);
-               // batchRun = run.getBatchRun();
                 rollback = true;
             }
             
+            //make sure we are working with the 'good' batchRun
             batchRun = beans.getDao().reload(batchRun);
             if (batchRun.isInterruptMe()) {
                 LOGGER.log(Level.INFO, "Batch  " + batch.getFullName() + " manually cancelled, rolling back.");
@@ -136,7 +131,6 @@ public class BatchJobImpl implements Job {
                                 " failed to rollback in batch " + batch.getFullName() + "", e);
                     }
                     runPop = beans.getDao().save(runPop);
-                   // batchRun = runPop.getBatchRun();
                 }
                 break; //leave for-loop           
             }             
@@ -155,7 +149,6 @@ public class BatchJobImpl implements Job {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {}
             }
-           // batchRun = runTemp.getBatchRun();
             runPop = runTemp;
             try {
                 resultStack.pop().commit();
@@ -168,7 +161,6 @@ public class BatchJobImpl implements Job {
                 runPop.setStatus(Run.Status.NOT_COMMITTED);
             }
             runPop = beans.getDao().save(runPop);
-           // batchRun = runPop.getBatchRun();
         }
         
         LOGGER.log(Level.INFO, "Finished batch " + batch.getFullName());

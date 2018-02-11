@@ -19,18 +19,21 @@ import java.util.logging.Logger;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.ValidationError.ValidationErrorType;
 import org.geoserver.taskmanager.web.action.Action;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
 /**
@@ -55,6 +58,16 @@ public class TaskManagerTaskUtil {
 
     @Autowired
     private TaskManagerDataUtil dataUtil;
+    
+    @Lookup
+    public TaskContext createContext(Task task) {
+        return null;
+    }
+    
+    @Lookup
+    public TaskContext createContext(Task task, BatchRun batchRun) {
+        return null;
+    }
             
     private String getRawParameterValue(Parameter parameter) {
         String attName = dataUtil.getAssociatedAttributeName(parameter);
@@ -76,7 +89,7 @@ public class TaskManagerTaskUtil {
      * @param task the task
      * @return the raw parameters.
      */
-    public Map<String, String> getRawParameterValues(Task task) {
+    private Map<String, String> getRawParameterValues(Task task) {
         Map<String, String> rawParameterValues = new HashMap<String, String>();
         for (Parameter parameter : task.getParameters().values()) {
             String rawValue = getRawParameterValue(parameter);
@@ -115,7 +128,7 @@ public class TaskManagerTaskUtil {
      * @return the parsed parameters
      * @throws TaskException if any of the parameters are invalid or missing.
      */
-    public Map<String, Object> parseParameters(TaskType taskType, 
+    private Map<String, Object> parseParameters(TaskType taskType, 
             Map<String, String> rawParameters) throws TaskException {
         List<ValidationError> validationErrors = new ArrayList<ValidationError>();
         
@@ -161,16 +174,27 @@ public class TaskManagerTaskUtil {
      * in which case the logs should be checked.
      */
     public boolean cleanup(Task task) {
-        Map<String, String> rawParameterValues = getRawParameterValues(task);
         TaskType type = taskTypes.get(task.getType());
         try {
-            Map<String, Object> parameterValues = parseParameters(type, rawParameterValues);
-            type.cleanup(task, parameterValues);
+            type.cleanup(createContext(task));
             return true;
         } catch (TaskException e) {
             LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
             return false;
-        }      
+        }
+    }
+    
+    /**
+     * Clean-up a task.
+     * 
+     * @param task the task.
+     * @return true if the cleanup was entirely successful, false if one or more task clean-ups failed,
+     * in which case the logs should be checked.
+     * @throws TaskException 
+     */
+    public Map<String, Object> getParameterValues(Task task) throws TaskException {
+        return parseParameters(taskTypes.get(task.getType()), 
+                getRawParameterValues(task));
     }
     
     /**

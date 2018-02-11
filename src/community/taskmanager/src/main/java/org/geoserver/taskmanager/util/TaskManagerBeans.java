@@ -88,7 +88,7 @@ public class TaskManagerBeans {
     public InitConfigUtil getInitConfigUtil() {
         return initConfigUtil;
     }
-    
+        
     public static TaskManagerBeans get() {
         return GeoServerApplication.get().getApplicationContext().getBean(TaskManagerBeans.class);
     }

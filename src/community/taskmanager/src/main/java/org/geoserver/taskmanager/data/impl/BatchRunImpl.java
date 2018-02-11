@@ -50,6 +50,9 @@ public class BatchRunImpl extends BaseImpl implements BatchRun {
     
     @Column(nullable = false)
     private Boolean interruptMe = false; 
+    
+    @Column
+    private String schedulerReference;
 
     @Override
     public Long getId() {
@@ -101,5 +104,16 @@ public class BatchRunImpl extends BaseImpl implements BatchRun {
         this.interruptMe = interruptMe;
     }
     
+    @Override
+    public String getSchedulerReference() {
+        return schedulerReference;
+    }
+
+    @Override
+    public void setSchedulerReference(String qReference) {
+        this.schedulerReference = qReference;
+    }
+    
+
     
 }
