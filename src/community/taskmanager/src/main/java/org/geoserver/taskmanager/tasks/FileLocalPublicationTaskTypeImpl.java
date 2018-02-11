@@ -19,11 +19,10 @@ import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
-import org.geoserver.taskmanager.data.Batch;
-import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
@@ -65,12 +64,11 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues) throws TaskException {
+    public TaskResult run(TaskContext ctx) throws TaskException {
         CatalogFactory catalogFac = new CatalogFactoryImpl(catalog);
         
-        final File file = (File) parameterValues.get(PARAM_FILE);
-        final Name layerName = (Name) parameterValues.get(PARAM_LAYER);
+        final File file = (File) ctx.getParameterValues().get(PARAM_FILE);
+        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
         
         final NamespaceInfo ns = catalog.getNamespaceByURI(layerName.getNamespaceURI());
         final WorkspaceInfo ws = catalog.getWorkspaceByName(ns.getName());
@@ -163,9 +161,9 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public void cleanup(Task task, Map<String, Object> parameterValues) throws TaskException {
-        final String workspace = task.getConfiguration().getWorkspace();
-        final Name layerName = (Name) parameterValues.get(PARAM_LAYER);
+    public void cleanup(TaskContext ctx) throws TaskException {
+        final String workspace = ctx.getTask().getConfiguration().getWorkspace();
+        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
         
         final LayerInfo layer = catalog.getLayerByName(layerName);               
         final DataStoreInfo store = catalog.getStoreByName(workspace, layerName.getLocalPart(), DataStoreInfo.class);

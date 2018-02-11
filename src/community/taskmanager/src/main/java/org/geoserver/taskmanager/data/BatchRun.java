@@ -56,5 +56,9 @@ public interface BatchRun extends Serializable, Identifiable {
         }
     }
 
+    String getSchedulerReference();
+
+    void setSchedulerReference(String qReference);
+
 
 }

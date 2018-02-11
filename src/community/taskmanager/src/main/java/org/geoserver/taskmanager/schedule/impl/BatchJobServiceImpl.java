@@ -4,11 +4,15 @@
  */
 package org.geoserver.taskmanager.schedule.impl;
 
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
+import org.geoserver.taskmanager.data.Run;
+import org.geoserver.taskmanager.data.Run.Status;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.BatchJobService;
@@ -22,6 +26,7 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,7 +164,37 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         } catch (SchedulerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-    }    
+    }  
+        
+    @Override
+    public void interrupt(BatchRun batchRun) {
+        if (batchRun.getSchedulerReference() != null) {
+            TriggerState state;
+            try {
+                state = scheduler.getTriggerState(TriggerKey.triggerKey(batchRun.getSchedulerReference()));
+                if (state == TriggerState.COMPLETE || state == TriggerState.ERROR
+                        || state == TriggerState.NONE) {
+                    for (Run run : batchRun.getRuns()) {
+                        if (run.getEnd() != null) {
+                            if (run.getStatus() == Status.RUNNING) {
+                                run.setStatus(Status.NOT_ROLLED_BACK);
+                            } else if (run.getStatus() == Status.COMMITTING
+                                    ||run.getStatus() == Status.READY_TO_COMMIT) {
+                                run.setStatus(Status.NOT_COMMITTED);
+                            }
+                            run.setEnd(new Date());
+                            dao.save(run);
+                        }
+                    }
+                    return;
+                }
+            } catch (SchedulerException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
+        batchRun.setInterruptMe(true);
+        dao.save(batchRun);
+    }
 
 
 }

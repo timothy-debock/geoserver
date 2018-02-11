@@ -6,8 +6,6 @@ package org.geoserver.taskmanager.schedule;
 
 import java.util.Map;
 
-import org.geoserver.taskmanager.data.Batch;
-import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.util.Named;
 
 /**
@@ -27,22 +25,16 @@ public interface TaskType extends Named {
     
     /**
      * Run a task, based on these parameter values.
-     * @param batch TODO
-     * @param task TODO
-     * @param parameterValues
-     * 
+     * @param ctx TODO
      * @return the task result
      */
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues) throws TaskException;
+    public TaskResult run(TaskContext ctx) throws TaskException;
     
     /**
      * Do a clean-up for this task (for example, if this task publishes something, remove it).
-     * @param parameterValues the parameter values for this task
-     * 
+     * @param ctx TODO
      * @throws TaskException 
      */
-    public void cleanup(Task task, Map<String, Object> parameterValues) 
-            throws TaskException;
+    public void cleanup(TaskContext ctx) throws TaskException;
 
 }

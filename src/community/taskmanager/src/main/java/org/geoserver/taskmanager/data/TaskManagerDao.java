@@ -202,6 +202,14 @@ public interface TaskManagerDao {
      */
     Task copyTask(String taskName);
 
+    /**
+     * Get current batch runs for batch
+     * 
+     * @param batch the batch
+     * @return the list of currently running batch runs for batch
+     */
+    List<BatchRun> getCurrentBatchRuns(Batch batch);
+
 
 
 }
