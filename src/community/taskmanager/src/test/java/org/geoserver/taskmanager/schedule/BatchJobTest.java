@@ -248,7 +248,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task1").intValue());
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task2").intValue());
-        assertEquals(null , testTaskType.getStatus().get("my_batch:my_config/task3"));
+        assertEquals(1 , testTaskType.getStatus().get("my_batch:my_config/task3").intValue());
 
         assertEquals(Run.Status.ROLLED_BACK, dao.getLatestRun(batch.getElements().get(0)).getStatus());
         assertEquals(Run.Status.ROLLED_BACK, dao.getLatestRun(batch.getElements().get(1)).getStatus());
