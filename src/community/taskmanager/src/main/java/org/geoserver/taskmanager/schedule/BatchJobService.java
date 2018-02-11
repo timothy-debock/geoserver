@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.schedule;
 
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 
 /**
@@ -42,5 +43,15 @@ public interface BatchJobService {
      * @return the saved config.
      */
     Configuration saveAndSchedule(Configuration config);
+
+    /**
+     * Interrupt a batch run.
+     * This method will also check if it can verify the batch run has actually already ended
+     * (for example when the server was restarted), and if that is the case update
+     * its status.
+     * 
+     * @param batchRun the batch run to interrupt
+     */
+    void interrupt(BatchRun batchRun);
 
 }

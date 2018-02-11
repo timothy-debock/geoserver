@@ -324,5 +324,18 @@ public class TaskManagerDataUtil {
             return null;
         }
     }
+    
+    public boolean isDeletable(Batch batch) {
+        return dao.getCurrentBatchRuns(batch).isEmpty();
+    }
+    
+    public boolean isDeletable(Configuration config) {
+        for (Batch batch : config.getBatches().values()) {
+            if (!dao.getCurrentBatchRuns(batch).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
