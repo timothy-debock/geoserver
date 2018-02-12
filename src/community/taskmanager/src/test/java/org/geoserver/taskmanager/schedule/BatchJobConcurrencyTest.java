@@ -17,6 +17,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.Trigger.TriggerState;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -132,6 +133,13 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
         
         //verify it has finished task 2 in batch 1 first
         assertTrue(testTaskType.getStatus().get("batch_2:my_config/task2").intValue() >= 2);
+
+        //make sure it is all finished before we delete
+        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
+
+        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
     }
     
     @Test
@@ -162,6 +170,13 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
         
         //verify it has committed task 2 in batch 1 first
         assertEquals(4, testTaskType.getStatus().get("batch_2:my_config/task2").intValue());
+        
+        //make sure it is all finished before we delete
+        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
+
+        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.COMPLETE
+                && scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
     }
     
 }
