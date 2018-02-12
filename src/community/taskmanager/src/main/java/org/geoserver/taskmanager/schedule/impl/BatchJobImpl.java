@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.schedule.impl;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -14,6 +15,7 @@ import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,7 +74,9 @@ public class BatchJobImpl implements Job {
         Stack<TaskResult> resultStack = new Stack<TaskResult>();
         Stack<Run> runStack = new Stack<Run>();
 
-        boolean rollback = false;        
+        boolean rollback = false;      
+        
+        Map<Object, Object> tempValues = new HashMap<Object, Object>();
                 
         for (int i = 0 ;  i < elements.size() ; i++) {
             rollback = false;
@@ -89,7 +93,8 @@ public class BatchJobImpl implements Job {
                         
             //OK, let's go
             Task task = element.getTask();     
-            TaskContext ctx = beans.getTaskUtil().createContext(task, batchRun);
+            TaskContext ctx = beans.getTaskUtil().createContext(
+                    task, batchRun, tempValues);
             
             TaskType type = beans.getTaskTypes().get(task.getType());
             

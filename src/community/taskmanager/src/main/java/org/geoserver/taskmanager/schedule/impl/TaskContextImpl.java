@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.schedule.impl;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.geoserver.taskmanager.data.BatchRun;
@@ -45,9 +44,10 @@ public class TaskContextImpl implements TaskContext {
         this.task = task;
     }
 
-    public TaskContextImpl(Task task, BatchRun batchRun) {
+    public TaskContextImpl(Task task, BatchRun batchRun, Map<Object, Object> tempValues) {
         this.task = task;
         this.batchRun = batchRun;
+        this.tempValues = tempValues;
     }
 
     @Override
@@ -70,9 +70,6 @@ public class TaskContextImpl implements TaskContext {
 
     @Override
     public Map<Object, Object> getTempValues() {
-        if (tempValues == null) {
-            tempValues = new HashMap<Object, Object>();
-        }
         return tempValues;
     }
     
