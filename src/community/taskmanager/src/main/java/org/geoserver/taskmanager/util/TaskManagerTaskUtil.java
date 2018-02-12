@@ -322,10 +322,10 @@ public class TaskManagerTaskUtil {
         return domains;
     }
 
-    public Set<ParameterType> getTypesForAttribute(Attribute attribute) {
+    public Set<ParameterType> getTypesForAttribute(Attribute attribute, Configuration config) {
         HashSet<ParameterType> parameterTypes = new HashSet<>();
 
-        for (Parameter parameter : dataUtil.getAssociatedParameters(attribute)) {
+        for (Parameter parameter : dataUtil.getAssociatedParameters(attribute, config)) {
             TaskType taskType = taskTypes.get(parameter.getTask().getType());
             parameterTypes.add(taskType.getParameterInfo().get(parameter.getName()).getType());
         }
