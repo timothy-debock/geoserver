@@ -65,7 +65,7 @@ public class TaskManagerTaskUtil {
     }
     
     @Lookup
-    public TaskContext createContext(Task task, BatchRun batchRun) {
+    public TaskContext createContext(Task task, BatchRun batchRun, Map<Object, Object> tempValues) {
         return null;
     }
             
