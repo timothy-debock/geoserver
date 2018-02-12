@@ -27,6 +27,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -40,7 +41,11 @@ import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
+<<<<<<< HEAD
 import org.geoserver.taskmanager.util.InitConfigUtil;
+=======
+import org.geoserver.taskmanager.schedule.ParameterType;
+>>>>>>> fe1b0d5... textarea for sql types
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.util.ValidationError;
 import org.geoserver.taskmanager.web.action.Action;
@@ -53,10 +58,12 @@ import org.geoserver.taskmanager.web.panel.NewTaskPanel;
 import org.geoserver.taskmanager.web.panel.PanelListPanel;
 import org.geoserver.taskmanager.web.panel.SimpleAjaxSubmitLink;
 import org.geoserver.taskmanager.web.panel.TaskParameterPanel;
+import org.geoserver.taskmanager.web.panel.TextAreaPanel;
 import org.geoserver.taskmanager.web.panel.TextFieldPanel;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.UnauthorizedPage;
+import org.geoserver.web.data.store.panel.TextAreaParamPanel;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -489,9 +496,15 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                     if (property.equals(AttributesModel.VALUE)) {
                         List<String> domain = domains.get(itemModel.getObject().getName());
                         if (domain == null) {
-                            return new TextFieldPanel(id, (IModel<String>) property.getModel(itemModel));
+                            Set<ParameterType> typesForAttribute =
+                                    TaskManagerBeans.get().getTaskUtil().getTypesForAttribute(itemModel.getObject());
+                            if (typesForAttribute.contains(ParameterType.SQL)) {
+                                return new TextAreaPanel(id, (IModel<String>) property.getModel(itemModel));
+                            } else {
+                                return new TextFieldPanel(id, (IModel<String>) property.getModel(itemModel));
+                            }
                         } else {
-                            final DropDownPanel ddp = new DropDownPanel(id, 
+                            final DropDownPanel ddp = new DropDownPanel(id,
                                     (IModel<String>) property.getModel(itemModel),
                                     new PropertyModel<List<String>>(domains, itemModel.getObject().getName()));
                                                         

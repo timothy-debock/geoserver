@@ -233,7 +233,6 @@ public class TaskManagerTaskUtil {
         }
         return task;
     }
-    
     private static class AttributeInfo {
         private ParameterType type;
         private List<String> dependsOn;
@@ -321,6 +320,17 @@ public class TaskManagerTaskUtil {
             domains.put(att.getName(), mergeDomain(att, configuration));
         }
         return domains;
+    }
+
+    public Set<ParameterType> getTypesForAttribute(Attribute attribute) {
+        HashSet<ParameterType> parameterTypes = new HashSet<>();
+
+        for (Parameter parameter : dataUtil.getAssociatedParameters(attribute)) {
+            TaskType taskType = taskTypes.get(parameter.getTask().getType());
+            parameterTypes.add(taskType.getParameterInfo().get(parameter.getName()).getType());
+        }
+
+        return parameterTypes;
     }
     
     /**
