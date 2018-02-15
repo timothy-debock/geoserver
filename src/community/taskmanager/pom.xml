@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.geoserver</groupId>
         <artifactId>community</artifactId>
-        <version>2.13-SNAPSHOT</version>
+        <version>2.11.2-dov-0.2-SNAPSHOT</version>
     </parent>
 
     <groupId>org.geoserver.community</groupId>
     <artifactId>gs-taskmanager</artifactId>
     <packaging>jar</packaging>
-    <version>2.13-SNAPSHOT</version>
+    <version>2.11.2-dov-0.2-SNAPSHOT</version>
 
     <name>GeoServer Task Manager</name>
     <description>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>it.geosolutions</groupId>
             <artifactId>geoserver-manager</artifactId>
-            <version>1.8-dov-0.1</version>
+            <version>1.8-dov-0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 				
