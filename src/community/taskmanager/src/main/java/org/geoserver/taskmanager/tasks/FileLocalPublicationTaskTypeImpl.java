@@ -1,13 +1,14 @@
 package org.geoserver.taskmanager.tasks;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.wicket.util.file.File;
 import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.CatalogFactory;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
@@ -26,6 +27,8 @@ import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geotools.coverage.grid.io.GridFormatFinder;
+import org.geotools.feature.NameImpl;
 import org.opengis.feature.type.Name;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -81,7 +84,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
         final StoreInfo store;
         final ResourceInfo resource;
         
-        boolean isShapeFile = false;
+        boolean isShapeFile = file.getName().toUpperCase().endsWith(".SHP");
                 
         if (createLayer) {
             final StoreInfo _store = catalog.getStoreByName(ws, layerName.getLocalPart(), StoreInfo.class);
@@ -95,9 +98,12 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 store.setName(layerName.getLocalPart());
                 try {
                     if (isShapeFile) {
-                        ((CoverageStoreInfo) store).setURL(file.toURI().toURL().toString());
-                    } else {
                         store.getConnectionParameters().put("url", file.toURI().toURL());
+                    } else {
+                        ((CoverageStoreInfo) store).setURL(
+                                file.toURI().toURL().toString());
+                        ((CoverageStoreInfo) store).setType(
+                                GridFormatFinder.findFormat(file).getName());
                     }
                 } catch (MalformedURLException e) {
                     throw new TaskException(e);
@@ -108,22 +114,29 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 store = _store;
             }
             
+            CatalogBuilder builder = new CatalogBuilder(catalog);
             if (createResource) {
-                resource = isShapeFile ? catalogFac.createFeatureType() : catalogFac.createCoverage();
-                resource.setName(layerName.getLocalPart());
-                resource.setNamespace(ns);
-                resource.setStore(store);
-                resource.setEnabled(true);
+                builder.setStore(store);
+                try {
+                    if (isShapeFile) {
+                        resource = builder.buildFeatureType(new NameImpl(layerName.getLocalPart()));
+                    } else {
+                        resource = builder.buildCoverage(layerName.getLocalPart());
+                    }
+                } catch (Exception e) {
+                    if (createStore) {
+                        catalog.remove(store);
+                    }
+                    throw new TaskException(e);
+                }
                 catalog.add(resource);
             } else {
                 resource = _resource;
             }
             
-            layer = catalogFac.createLayer();
-            layer.setResource(resource);
-            layer.setEnabled(true);
+            layer = builder.buildLayer(resource);
             layer.setAdvertised(false);
-            catalog.add(layer);            
+            catalog.add(layer);     
         } else {
             layer = null;
             resource = null;
