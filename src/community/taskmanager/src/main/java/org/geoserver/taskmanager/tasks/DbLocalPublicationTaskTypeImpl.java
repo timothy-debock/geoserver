@@ -1,11 +1,13 @@
 package org.geoserver.taskmanager.tasks;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
 import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.CatalogFactory;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -22,6 +24,7 @@ import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.SqlUtil;
+import org.geotools.feature.NameImpl;
 import org.geotools.jdbc.JDBCDataStoreFactory;
 import org.opengis.feature.type.Name;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,23 +110,37 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                 store = _store;
             }
             
+            CatalogBuilder builder = new CatalogBuilder(catalog);
             if (createResource) {
-                resource = catalogFac.createFeatureType();
+                builder.setStore(store);
+                try {
+                    resource = builder.buildFeatureType(new NameImpl(
+                            SqlUtil.notQualified(table.getTableName())));
+                } catch (Exception e) {
+                    if (createStore) {
+                        catalog.remove(store);
+                    }
+                    throw new TaskException(e);
+                }
                 resource.setName(layerName.getLocalPart());
-                resource.setNamespace(ns);
-                resource.setStore(store);
-                resource.setNativeName(SqlUtil.notQualified(table.getTableName()));
-                resource.setEnabled(true);
                 catalog.add(resource);
             } else {
                 resource = _resource;
             }
             
-            layer = catalogFac.createLayer();
-            layer.setResource(resource);
-            layer.setEnabled(true);
-            layer.setAdvertised(false);
-            catalog.add(layer);            
+            try {
+                layer = builder.buildLayer(resource);
+                layer.setAdvertised(false);
+                catalog.add(layer);     
+            } catch (IOException e) {
+                if (createStore) {
+                    catalog.remove(store);
+                }
+                if (createResource) {
+                    catalog.remove(resource);
+                }
+                throw new TaskException(e);
+            }
         } else {
             layer = null;
             resource = null;
