@@ -135,6 +135,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .createAlias("batch", "batch")
                 .createAlias("task", "task")
                 .add(Restrictions.eq("batch.id", batch.getId()))
+                .add(Restrictions.eq("removeStamp", 0L))
                 .setProjection(Projections.property("task.id"));
         Criteria criteria = getSession().createCriteria(TaskImpl.class)
                 .createAlias("configuration", "configuration")
