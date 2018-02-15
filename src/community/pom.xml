@@ -227,7 +227,7 @@
         <module>gwc-distributed</module>
         <module>jdbcstore</module>
         <module>gdal</module>
-        <module>gwc-s3</module>
+        <!-- <module>gwc-s3</module> -->
         <module>backup-restore</module>
         <module>ncwms</module>
         <module>web-resource</module>
@@ -245,6 +245,7 @@
         <module>jdbc-metrics</module>
         <module>oseo</module>
         <module>mbstyle</module>
+        <module>taskmanager</module>
         <module>s3-geotiff</module>
         <module>status-monitoring</module>
       </modules>
@@ -555,6 +556,12 @@
         <module>hz-cluster</module>
         <module>jdbcstore</module>
         <module>taskmanager</module>      
+      </modules>
+    </profile>
+    <profile>
+      <id>taskmanager></id>
+      <modules>
+        <module>taskmanager</module>
      </modules>
     </profile>
 
