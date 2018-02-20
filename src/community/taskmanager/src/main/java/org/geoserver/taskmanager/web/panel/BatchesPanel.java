@@ -122,61 +122,79 @@ public class BatchesPanel extends Panel {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                dialog.setTitle(new ParamResourceModel("confirmDeleteBatchesDialog.title", BatchesPanel.this));
-                dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
-
-                    private static final long serialVersionUID = -5552087037163833563L;
-                    
-                    private String error = null;
-
-                    @Override
-                    protected Component getContents(String id) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(new ParamResourceModel("confirmDeleteBatchesDialog.content",
-                               BatchesPanel.this).getString());
-                        for (Batch batch : batchesPanel.getSelection()) {
-                            sb.append("\n&nbsp;&nbsp;");
-                            sb.append(escapeHtml(batch.getFullName()));
-                        }
-                        return new MultiLineLabel(id, sb.toString()).setEscapeModelStrings(false);
+                List<String> nonDeletable = new ArrayList<String>();
+                for (Batch batch : batchesPanel.getSelection()) {
+                    if (!TaskManagerBeans.get().getDataUtil().isDeletable(batch)) {
+                        nonDeletable.add(batch.getFullName());
                     }
-
-                    @Override
-                    protected boolean onSubmit(AjaxRequestTarget target, Component contents) {
-                        try {
-                            for (Batch batch : batchesPanel.getSelection()) {
-                                if (configurationModel != null) {
-                                    configurationModel.getObject().getBatches().remove(batch.getName());
-                                    if (batch.getId() != null) {
-                                        removedBatches.add(batch);
-                                    }
-                                } else {
-                                    TaskManagerBeans.get().getDao().remove(batch);
-                                }
-                            }
-                            batchesPanel.clearSelection();
-                            remove.setEnabled(false);
-                        } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, e.getMessage(), e);
-                            Throwable rootCause = ExceptionUtils.getRootCause(e);
-                            error = rootCause == null ? e.getLocalizedMessage() : 
-                                rootCause.getLocalizedMessage();
-                        }
-                        return true;
-                    }
-                    
-                    @Override
-                    public void onClose(AjaxRequestTarget target) {
-                        if (error != null) {
-                            error(error);
-                            target.add(remove);
-                            target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
-                        } else {
-                            target.add(batchesPanel);
-                        }
-                    }
-                });
+                }
+                if (!nonDeletable.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(new ParamResourceModel("cannotDelete",
+                           BatchesPanel.this).getString());
+                    for (String batchName : nonDeletable) {
+                        sb.append(escapeHtml(batchName)).append(", ");
+                    }              
+                    sb.setLength(sb.length() - 2);
+                    error(sb.toString());
+                    target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                } else {
                 
+                    dialog.setTitle(new ParamResourceModel("confirmDeleteBatchesDialog.title", BatchesPanel.this));
+                    dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
+    
+                        private static final long serialVersionUID = -5552087037163833563L;
+                        
+                        private String error = null;
+    
+                        @Override
+                        protected Component getContents(String id) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(new ParamResourceModel("confirmDeleteBatchesDialog.content",
+                                   BatchesPanel.this).getString());
+                            for (Batch batch : batchesPanel.getSelection()) {
+                                sb.append("\n&nbsp;&nbsp;");
+                                sb.append(escapeHtml(batch.getFullName()));
+                            }
+                            return new MultiLineLabel(id, sb.toString()).setEscapeModelStrings(false);
+                        }
+    
+                        @Override
+                        protected boolean onSubmit(AjaxRequestTarget target, Component contents) {
+                            try {
+                                for (Batch batch : batchesPanel.getSelection()) {
+                                    if (configurationModel != null) {
+                                        configurationModel.getObject().getBatches().remove(batch.getName());
+                                        if (batch.getId() != null) {
+                                            removedBatches.add(batch);
+                                        }
+                                    } else {
+                                        TaskManagerBeans.get().getDao().remove(batch);
+                                    }
+                                }
+                                batchesPanel.clearSelection();
+                                remove.setEnabled(false);
+                            } catch (Exception e) {
+                                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                                error = rootCause == null ? e.getLocalizedMessage() : 
+                                    rootCause.getLocalizedMessage();
+                            }
+                            return true;
+                        }
+                        
+                        @Override
+                        public void onClose(AjaxRequestTarget target) {
+                            if (error != null) {
+                                error(error);
+                                target.add(remove);
+                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                            } else {
+                                target.add(batchesPanel);
+                            }
+                        }
+                    });
+                }                
             }  
         });
         remove.setOutputMarkupId(true);
