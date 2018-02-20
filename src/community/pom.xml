@@ -557,6 +557,7 @@
         <module>hz-cluster</module>
         <module>jdbcstore</module>
         <module>taskmanager</module>      
+        <module>s3-geotiff</module>
       </modules>
     </profile>
     <profile>
