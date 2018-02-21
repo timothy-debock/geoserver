@@ -106,7 +106,10 @@ public class BatchPage extends GeoServerSecuredPage {
         
         List<String> workspaces = new ArrayList<String>();
         for (WorkspaceInfo wi : GeoServerApplication.get().getCatalog().getWorkspaces()) {
-            workspaces.add(wi.getName());
+            if (wi.getName().equals(batchModel.getObject().getWorkspace()) ||
+                    TaskManagerBeans.get().getSecUtil().isAdminable(getSession().getAuthentication(), wi)) {
+                workspaces.add(wi.getName());
+            }
         }
                 
         form.add(new DropDownChoice<String>("workspace", 
@@ -152,7 +155,7 @@ public class BatchPage extends GeoServerSecuredPage {
         });
         
         if (batchModel.getObject().getId() != null
-                && !TaskManagerBeans.get().getSecUtil().isWritable(
+                && !TaskManagerBeans.get().getSecUtil().isAdminable(
                 getSession().getAuthentication(), batchModel.getObject())) {
             form.get("name").setEnabled(false);
             form.get("workspace").setEnabled(false);

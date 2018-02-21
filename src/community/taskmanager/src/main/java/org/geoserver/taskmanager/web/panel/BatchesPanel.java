@@ -14,6 +14,7 @@ import org.geoserver.taskmanager.web.model.BatchesModel;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerBasePage;
+import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -269,7 +270,10 @@ public class BatchesPanel extends Panel {
                 } else if (property == BatchesModel.RUN) {
                     if (itemModel.getObject().getId() == null || 
                             itemModel.getObject().getElements().isEmpty() ||
-                            (configurationModel != null && configurationModel.getObject().isTemplate())) {
+                            (configurationModel != null && configurationModel.getObject().isTemplate()) ||
+                            !TaskManagerBeans.get().getSecUtil().isWritable(
+                                    ((GeoServerSecuredPage) getPage()).getSession().getAuthentication(), 
+                                    itemModel.getObject())) {
                         return new Label(id);
                     } else {
                         SimpleAjaxSubmitLink link = new SimpleAjaxSubmitLink(id, null) {
