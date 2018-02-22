@@ -250,7 +250,7 @@ public class TaskManagerDataUtil {
     // Transactional methods
     // -----------------------
     
-    @Transactional 
+    @Transactional("tmTransactionManager") 
     public Configuration saveScheduleAndRemove(Configuration config, Collection<Task> tasks, 
             Collection<Batch> batches) {
         config = bjService.saveAndSchedule(config);
@@ -263,7 +263,7 @@ public class TaskManagerDataUtil {
         return config;
     }
     
-    @Transactional 
+    @Transactional("tmTransactionManager") 
     public Batch saveScheduleAndRemove(Batch batch, Collection<BatchElement> bes) {
         batch = bjService.saveAndSchedule(batch);
         for (BatchElement be : bes) {
@@ -278,7 +278,7 @@ public class TaskManagerDataUtil {
      * @param task the task to be initialized
      * @return return the initialized task
      */
-    @Transactional    
+    @Transactional("tmTransactionManager")    
     public Task init(Task task) {
         task = dao.reload(task);
         Hibernate.initialize(task.getBatchElements());
@@ -291,7 +291,7 @@ public class TaskManagerDataUtil {
      * @param be the BatchElement to be initialized
      * @return return the initialized BatchElement
      */
-    @Transactional    
+    @Transactional("tmTransactionManager")    
     public BatchElement init(BatchElement be) {
         be = dao.reload(be);
         Hibernate.initialize(be.getRuns());
@@ -304,7 +304,7 @@ public class TaskManagerDataUtil {
      * @param be the Batch to be initialized
      * @return return the initialized Batch
      */
-    @Transactional    
+    @Transactional("tmTransactionManager")    
     public Batch init(Batch b) {
         b = dao.reload(b);
         Hibernate.initialize(b.getBatchRuns()); 
@@ -317,7 +317,7 @@ public class TaskManagerDataUtil {
      * @param element the batch element.
      * @return the run, or null if the task is being run elsewhere)
      */
-    @Transactional    
+    @Transactional("tmTransactionManager")    
     public Run runIfPossible(BatchElement element, BatchRun br) {
         if (dao.getCurrentRun(element.getTask()) == null) {
             Run run = fac.createRun();
@@ -337,7 +337,7 @@ public class TaskManagerDataUtil {
      * @param element the batch element.
      * @return the run, or null if the task is being committed elsewhere)
      */
-    @Transactional    
+    @Transactional("tmTransactionManager")    
     public Run startCommitIfPossible(Run run) {
         if (run == null) {
             System.out.println("run is null");
@@ -359,7 +359,7 @@ public class TaskManagerDataUtil {
      * 
      * @param br
      */
-    @Transactional
+    @Transactional("tmTransactionManager")
     public BatchRun closeBatchRun(BatchRun br, String message) {
         for (Run run : br.getRuns()) {
             if (!run.getStatus().isClosed()) {
