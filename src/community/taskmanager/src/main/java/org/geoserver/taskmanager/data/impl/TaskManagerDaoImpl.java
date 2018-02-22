@@ -269,12 +269,6 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .setMaxResults(1).uniqueResult();
     }
     
-    /*public boolean isInterruptMe(BatchRun batchRun) {
-        return (Boolean) (getSession().createCriteria(BatchRun.class)
-                .add(Restrictions.idEq(batchRun.getId()))
-                .setProjection(Projections.property("interruptMe")).uniqueResult());
-    }*/
-    
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Configuration copyConfiguration(String configName) {

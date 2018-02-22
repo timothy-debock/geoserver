@@ -110,10 +110,14 @@ public class TestTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public void cleanup(TaskContext ctx) {
-        
+    public void cleanup(TaskContext ctx) throws TaskException {
+        throw new TaskException("unsupported");
     }
-
+    
+    @Override
+    public boolean supportsCleanup() {
+        return false;
+    }
 
     @Override
     public String getName() {

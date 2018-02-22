@@ -45,7 +45,6 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 
@@ -277,7 +276,7 @@ public class BatchesPanel extends Panel {
                             @Override
                             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                                 TaskManagerBeans.get().getBjService().scheduleNow(itemModel.getObject());
-                                info(new StringResourceModel("batchStarted", BatchesPanel.this).getString());
+                                info(new ParamResourceModel("batchStarted", BatchesPanel.this).getString());
                                 
                                 target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
                             }

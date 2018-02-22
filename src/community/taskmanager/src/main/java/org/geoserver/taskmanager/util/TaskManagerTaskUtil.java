@@ -185,6 +185,16 @@ public class TaskManagerTaskUtil {
     }
     
     /**
+     * Can this taks be cleaned up?
+     * @param task the task
+     * 
+     * @return whether the task can be cleaned-up
+     */
+    public boolean canCleanup(Task task) {
+        return taskTypes.get(task.getType()).supportsCleanup();
+    }
+    
+    /**
      * Clean-up a task.
      * 
      * @param task the task.
@@ -207,9 +217,26 @@ public class TaskManagerTaskUtil {
     public boolean cleanup(Configuration config) {
         boolean success = true;
         for (Task task : config.getTasks().values()) {
-            success = success && cleanup(task);
+            if (canCleanup(task)) {
+                success = success && cleanup(task);
+            }
         }
         return success;        
+    }
+    
+    /**
+     * Can this configuration be cleaned up?
+     * @param config the configuration
+     * 
+     * @return whether the configuration can be cleaned-up
+     */
+    public boolean canCleanup(Configuration config) {
+        for (Task task : config.getTasks().values()) {
+            if (canCleanup(task)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**

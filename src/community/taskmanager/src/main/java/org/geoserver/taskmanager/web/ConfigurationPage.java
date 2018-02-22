@@ -24,7 +24,6 @@ import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
@@ -50,6 +49,7 @@ import org.geoserver.taskmanager.web.model.TasksModel;
 import org.geoserver.taskmanager.web.panel.BatchesPanel;
 import org.geoserver.taskmanager.web.panel.ButtonPanel;
 import org.geoserver.taskmanager.web.panel.DropDownPanel;
+import org.geoserver.taskmanager.web.panel.MultiLabelCheckBoxPanel;
 import org.geoserver.taskmanager.web.panel.NewTaskPanel;
 import org.geoserver.taskmanager.web.panel.PanelListPanel;
 import org.geoserver.taskmanager.web.panel.SimpleAjaxSubmitLink;
@@ -318,10 +318,12 @@ public class ConfigurationPage extends GeoServerSecuredPage {
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
                 dialog.setInitialWidth(600);
-                dialog.setInitialHeight(150);
+                dialog.setInitialHeight(175);
                 dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
 
                     private static final long serialVersionUID = -5552087037163833563L;
+
+                    private IModel<Boolean> shouldCleanupModel = new Model<Boolean>();
                     
                     @Override
                     protected Component getContents(String id) {
@@ -332,8 +334,9 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                             sb.append("\n&nbsp;&nbsp;");
                             sb.append(escapeHtml(task.getName()));
                         }
-                        return new MultiLineLabel(id, sb.toString())
-                                .setEscapeModelStrings(false);
+                        return new MultiLabelCheckBoxPanel(id, sb.toString(),
+                                new ParamResourceModel("cleanUp", getPage()).getString(),
+                                shouldCleanupModel);
                     }
 
                     @Override
@@ -342,8 +345,27 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         for (Task task : tasksPanel.getSelection()) {
                             BatchElement element = taskInUse(task);
                             if (element == null) {
+                                if (shouldCleanupModel.getObject()) {
+                                    //clean-up
+                                    if (TaskManagerBeans.get().getTaskUtil().canCleanup(task)) {
+                                        if (TaskManagerBeans.get().getTaskUtil().cleanup(task)) {
+                                            info(new ParamResourceModel("cleanUp.success",
+                                                    getPage(), task.getName()).getString());                                                   
+                                        } else {
+                                            error(new ParamResourceModel("cleanUp.error",
+                                                    getPage(), task.getName()).getString());    
+                                        }
+                                    } else {
+                                        info(new ParamResourceModel("cleanUp.ignore",
+                                                getPage(), task.getName()).getString());   
+                                    }
+                                }
+                                
+                                //remember which attribute names to update
                                 attNames.addAll(TaskManagerBeans.get().getDataUtil()
                                         .getAssociatedAttributeNames(task));
+                                
+                                //actually remove
                                 configurationModel.getObject().getTasks().remove(task.getName());
                                 if (task.getId() != null) {
                                     removedTasks.add(task);                                
