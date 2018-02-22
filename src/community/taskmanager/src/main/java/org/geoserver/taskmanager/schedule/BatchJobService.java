@@ -54,4 +54,11 @@ public interface BatchJobService {
      */
     void interrupt(BatchRun batchRun);
 
+    /**
+     * Start a batch right now.
+     * 
+     * @param batch
+     */
+    void scheduleNow(Batch batch);
+
 }

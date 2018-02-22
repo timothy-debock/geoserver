@@ -4,20 +4,18 @@
  */
 package org.geoserver.taskmanager.schedule.impl;
 
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
-import org.geoserver.taskmanager.data.Run;
-import org.geoserver.taskmanager.data.Run.Status;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.LookupService;
+import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geotools.util.logging.Logging;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -48,6 +46,9 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     
     @Autowired 
     TaskManagerDao dao;
+
+    @Autowired 
+    TaskManagerDataUtil dataUtil;
     
     @Autowired
     Scheduler scheduler;
@@ -154,6 +155,11 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
                 batch.setEnabled(false);
                 dao.save(batch); 
             }
+            
+            for (BatchRun br : dao.getCurrentBatchRuns(batch)) {
+                LOGGER.log(Level.WARNING, "Automatically closing inactive batch run at start-up: " + batch.getFullName());
+                dataUtil.closeBatchRun(br, "closed at start-up");
+            }
         }
     }
     
@@ -164,7 +170,20 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         } catch (SchedulerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-    }  
+    }
+    
+    @Override
+    public void scheduleNow(Batch batch) {
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .forJob(batch.getFullName())
+                .startNow()        
+                .build();
+        try {
+            scheduler.scheduleJob(trigger);
+        } catch (SchedulerException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
         
     @Override
     public void interrupt(BatchRun batchRun) {
@@ -174,18 +193,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
                 state = scheduler.getTriggerState(TriggerKey.triggerKey(batchRun.getSchedulerReference()));
                 if (state == TriggerState.COMPLETE || state == TriggerState.ERROR
                         || state == TriggerState.NONE) {
-                    for (Run run : batchRun.getRuns()) {
-                        if (run.getEnd() != null) {
-                            if (run.getStatus() == Status.RUNNING) {
-                                run.setStatus(Status.NOT_ROLLED_BACK);
-                            } else if (run.getStatus() == Status.COMMITTING
-                                    ||run.getStatus() == Status.READY_TO_COMMIT) {
-                                run.setStatus(Status.NOT_COMMITTED);
-                            }
-                            run.setEnd(new Date());
-                            dao.save(run);
-                        }
-                    }
+                    dataUtil.closeBatchRun(batchRun, "manually closed due to inactivity");
                     return;
                 }
             } catch (SchedulerException e) {

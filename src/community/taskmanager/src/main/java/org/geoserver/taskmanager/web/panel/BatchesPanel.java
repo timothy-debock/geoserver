@@ -12,7 +12,6 @@ import org.geoserver.taskmanager.web.BatchPage;
 import org.geoserver.taskmanager.web.BatchRunsPage;
 import org.geoserver.taskmanager.web.model.BatchesModel;
 import org.geoserver.web.CatalogIconFactory;
-import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerDialog;
@@ -21,10 +20,6 @@ import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geotools.util.logging.Logging;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
@@ -281,15 +276,7 @@ public class BatchesPanel extends Panel {
                             
                             @Override
                             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                                Trigger trigger = TriggerBuilder.newTrigger()
-                                        .forJob(itemModel.getObject().getFullName())
-                                        .startNow()        
-                                        .build();
-                                try {
-                                    GeoServerApplication.get().getBeanOfType(Scheduler.class).scheduleJob(trigger);
-                                } catch (SchedulerException e) {
-                                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                                }
+                                TaskManagerBeans.get().getBjService().scheduleNow(itemModel.getObject());
                                 info(new StringResourceModel("batchStarted", BatchesPanel.this).getString());
                                 
                                 target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());

@@ -39,7 +39,7 @@ public interface BatchRun extends Serializable, Identifiable {
                     return getRuns().get(i).getStatus();
                 }
             }
-            return Status.COMMITTED;            
+            return Status.COMMITTED;
         }
     }
 

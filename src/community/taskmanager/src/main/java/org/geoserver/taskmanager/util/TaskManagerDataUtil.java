@@ -23,6 +23,7 @@ import org.geoserver.taskmanager.data.Run;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
+import org.geoserver.taskmanager.data.Run.Status;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -219,6 +220,31 @@ public class TaskManagerDataUtil {
         }
         return result;
     }
+
+    /**
+     * Verifiy if batch is deletable (not running)
+     * 
+     * @param batch the batch to verify
+     * @return whether it is deletable
+     */
+    public boolean isDeletable(Batch batch) {
+        return dao.getCurrentBatchRuns(batch).isEmpty();
+    }
+    
+    /**
+     * Verifiy if configuration is deletable (no batches are running)
+     * 
+     * @param config the config to verify
+     * @return whether it is deletable
+     */
+    public boolean isDeletable(Configuration config) {
+        for (Batch batch : config.getBatches().values()) {
+            if (!dao.getCurrentBatchRuns(batch).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     // -----------------------
     // Transactional methods
@@ -325,19 +351,34 @@ public class TaskManagerDataUtil {
         } else {
             return null;
         }
-    }
+    }  
     
-    public boolean isDeletable(Batch batch) {
-        return dao.getCurrentBatchRuns(batch).isEmpty();
-    }
-    
-    public boolean isDeletable(Configuration config) {
-        for (Batch batch : config.getBatches().values()) {
-            if (!dao.getCurrentBatchRuns(batch).isEmpty()) {
-                return false;
+    /**
+     * Close a batch run (do this when the batch run is no longer running,
+     * but its status suggests it is.)
+     * 
+     * @param br
+     */
+    @Transactional
+    public BatchRun closeBatchRun(BatchRun br, String message) {
+        for (Run run : br.getRuns()) {
+            if (!run.getStatus().isClosed()) {
+                if (run.getEnd() == null) {
+                    //the task stopped while running
+                    run.setStatus(Status.FAILED);
+                    run.setEnd(new Date());
+                } else if (br.getStatus() == Status.COMMITTING) {
+                    //if the batch run was already in the commit phase,
+                    //we were already past the point of rolling back
+                    run.setStatus(Status.NOT_COMMITTED);
+                } else { //the task was finished, but was neither committed or rolled back
+                    run.setStatus(Status.NOT_ROLLED_BACK);
+                }
+                run.setMessage(message);
+                br = dao.save(run).getBatchRun();
             }
         }
-        return true;
+        return dao.reload(br);
     }
 
 }
