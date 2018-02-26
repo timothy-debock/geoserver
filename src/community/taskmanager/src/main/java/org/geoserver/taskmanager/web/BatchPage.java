@@ -275,7 +275,7 @@ public class BatchPage extends GeoServerSecuredPage {
                                 getPage()).getString());
                         for (BatchElement be : elementsPanel.getSelection()) {
                             sb.append("\n&nbsp;&nbsp;");
-                            sb.append(escapeHtml(be.getTask().getName()));
+                            sb.append(escapeHtml(be.getTask().getFullName()));
                         }
                         return new MultiLineLabel(id, sb.toString())
                                 .setEscapeModelStrings(false);

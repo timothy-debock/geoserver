@@ -83,6 +83,8 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
     @Override
     public TaskResult run(TaskContext ctx) throws TaskException {
+        //TODO: check for ctx.isInterruptMe() in loops and cancel task
+        
         final DbSource sourcedb = (DbSource) ctx.getParameterValues().get(PARAM_SOURCE_DB_NAME);
         final DbSource targetdb = (DbSource) ctx.getParameterValues().get(PARAM_TARGET_DB_NAME);
         final DbTable table = ctx.getTempValues().containsKey(ctx.getParameterValues().get(PARAM_TABLE_NAME)) ?

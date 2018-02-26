@@ -50,7 +50,7 @@ public class RunImpl extends BaseImpl implements Run {
     @Lob
     private String message;
 
-    @ManyToOne(/* cascade = CascadeType.MERGE */)
+    @ManyToOne
     @JoinColumn(name = "batchRun")
     private BatchRunImpl batchRun;
 
