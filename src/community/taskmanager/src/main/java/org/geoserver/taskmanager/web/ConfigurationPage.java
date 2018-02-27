@@ -595,7 +595,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         //TODO: use localized resource based on error type instead of toString
                         form.error(error.toString());
                     }
-                    target.add(feedbackPanel);
+                    target.add(getFeedbackPanel());
                     return;
                 } else if (!configurationModel.getObject().isTemplate() && !initMode) {
                     configurationModel.getObject().setValidated(true);
@@ -616,7 +616,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         form.success(new ParamResourceModel("success", getPage()).getString());
                         target.add(batchesPanel);
                         ((MarkupContainer) batchesPanel.get("form:batchesPanel:listContainer:items")).removeAll();
-                        target.add(feedbackPanel);
+                        target.add(getFeedbackPanel());
                         if (initMode) {
                             setResponsePage(new InitConfigurationPage(configurationModel));
                         }
@@ -626,12 +626,12 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
                     form.error(rootCause == null ? e.getLocalizedMessage() : 
                         rootCause.getLocalizedMessage());
-                    target.add(feedbackPanel);
+                    target.add(getFeedbackPanel());
                 }
             }
 
             protected void onError(AjaxRequestTarget target, Form<?> form) {
-                target.add(feedbackPanel);
+                target.add(getFeedbackPanel());
             }
         };
     }   

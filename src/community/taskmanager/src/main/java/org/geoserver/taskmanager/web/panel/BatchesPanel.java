@@ -117,21 +117,15 @@ public class BatchesPanel extends Panel {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                List<String> nonDeletable = new ArrayList<String>();
+                boolean someCant = false;
                 for (Batch batch : batchesPanel.getSelection()) {
                     if (!TaskManagerBeans.get().getDataUtil().isDeletable(batch)) {
-                        nonDeletable.add(batch.getFullName());
+                        error(new ParamResourceModel("stillRunning",
+                                BatchesPanel.this, batch.getFullName()).getString());
+                        someCant = true;
                     }
                 }
-                if (!nonDeletable.isEmpty()) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(new ParamResourceModel("cannotDelete",
-                           BatchesPanel.this).getString());
-                    for (String batchName : nonDeletable) {
-                        sb.append(escapeHtml(batchName)).append(", ");
-                    }              
-                    sb.setLength(sb.length() - 2);
-                    error(sb.toString());
+                if (someCant) {
                     target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
                 } else {
                 

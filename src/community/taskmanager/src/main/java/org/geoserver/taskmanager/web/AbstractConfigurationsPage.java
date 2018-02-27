@@ -4,7 +4,9 @@
  */
 package org.geoserver.taskmanager.web;
 
+import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.Configuration;
+import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.web.model.ConfigurationsModel;
 import org.geoserver.taskmanager.web.panel.DropDownPanel;
@@ -28,7 +30,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -127,24 +128,23 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                List<String> nonDeletable = new ArrayList<String>();
+                boolean someCant = false;
                 for (Configuration config : configurationsPanel.getSelection()) {
-                    if (!TaskManagerBeans.get().getDataUtil().isDeletable(config)) {
-                        nonDeletable.add(config.getName());
+                    BatchElement be = taskInUseByExternalBatch(config);
+                    if (be != null) {
+                        error(new ParamResourceModel("taskInUse",
+                                AbstractConfigurationsPage.this, config.getName(),
+                                be.getTask().getName(), be.getBatch().getName()).getString());
+                        someCant = true;
+                    } else if (!TaskManagerBeans.get().getDataUtil().isDeletable(config)) {
+                        error(new ParamResourceModel("stillRunning",
+                                AbstractConfigurationsPage.this, config.getName()).getString());
+                        someCant = true;
                     }
                 }
-                if (!nonDeletable.isEmpty()) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(new ParamResourceModel("cannotDelete",
-                           AbstractConfigurationsPage.this).getString());
-                    for (String batchName : nonDeletable) {
-                        sb.append(escapeHtml(batchName)).append(", ");
-                    }              
-                    sb.setLength(sb.length() - 2);
-                    error(sb.toString());
-                    target.add(feedbackPanel);
-                } else {
-                
+                if (someCant) {
+                    target.add(getFeedbackPanel());
+                } else {                
                     dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
                     dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
     
@@ -204,7 +204,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                             if (error != null) {
                                 error(error);
                             }
-                            target.add(feedbackPanel);
+                            target.add(getFeedbackPanel());
                             target.add(configurationsPanel);
                             target.add(remove);
                         }
@@ -262,6 +262,19 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
             }
         });
         configurationsPanel.setOutputMarkupId(true);
+    }
+    
+    private BatchElement taskInUseByExternalBatch(Configuration config) {
+        for (Task task : config.getTasks().values()) {
+            task = TaskManagerBeans.get().getDataUtil().init(task);
+            for (BatchElement element : task.getBatchElements()) {
+                if (element.getBatch().getConfiguration() == null
+                        && element.getBatch().isActive()) {
+                    return element;
+                }
+            }
+        } 
+        return null;
     }
 
 }
