@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 
 import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.CoverageDimensionInfo;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.KeywordInfo;
@@ -193,7 +194,6 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             mdli.getContent());
                 }
                 for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
-                    // TODO: dimension info
                     if (entry.getValue() != null) {
                         re.setMetadataString(entry.getKey(), entry.getValue().toString());
                     }
@@ -210,6 +210,19 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             resource.getNativeBoundingBox().getMinY(),
                             resource.getNativeBoundingBox().getMaxX(),
                             resource.getNativeBoundingBox().getMaxY(), resource.getSRS());
+                }
+                
+                //dimensions, must happen after setName or strange things happen (gs-man bug)
+                if (resource instanceof CoverageInfo) {
+                    CoverageInfo coverage = (CoverageInfo) resource;                    
+                    for (CoverageDimensionInfo di : coverage.getDimensions()) {
+                        ((GSCoverageEncoder) re).addCoverageDimensionInfo(di.getName(),
+                                di.getDescription(), 
+                                Double.toString(di.getRange().getMinimum()), 
+                                Double.toString(di.getRange().getMaximum()), 
+                                di.getUnit(), 
+                                di.getDimensionType() == null ? null : di.getDimensionType().identifier());
+                    }
                 }
 
                 // resource might have already been created together with store

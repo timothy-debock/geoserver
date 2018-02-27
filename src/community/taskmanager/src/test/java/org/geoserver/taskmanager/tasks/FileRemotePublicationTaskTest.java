@@ -113,6 +113,7 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         CoverageInfo ci = geoServer.getCatalog().getCoverageByName("DEM");
         ci.setTitle("my title ë");
         ci.setAbstract("my abstract ë");
+        ci.getDimensions().get(0).setName("CUSTOM_DIMENSION");
         geoServer.getCatalog().save(ci);
         
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, "DEM");
@@ -137,6 +138,8 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         RESTCoverage cov = restManager.getReader().getCoverage("wcs", "DEM", "DEM");
         assertEquals(ci.getTitle(), cov.getTitle());
         assertEquals(ci.getAbstract(), cov.getAbstract());
+        assertEquals(ci.getDimensions().get(0).getName(), 
+                cov.getEncodedDimensionsInfoList().get(0).getName());
         
         assertTrue(taskUtil.cleanup(config));      
         
