@@ -4,7 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
+import org.geoserver.taskmanager.data.Run.Status;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -107,5 +110,34 @@ public class TaskManagerDataTest extends AbstractTaskManagerTest {
         config2 = dao.save(config2);
         task = util.init(config2.getTasks().get("task"));
         assertEquals(1, task.getBatchElements().size());
+    }
+    
+    @Test
+    public void testBatchRun() {
+        BatchRun br = fac.createBatchRun();
+        
+        Run run = fac.createRun();
+        run.setStart(new Date(1000));
+        run.setEnd(new Date(2000));
+        run.setStatus(Status.COMMITTED);   
+        br.getRuns().add(run);
+        
+        run = fac.createRun();
+        run.setStart(new Date(2000));
+        run.setEnd(new Date(3000));
+        run.setStatus(Status.NOT_COMMITTED);    
+        run.setMessage("foo");
+        br.getRuns().add(run);
+        
+        run = fac.createRun();
+        run.setStart(new Date(3000));
+        run.setEnd(new Date(4000));
+        run.setStatus(Status.COMMITTED);        
+        br.getRuns().add(run);
+        
+        assertEquals(new Date(1000), br.getStart());
+        assertEquals(new Date(4000), br.getEnd());
+        assertEquals("foo", br.getMessage());
+        assertEquals(Status.NOT_COMMITTED, br.getStatus());
     }
 }
