@@ -33,6 +33,7 @@ import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -159,6 +160,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 if (resource instanceof CoverageInfo) {
                     CoverageInfo coverage = (CoverageInfo) resource;
                     final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
+                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
                     coverageEncoder.setNativeFormat(coverage.getNativeFormat());
                     for (String format : coverage.getSupportedFormats()) {
                         coverageEncoder.addSupportedFormats(format);
@@ -169,13 +171,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     for (String srs : coverage.getResponseSRS()) {
                         coverageEncoder.setResponseSRS(srs); // wrong: should be add
                     }
-                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
-                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());
                     re = coverageEncoder;
                 } else {
                     GSFeatureTypeEncoder fte = new GSFeatureTypeEncoder();
-                    fte.setSRS(resource.getSRS());
                     fte.setNativeName(resource.getNativeName());
+                    if (resource.getNativeCRS() != null) {
+                        fte.setNativeCRS(CRS.toSRS(resource.getNativeCRS()));
+                    }
                     re = fte;
                 }
                 postProcess(re, ctx.getParameterValues());
