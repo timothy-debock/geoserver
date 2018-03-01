@@ -49,6 +49,7 @@ import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geotools.util.logging.Logging;
+import org.hibernate.exception.ConstraintViolationException;
 
 public class BatchPage extends GeoServerSecuredPage {
     private static final long serialVersionUID = -5111795911981486778L;
@@ -186,6 +187,9 @@ public class BatchPage extends GeoServerSecuredPage {
                         config.getBatches().put(batchModel.getObject().getName(), batchModel.getObject());
                     }
                     doReturn();                    
+                } catch (ConstraintViolationException e) { 
+                    form.error(new ParamResourceModel("duplicate", getPage()).getString());
+                    addFeedbackPanels(target);
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, e.getMessage(), e);
                     Throwable rootCause = ExceptionUtils.getRootCause(e);

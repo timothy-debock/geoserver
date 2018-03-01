@@ -65,6 +65,7 @@ import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geotools.util.logging.Logging;
+import org.hibernate.exception.ConstraintViolationException;
 
 public class ConfigurationPage extends GeoServerSecuredPage {
 
@@ -622,6 +623,9 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                             setResponsePage(new InitConfigurationPage(configurationModel));
                         }
                     }
+                } catch (ConstraintViolationException e) { 
+                    form.error(new ParamResourceModel("duplicate", getPage()).getString());
+                    addFeedbackPanels(target);
                 } catch (Exception e) { 
                     LOGGER.log(Level.WARNING, e.getMessage(), e);
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
