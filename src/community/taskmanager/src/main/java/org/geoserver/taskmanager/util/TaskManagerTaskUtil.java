@@ -260,6 +260,7 @@ public class TaskManagerTaskUtil {
         }
         return task;
     }
+    
     private static class AttributeInfo {
         private ParameterType type;
         private List<String> dependsOn;
@@ -437,7 +438,7 @@ public class TaskManagerTaskUtil {
                 if (info == null) {
                     validationErrors.add(new ValidationError(ValidationErrorType.INVALID_PARAM, 
                             parameter.getKey(), null, taskType.getName()));
-                    break;
+                    continue;
                 }
                 ParameterType pt = info.getType();
                 List<String> dependsOnValues = new ArrayList<String>();
@@ -447,7 +448,7 @@ public class TaskManagerTaskUtil {
                 if (!pt.validate(parameter.getValue(), dependsOnValues)) {
                     validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
                             parameter.getKey(), parameter.getValue(), taskType.getName()));
-                    break;
+                    continue;
                 }
             }
             
