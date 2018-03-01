@@ -303,6 +303,8 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
             if (Hibernate.isInitialized(batch.getBatchRuns())) {
                 batch.getBatchRuns().clear();
             }
+            //disable cloned batches
+            batch.setEnabled(false);
         }
         return clone;
     }

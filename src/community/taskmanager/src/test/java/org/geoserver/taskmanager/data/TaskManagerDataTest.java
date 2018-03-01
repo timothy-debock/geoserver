@@ -53,6 +53,7 @@ public class TaskManagerDataTest extends AbstractTaskManagerTest {
         config = dao.save(config);
         
         batch = fac.createBatch();
+        batch.setEnabled(true);
         
         batch.setName("my_batch");      
         batch = dao.save(batch);
@@ -114,6 +115,7 @@ public class TaskManagerDataTest extends AbstractTaskManagerTest {
         config2 = dao.save(config2);
         task = util.init(config2.getTasks().get("task"));
         assertEquals(1, task.getBatchElements().size());
+        assertFalse(config2.getBatches().get("my_batch").isEnabled());
     }
     
     @Test
