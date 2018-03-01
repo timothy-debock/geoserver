@@ -57,6 +57,7 @@ import org.geoserver.taskmanager.web.panel.TaskParameterPanel;
 import org.geoserver.taskmanager.web.panel.TextAreaPanel;
 import org.geoserver.taskmanager.web.panel.TextFieldPanel;
 import org.geoserver.web.GeoServerApplication;
+import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.UnauthorizedPage;
 import org.geoserver.web.wicket.GeoServerDialog;
@@ -384,7 +385,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         target.add(tasksPanel);
                         target.add(attributesPanel);
                         target.add(remove);
-                        target.add(getFeedbackPanel());
+                        ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                         return true;
                     }
                 });
@@ -568,7 +569,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                                                 target.add(tablePanel);
                                             } else {
                                                 error(new ParamResourceModel("invalidValue", getPage()).getString());
-                                                target.add(ConfigurationPage.this.getFeedbackPanel());
+                                                ConfigurationPage.this.addFeedbackPanels(target);
                                             }
                                         }
                                     };
@@ -595,7 +596,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         //TODO: use localized resource based on error type instead of toString
                         form.error(error.toString());
                     }
-                    target.add(getFeedbackPanel());
+                    addFeedbackPanels(target);
                     return;
                 } else if (!configurationModel.getObject().isTemplate() && !initMode) {
                     configurationModel.getObject().setValidated(true);
@@ -616,7 +617,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         form.success(new ParamResourceModel("success", getPage()).getString());
                         target.add(batchesPanel);
                         ((MarkupContainer) batchesPanel.get("form:batchesPanel:listContainer:items")).removeAll();
-                        target.add(getFeedbackPanel());
+                        addFeedbackPanels(target);
                         if (initMode) {
                             setResponsePage(new InitConfigurationPage(configurationModel));
                         }
@@ -626,12 +627,12 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
                     form.error(rootCause == null ? e.getLocalizedMessage() : 
                         rootCause.getLocalizedMessage());
-                    target.add(getFeedbackPanel());
+                    addFeedbackPanels(target);
                 }
             }
 
             protected void onError(AjaxRequestTarget target, Form<?> form) {
-                target.add(getFeedbackPanel());
+                addFeedbackPanels(target);
             }
         };
     }   

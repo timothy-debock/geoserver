@@ -114,7 +114,7 @@ public class BatchRunsPage extends GeoServerSecuredPage {
                                 TaskManagerBeans.get().getBjService().interrupt(runModel.getObject());
                                 info(new ParamResourceModel("runInterrupted", BatchRunsPage.this).getString());
                                 
-                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                             }
                         };
                         link.getLink().add(new AttributeAppender("class", "stop-link", ","));

@@ -143,7 +143,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                     }
                 }
                 if (someCant) {
-                    target.add(getFeedbackPanel());
+                    addFeedbackPanels(target);
                 } else {                
                     dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
                     dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
@@ -203,8 +203,8 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                         public void onClose(AjaxRequestTarget target) {
                             if (error != null) {
                                 error(error);
-                            }
-                            target.add(getFeedbackPanel());
+                            } 
+                            addFeedbackPanels(target);
                             target.add(configurationsPanel);
                             target.add(remove);
                         }

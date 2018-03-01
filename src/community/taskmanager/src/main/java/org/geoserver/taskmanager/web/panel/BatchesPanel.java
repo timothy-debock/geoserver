@@ -126,7 +126,7 @@ public class BatchesPanel extends Panel {
                     }
                 }
                 if (someCant) {
-                    target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                    ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                 } else {
                 
                     dialog.setTitle(new ParamResourceModel("confirmDeleteBatchesDialog.title", BatchesPanel.this));
@@ -177,7 +177,7 @@ public class BatchesPanel extends Panel {
                             if (error != null) {
                                 error(error);
                                 target.add(remove);
-                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                             } else {
                                 target.add(batchesPanel);
                             }
@@ -271,8 +271,8 @@ public class BatchesPanel extends Panel {
                             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                                 TaskManagerBeans.get().getBjService().scheduleNow(itemModel.getObject());
                                 info(new ParamResourceModel("batchStarted", BatchesPanel.this).getString());
-                                
-                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+
+                                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                             }
                         };
                         link.getLink().add(new AttributeAppender("class", "play-link", ","));
