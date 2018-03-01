@@ -62,7 +62,7 @@ public class DummyTaskTypeImpl implements TaskType {
              new ParameterType() {
                 @Override
                 public List<String> getDomain(List<String> dependsOnRawValues) {
-                    if (dependsOnRawValues.get(0).equals("true")) {
+                    if ("true".equals(dependsOnRawValues.get(0))) {
                         return Lists.newArrayList("crash", "test", "dummy");
                     } else {
                         return Lists.newArrayList("dummy");

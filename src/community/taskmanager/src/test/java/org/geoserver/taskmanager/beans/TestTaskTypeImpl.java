@@ -43,7 +43,7 @@ public class TestTaskTypeImpl implements TaskType {
     static {
         PARAM_INFO.put(PARAM_FAIL, new ParameterInfo(PARAM_FAIL, ParameterType.BOOLEAN, false));
         PARAM_INFO.put(PARAM_DELAY, new ParameterInfo(PARAM_DELAY, ParameterType.INTEGER, false));
-        PARAM_INFO.put(PARAM_DELAY, new ParameterInfo(PARAM_DELAY_COMMIT, ParameterType.INTEGER, false));
+        PARAM_INFO.put(PARAM_DELAY_COMMIT, new ParameterInfo(PARAM_DELAY_COMMIT, ParameterType.INTEGER, false));
     }
     
     /**
