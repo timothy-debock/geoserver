@@ -195,14 +195,6 @@ public interface TaskManagerDao {
     <T extends Identifiable>  T reload(T object);
 
     /**
-     * Copy task
-     * 
-     * @param taskName the name of the task you wish to copy
-     * @return copied task
-     */
-    Task copyTask(String taskName);
-
-    /**
      * Get current batch runs for batch
      * 
      * @param batch the batch

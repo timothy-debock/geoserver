@@ -257,7 +257,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 dialog.setTitle(new ParamResourceModel("newTaskDialog.title", getPage()));
                 dialog.setInitialWidth(600);
-                dialog.setInitialHeight(200);
+                dialog.setInitialHeight(225);
                 dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
 
                     private static final long serialVersionUID = 7410393012930249966L;
@@ -266,7 +266,8 @@ public class ConfigurationPage extends GeoServerSecuredPage {
 
                     @Override
                     protected Component getContents(String id) {
-                        return panel = new NewTaskPanel(id);
+                        return panel = new NewTaskPanel(id, 
+                                configurationModel.getObject());
                     }
 
                     @Override
@@ -279,9 +280,17 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                             target.add(panel.getFeedbackPanel());
                             return false;
                         } else {
-                            Task task = TaskManagerBeans.get().getTaskUtil().initTask(
-                                    panel.getTypeField().getModelObject(), 
-                                    panel.getNameField().getModelObject());
+                            Task task;
+                            String copyTask = panel.getCopyField().getModel().getObject();
+                            if (copyTask != null) {
+                                task = TaskManagerBeans.get().getTaskUtil().copyTask(
+                                         configurationModel.getObject().getTasks().get(copyTask),
+                                         panel.getNameField().getModelObject());
+                            } else {
+                                task = TaskManagerBeans.get().getTaskUtil().initTask(
+                                        panel.getTypeField().getModelObject(), 
+                                        panel.getNameField().getModelObject());
+                            }
                             TaskManagerBeans.get().getDataUtil().addTaskToConfiguration(
                                     configurationModel.getObject(), task);
                             

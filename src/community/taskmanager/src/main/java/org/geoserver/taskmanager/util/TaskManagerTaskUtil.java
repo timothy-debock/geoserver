@@ -243,7 +243,7 @@ public class TaskManagerTaskUtil {
      * Creates and initializes a task of a particular type
      * 
      * @param type the type
-     * @param string 
+     * @param name the name of the new task 
      * @return the task
      */
     public Task initTask(String type, String name) {
@@ -257,6 +257,27 @@ public class TaskManagerTaskUtil {
             param.setValue("${" + info.getName() + "}");
             param.setTask(task);
             task.getParameters().put(info.getName(), param);
+        }
+        return task;
+    }
+        
+    /**
+     * Duplicates a task to a new task
+     * 
+     * @param original the original task the type
+     * @param name the name of the new task 
+     * @return the task
+     */
+    public Task copyTask(Task original, String name) {
+        Task task = fac.createTask();
+        task.setType(original.getType());
+        task.setName(name);
+        for (Parameter originalParam : original.getParameters().values()) {
+            Parameter param = fac.createParameter();
+            param.setName(originalParam.getName());
+            param.setValue(originalParam.getValue());
+            param.setTask(task);
+            task.getParameters().put(param.getName(), param);
         }
         return task;
     }

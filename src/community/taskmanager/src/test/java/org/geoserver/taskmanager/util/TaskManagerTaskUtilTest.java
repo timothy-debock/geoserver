@@ -21,6 +21,7 @@ import org.geoserver.taskmanager.beans.DummyAction;
 import org.geoserver.taskmanager.beans.DummyTaskTypeImpl;
 import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Configuration;
+import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
@@ -163,6 +164,17 @@ public class TaskManagerTaskUtilTest extends AbstractTaskManagerTest {
         assertEquals(2, t.getParameters().size());
         assertEquals("${param1}", t.getParameters().get(DummyTaskTypeImpl.PARAM1).getValue());
         assertEquals("${param2}", t.getParameters().get(DummyTaskTypeImpl.PARAM2).getValue());
+    }
+
+    @Test
+    public void testCopyTask() {
+        Task t = taskUtil.copyTask(task1, "copiedTask");
+        assertEquals("copiedTask", t.getName());
+        assertEquals(task1.getType(), t.getType());
+        assertEquals(task1.getParameters().size(), t.getParameters().size());
+        for (Parameter par : task1.getParameters().values()) {
+            assertEquals(par.getValue(), t.getParameters().get(par.getName()).getValue());
+        }
     }
     
     @Test

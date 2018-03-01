@@ -308,21 +308,5 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         }
         return clone;
     }
-    
-    @Override
-    @Transactional(transactionManager = "tmTransactionManager", 
-        propagation = Propagation.REQUIRES_NEW)
-    public Task copyTask(String taskName) {
-        TaskImpl clone = (TaskImpl) getSession().createCriteria(TaskImpl.class)
-                .add(Restrictions.eq("removeStamp", 0L))
-                .add(Restrictions.eq("name", taskName)).uniqueResult();;
-        ((TaskImpl) clone).setId(null);
-        ((TaskImpl) clone).setBatchElements(new ArrayList<BatchElement>());
-        for (Parameter param : clone.getParameters().values()) {
-            param.setTask(clone);
-            ((ParameterImpl) param).setId(null);
-        }
-        return clone;
-    }
 
 }
