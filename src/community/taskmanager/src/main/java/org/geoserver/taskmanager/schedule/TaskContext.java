@@ -6,7 +6,6 @@ package org.geoserver.taskmanager.schedule;
 
 import java.util.Map;
 
-import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Task;
 
 /**
@@ -23,9 +22,9 @@ public interface TaskContext {
     Task getTask();
 
     /**     
-     * @return the batch run, null if this is a clean-up
+     * @return the batch context, null if this is a clean-up
      */
-    BatchRun getBatchRun();
+    BatchContext getBatchContext();
 
     /**
      * 
@@ -34,18 +33,6 @@ public interface TaskContext {
      * @throws TaskException
      */
     Map<String, Object> getParameterValues() throws TaskException;
-
-    /**
-     * During run, tasks create temporary objects that are committed to real
-     * objects during the commit phase (such as a table name)
-     * This maps real objects to temporary objects during a single batch run.
-     * Tasks should save and look up temporary objects so that tasks within a batch can
-     * work together.
-     * 
-     * @return the temp values for this batch run, null if this is a clean-up
-     * 
-     */
-    Map<Object, Object> getTempValues();
 
     /**
      * Tasks can call this function to check if the user wants to interrupt the batch

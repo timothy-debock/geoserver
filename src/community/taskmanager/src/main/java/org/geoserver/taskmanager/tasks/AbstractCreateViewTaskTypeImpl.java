@@ -15,10 +15,10 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
-import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTableImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
@@ -61,7 +61,26 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
         final String viewName = (String) ctx.getParameterValues().get(PARAM_VIEW_NAME);
         final String tempViewName = SqlUtil.qualified(SqlUtil.schema(viewName),
                 "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
-        ctx.getTempValues().put(new DbTableImpl(db, viewName), new DbTableImpl(db, tempViewName));
+        ctx.getBatchContext().put(new DbTableImpl(db, viewName), new DbTableImpl(db, tempViewName));
+
+        final String definition = buildQueryDefinition(ctx,
+                db.getDialect().autoUpdateView() ? null : new BatchContext.Dependency() {
+                    @Override
+                    public void revert() throws TaskException {
+                        final String definition = buildQueryDefinition(ctx, null);
+                        try (Connection conn = db.getDataSource().getConnection()) {
+                            try (Statement stmt = conn.createStatement()){
+                                StringBuilder sb = new StringBuilder("DROP VIEW ")
+                                        .append(viewName).append("; CREATE VIEW ")
+                                        .append(viewName).append(" AS ").append(definition);
+                                LOGGER.log(Level.FINE, "replacing temporary View: " + sb.toString());
+                                stmt.executeUpdate(sb.toString());
+                            }
+                        } catch (SQLException e) {
+                            throw new TaskException(e);
+                        }
+                   }
+        });
         
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
@@ -73,8 +92,7 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
                 StringBuilder sb = new StringBuilder(sqlCreateSchemaIfNotExists);
                 sb.append("CREATE VIEW ")
                         .append(tempViewName).append(" AS ")
-                        .append(buildQueryDefinition(ctx.getParameterValues(), ctx.getTempValues(), 
-                                ctx.getTask().getConfiguration().getAttributes()));
+                        .append(definition);
                 LOGGER.log(Level.FINE, "creating temporary View: " + sb.toString());
                 stmt.executeUpdate(sb.toString());
             }
@@ -87,11 +105,14 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
             public void commit() throws TaskException {
                 try (Connection conn = db.getDataSource().getConnection()) {
                     try (Statement stmt = conn.createStatement()){
-                        LOGGER.log(Level.FINE, "commiting view: " + viewName);
-                        stmt.executeUpdate("DROP VIEW IF EXISTS " + db.getDialect().quote(viewName));
-
-                        String viewNameQuoted = db.getDialect().quote(SqlUtil.notQualified(viewName));
-                        stmt.executeUpdate(db.getDialect().sqlRenameView(tempViewName, viewNameQuoted));
+                        LOGGER.log(Level.FINE, "committing view: " + viewName);
+                        String viewNameQuoted = db.getDialect().quote(viewName);                        
+                        stmt.executeUpdate("DROP VIEW IF EXISTS " + viewNameQuoted);
+                        
+                        stmt.executeUpdate(db.getDialect().sqlRenameView(tempViewName, 
+                               db.getDialect().quote(SqlUtil.notQualified(viewName))));
+                        
+                        ctx.getBatchContext().delete(new DbTableImpl(db, viewName));
 
                         LOGGER.log(Level.FINE, "committed view: " + viewName);
                     }
@@ -116,8 +137,8 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
         };
     }
     
-    public abstract String buildQueryDefinition(Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues, Map<String, Attribute> attributes) ;
+    public abstract String buildQueryDefinition(TaskContext ctx, 
+            BatchContext.Dependency dependency) throws TaskException ;
 
     @Override
     public void cleanup(TaskContext ctx)

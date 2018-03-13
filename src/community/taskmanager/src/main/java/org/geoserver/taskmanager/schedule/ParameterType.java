@@ -70,7 +70,7 @@ public interface ParameterType {
 
         @Override
         public Boolean parse(String value, List<String> dependsOnRawValues) {
-            return Boolean.parseBoolean(value);        
+            return Boolean.parseBoolean(value);
         }
 
     };

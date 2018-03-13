@@ -49,6 +49,7 @@ import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geotools.util.logging.Logging;
+import org.hibernate.exception.ConstraintViolationException;
 
 public class BatchPage extends GeoServerSecuredPage {
     private static final long serialVersionUID = -5111795911981486778L;
@@ -111,10 +112,13 @@ public class BatchPage extends GeoServerSecuredPage {
                 workspaces.add(wi.getName());
             }
         }
-                
+        boolean canBeNull = GeoServerApplication.get().getCatalog().getDefaultWorkspace() != null &&
+                TaskManagerBeans.get().getSecUtil().isAdminable(
+                getSession().getAuthentication(), 
+                GeoServerApplication.get().getCatalog().getDefaultWorkspace());
         form.add(new DropDownChoice<String>("workspace", 
                 new PropertyModel<String>(batchModel, "workspace"), workspaces)
-                .setNullValid(true));
+                .setNullValid(canBeNull).setRequired(!canBeNull));
         
         form.add(new TextField<String>("description", 
                 new PropertyModel<String>(batchModel, "description")));
@@ -186,17 +190,20 @@ public class BatchPage extends GeoServerSecuredPage {
                         config.getBatches().put(batchModel.getObject().getName(), batchModel.getObject());
                     }
                     doReturn();                    
+                } catch (ConstraintViolationException e) { 
+                    form.error(new ParamResourceModel("duplicate", getPage()).getString());
+                    addFeedbackPanels(target);
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, e.getMessage(), e);
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
                     form.error(rootCause == null ? e.getLocalizedMessage() : 
                         rootCause.getLocalizedMessage());
-                    target.add(feedbackPanel);
+                    addFeedbackPanels(target);
                 }
             }
 
             protected void onError(AjaxRequestTarget target, Form<?> form) {
-                target.add(feedbackPanel);
+                addFeedbackPanels(target);
             }
         };
     }

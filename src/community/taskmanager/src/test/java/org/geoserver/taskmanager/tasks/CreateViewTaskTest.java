@@ -1,6 +1,11 @@
+/* (c) 2017-2018 Open Source Geospatial Foundation - all rights reserved
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
 package org.geoserver.taskmanager.tasks;
 
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
+import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Task;
@@ -8,7 +13,6 @@ import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.schedule.BatchJobService;
-import org.geoserver.taskmanager.schedule.TestTaskTypeImpl;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.SqlUtil;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
@@ -49,8 +53,8 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
     private static final String WHERE = "gwl like 'BL%'";
     private static final int NUMBER_OF_RECORDS = 7;
     private static final int NUMBER_OF_COLUMNS = 1;
-
     private static final String VIEW_NAME_NEW_SCHEMA = "newschema.vw_grondwaterlichamen";
+    
     //attributes
     private static final String ATT_DB_NAME = "db";
     private static final String ATT_TABLE_NAME = "table_name";

@@ -179,9 +179,9 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
 
     @Override
     public void cleanup(TaskContext ctx) throws TaskException {
-        final String workspace = ctx.getTask().getConfiguration().getWorkspace();
         final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
         final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
+        final String workspace = catalog.getNamespaceByURI(layerName.getNamespaceURI()).getPrefix();
         
         final LayerInfo layer = catalog.getLayerByName(layerName);               
         final DataStoreInfo store = catalog.getStoreByName(workspace, db.getName(), DataStoreInfo.class);
