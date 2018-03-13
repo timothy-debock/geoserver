@@ -87,9 +87,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
         
         final DbSource sourcedb = (DbSource) ctx.getParameterValues().get(PARAM_SOURCE_DB_NAME);
         final DbSource targetdb = (DbSource) ctx.getParameterValues().get(PARAM_TARGET_DB_NAME);
-        final DbTable table = ctx.getTempValues().containsKey(ctx.getParameterValues().get(PARAM_TABLE_NAME)) ?
-                (DbTable) ctx.getTempValues().get(ctx.getParameterValues().get(PARAM_TABLE_NAME)) :
-                (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
+        final DbTable table = (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME));
 
         final DbTable targetTable = ctx.getParameterValues().containsKey(PARAM_TARGET_TABLE_NAME) ?
                 (DbTable) ctx.getParameterValues().get(PARAM_TARGET_TABLE_NAME) :
@@ -97,7 +95,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
         final String tempTableName = SqlUtil.qualified(
                 SqlUtil.schema(targetTable.getTableName()),
                 "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
-        ctx.getTempValues().put(targetTable, new DbTableImpl(targetdb, tempTableName));
+        ctx.getBatchContext().put(targetTable, new DbTableImpl(targetdb, tempTableName));
 
         try (Connection sourceConn = sourcedb.getDataSource().getConnection()) {
             sourceConn.setAutoCommit(false);
@@ -244,6 +242,8 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " +
                                 targetdb.getDialect().quote(SqlUtil.notQualified(targetTable.getTableName())));
                     }
+                    
+                    ctx.getBatchContext().delete(targetTable);
                 } catch (SQLException e) {
                     throw new TaskException(e);
                 }

@@ -22,6 +22,10 @@ ul.links-above-table {
 	padding: 2px 0px 2px 20px;
 }
 
+.inline {
+	display: inline !important;
+}
+
 h4 {
     margin-top: 1.25em;
 }

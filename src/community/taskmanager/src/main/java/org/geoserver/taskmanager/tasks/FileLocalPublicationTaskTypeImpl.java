@@ -14,8 +14,6 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
-import org.geoserver.catalog.DataStoreInfo;
-import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
@@ -175,12 +173,13 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
 
     @Override
     public void cleanup(TaskContext ctx) throws TaskException {
-        final String workspace = ctx.getTask().getConfiguration().getWorkspace();
         final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
-        
+        final String workspace = catalog.getNamespaceByURI(layerName.getNamespaceURI()).getPrefix();
+
         final LayerInfo layer = catalog.getLayerByName(layerName);               
-        final DataStoreInfo store = catalog.getStoreByName(workspace, layerName.getLocalPart(), DataStoreInfo.class);
-        final FeatureTypeInfo resource = catalog.getResourceByName(layerName, FeatureTypeInfo.class);
+        final StoreInfo store = catalog.getStoreByName(workspace, layerName.getLocalPart(), StoreInfo.class);
+        final ResourceInfo resource = catalog.getResourceByName(layerName, 
+                ResourceInfo.class);
         
         catalog.remove(layer);
         catalog.remove(resource);

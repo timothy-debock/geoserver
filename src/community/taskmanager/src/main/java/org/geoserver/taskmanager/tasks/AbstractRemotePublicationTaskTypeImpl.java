@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 
 import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.CoverageDimensionInfo;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.KeywordInfo;
@@ -32,6 +33,7 @@ import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -158,6 +160,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 if (resource instanceof CoverageInfo) {
                     CoverageInfo coverage = (CoverageInfo) resource;
                     final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
+                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
                     coverageEncoder.setNativeFormat(coverage.getNativeFormat());
                     for (String format : coverage.getSupportedFormats()) {
                         coverageEncoder.addSupportedFormats(format);
@@ -168,13 +171,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     for (String srs : coverage.getResponseSRS()) {
                         coverageEncoder.setResponseSRS(srs); // wrong: should be add
                     }
-                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
-                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());
                     re = coverageEncoder;
                 } else {
                     GSFeatureTypeEncoder fte = new GSFeatureTypeEncoder();
-                    fte.setSRS(resource.getSRS());
                     fte.setNativeName(resource.getNativeName());
+                    if (resource.getNativeCRS() != null) {
+                        fte.setNativeCRS(CRS.toSRS(resource.getNativeCRS()));
+                    }
                     re = fte;
                 }
                 postProcess(re, ctx.getParameterValues());
@@ -193,7 +196,6 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             mdli.getContent());
                 }
                 for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
-                    // TODO: dimension info
                     if (entry.getValue() != null) {
                         re.setMetadataString(entry.getKey(), entry.getValue().toString());
                     }
@@ -210,6 +212,19 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             resource.getNativeBoundingBox().getMinY(),
                             resource.getNativeBoundingBox().getMaxX(),
                             resource.getNativeBoundingBox().getMaxY(), resource.getSRS());
+                }
+                
+                //dimensions, must happen after setName or strange things happen (gs-man bug)
+                if (resource instanceof CoverageInfo) {
+                    CoverageInfo coverage = (CoverageInfo) resource;                    
+                    for (CoverageDimensionInfo di : coverage.getDimensions()) {
+                        ((GSCoverageEncoder) re).addCoverageDimensionInfo(di.getName(),
+                                di.getDescription(), 
+                                Double.toString(di.getRange().getMinimum()), 
+                                Double.toString(di.getRange().getMaximum()), 
+                                di.getUnit(), 
+                                di.getDimensionType() == null ? null : di.getDimensionType().identifier());
+                    }
                 }
 
                 // resource might have already been created together with store

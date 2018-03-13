@@ -6,9 +6,9 @@ package org.geoserver.taskmanager.schedule.impl;
 
 import java.util.Map;
 
-import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
@@ -34,30 +34,22 @@ public class TaskContextImpl implements TaskContext {
     
     private Task task;
     
-    private BatchRun batchRun;
+    private BatchContext batchContext;
     
     private Map<String, Object> parameterValues;
-    
-    private Map<Object, Object> tempValues;
     
     public TaskContextImpl(Task task) {
         this.task = task;
     }
 
-    public TaskContextImpl(Task task, BatchRun batchRun, Map<Object, Object> tempValues) {
+    public TaskContextImpl(Task task, BatchContext batchContext) {
         this.task = task;
-        this.batchRun = batchRun;
-        this.tempValues = tempValues;
+        this.batchContext = batchContext;
     }
 
     @Override
     public Task getTask() {
         return task;
-    }
-
-    @Override
-    public BatchRun getBatchRun() {
-        return batchRun;
     }
 
     @Override
@@ -67,15 +59,17 @@ public class TaskContextImpl implements TaskContext {
         }
         return parameterValues;
     }
-
-    @Override
-    public Map<Object, Object> getTempValues() {
-        return tempValues;
-    }
     
     @Override
     public boolean isInterruptMe() {
-        return batchRun != null && dao.reload(batchRun).isInterruptMe();
+        return batchContext != null && dao.reload(batchContext.getBatchRun()).isInterruptMe();
     }
+
+    @Override
+    public BatchContext getBatchContext() {
+        return batchContext;
+    }
+    
+    
 
 }

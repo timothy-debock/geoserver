@@ -185,23 +185,7 @@ public interface TaskManagerDao {
      * @return the list of available tasks.
      */
     List<Task> getTasksAvailableForBatch(Batch batch);
-
-    /**
-     * Reloads object.
-     * 
-     * @param object the object to be reloaded
-     * @return the reloaded object
-     */
-    <T extends Identifiable>  T reload(T object);
-
-    /**
-     * Copy task
-     * 
-     * @param taskName the name of the task you wish to copy
-     * @return copied task
-     */
-    Task copyTask(String taskName);
-
+    
     /**
      * Get current batch runs for batch
      * 
@@ -210,6 +194,12 @@ public interface TaskManagerDao {
      */
     List<BatchRun> getCurrentBatchRuns(Batch batch);
 
-
+    /**
+     * Reloads object.
+     * 
+     * @param object the object to be reloaded
+     * @return the reloaded object
+     */
+    <T extends Identifiable>  T reload(T object);
 
 }

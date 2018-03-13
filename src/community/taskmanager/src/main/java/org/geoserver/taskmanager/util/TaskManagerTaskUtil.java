@@ -17,13 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Attribute;
-import org.geoserver.taskmanager.data.Batch;
-import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
@@ -65,7 +64,12 @@ public class TaskManagerTaskUtil {
     }
     
     @Lookup
-    public TaskContext createContext(Task task, BatchRun batchRun, Map<Object, Object> tempValues) {
+    public TaskContext createContext(Task task, BatchContext bc) {
+        return null;
+    }
+    
+    @Lookup
+    public BatchContext createContext(BatchRun br) {
         return null;
     }
             
@@ -185,6 +189,16 @@ public class TaskManagerTaskUtil {
     }
     
     /**
+     * Can this taks be cleaned up?
+     * @param task the task
+     * 
+     * @return whether the task can be cleaned-up
+     */
+    public boolean canCleanup(Task task) {
+        return taskTypes.get(task.getType()).supportsCleanup();
+    }
+    
+    /**
      * Clean-up a task.
      * 
      * @param task the task.
@@ -207,16 +221,33 @@ public class TaskManagerTaskUtil {
     public boolean cleanup(Configuration config) {
         boolean success = true;
         for (Task task : config.getTasks().values()) {
-            success = success && cleanup(task);
+            if (canCleanup(task)) {
+                success = success && cleanup(task);
+            }
         }
         return success;        
+    }
+    
+    /**
+     * Can this configuration be cleaned up?
+     * @param config the configuration
+     * 
+     * @return whether the configuration can be cleaned-up
+     */
+    public boolean canCleanup(Configuration config) {
+        for (Task task : config.getTasks().values()) {
+            if (canCleanup(task)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
      * Creates and initializes a task of a particular type
      * 
      * @param type the type
-     * @param string 
+     * @param name the name of the new task 
      * @return the task
      */
     public Task initTask(String type, String name) {
@@ -233,6 +264,28 @@ public class TaskManagerTaskUtil {
         }
         return task;
     }
+        
+    /**
+     * Duplicates a task to a new task
+     * 
+     * @param original the original task the type
+     * @param name the name of the new task 
+     * @return the task
+     */
+    public Task copyTask(Task original, String name) {
+        Task task = fac.createTask();
+        task.setType(original.getType());
+        task.setName(name);
+        for (Parameter originalParam : original.getParameters().values()) {
+            Parameter param = fac.createParameter();
+            param.setName(originalParam.getName());
+            param.setValue(originalParam.getValue());
+            param.setTask(task);
+            task.getParameters().put(param.getName(), param);
+        }
+        return task;
+    }
+    
     private static class AttributeInfo {
         private ParameterType type;
         private List<String> dependsOn;
@@ -410,7 +463,7 @@ public class TaskManagerTaskUtil {
                 if (info == null) {
                     validationErrors.add(new ValidationError(ValidationErrorType.INVALID_PARAM, 
                             parameter.getKey(), null, taskType.getName()));
-                    break;
+                    continue;
                 }
                 ParameterType pt = info.getType();
                 List<String> dependsOnValues = new ArrayList<String>();
@@ -420,49 +473,7 @@ public class TaskManagerTaskUtil {
                 if (!pt.validate(parameter.getValue(), dependsOnValues)) {
                     validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
                             parameter.getKey(), parameter.getValue(), taskType.getName()));
-                    break;
-                }
-            }
-            
-        }
-        
-        return validationErrors;
-    }
-    
-    /**
-     * Validate batch (at configuration time)
-     * 
-     * @param configuration the configuration
-     * @throws TaskException
-     */
-    public List<ValidationError> validate(Batch batch) {
-        List<ValidationError> validationErrors = new ArrayList<ValidationError>();
-        
-        for (BatchElement element : batch.getElements()) {
-            Task task = element.getTask();
-            TaskType taskType = taskTypes.get(task.getType());
-            Map<String, String> rawParameters = getRawParameterValues(task);
-            //first check all required (except if template)
-            if (!task.getConfiguration().isTemplate()) {
-                validateRequired(taskType, rawParameters, validationErrors);
-            }
-            
-            for (Entry<String, String> parameter : rawParameters.entrySet()) {
-                ParameterInfo info = taskType.getParameterInfo().get(parameter.getKey());
-                if (info == null) {
-                    validationErrors.add(new ValidationError(ValidationErrorType.INVALID_PARAM, 
-                            parameter.getKey(), null, taskType.getName()));
-                    break;
-                }
-                ParameterType pt = info.getType();
-                List<String> dependsOnValues = new ArrayList<String>();
-                for (ParameterInfo dependsOn : info.getDependsOn()) {
-                    dependsOnValues.add(rawParameters.get(dependsOn.getName()));
-                }
-                if (!pt.validate(parameter.getValue(), dependsOnValues)) {
-                    validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
-                            parameter.getKey(), parameter.getValue(), taskType.getName()));
-                    break;
+                    continue;
                 }
             }
             

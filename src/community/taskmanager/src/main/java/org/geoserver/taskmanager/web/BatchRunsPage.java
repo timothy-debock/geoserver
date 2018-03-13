@@ -15,7 +15,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
@@ -24,6 +23,7 @@ import org.geoserver.taskmanager.web.panel.SimpleAjaxSubmitLink;
 import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerTablePanel;
+import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 
@@ -112,9 +112,9 @@ public class BatchRunsPage extends GeoServerSecuredPage {
                             @Override
                             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                                 TaskManagerBeans.get().getBjService().interrupt(runModel.getObject());
-                                info(new StringResourceModel("runInterrupted", BatchRunsPage.this).getString());
+                                info(new ParamResourceModel("runInterrupted", BatchRunsPage.this).getString());
                                 
-                                target.add(((GeoServerBasePage) getPage()).getFeedbackPanel());
+                                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
                             }
                         };
                         link.getLink().add(new AttributeAppender("class", "stop-link", ","));

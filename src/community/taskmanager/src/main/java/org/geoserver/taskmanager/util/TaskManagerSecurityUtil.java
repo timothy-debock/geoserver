@@ -86,7 +86,7 @@ public class TaskManagerSecurityUtil {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
             check1 = limits == null || limits.isWritable();
         } else { //lack of default workspace (allow) versus incorrect workspace (deny unless admin)
-            check1 = batch.getWorkspace() == null; 
+            check1 = batch.getWorkspace() == null  || secManager.checkAuthenticationForAdminRole(user); 
         }
         if (wif != null) {
             WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wif);

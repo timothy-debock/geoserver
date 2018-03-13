@@ -21,7 +21,7 @@ public interface Run extends Serializable, Identifiable {
         public boolean isClosed() {
             return this != Status.RUNNING 
             && this != Status.READY_TO_COMMIT
-            && this != Status.COMMITTED;
+            && this != Status.COMMITTING;
         }
     }
 

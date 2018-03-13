@@ -1,4 +1,8 @@
-package org.geoserver.taskmanager.schedule;
+/* (c) 2017-2018 Open Source Geospatial Foundation - all rights reserved
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+package org.geoserver.taskmanager.beans;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -6,7 +10,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
+import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geotools.util.logging.Logging;
@@ -36,6 +43,7 @@ public class TestTaskTypeImpl implements TaskType {
     static {
         PARAM_INFO.put(PARAM_FAIL, new ParameterInfo(PARAM_FAIL, ParameterType.BOOLEAN, false));
         PARAM_INFO.put(PARAM_DELAY, new ParameterInfo(PARAM_DELAY, ParameterType.INTEGER, false));
+        PARAM_INFO.put(PARAM_DELAY_COMMIT, new ParameterInfo(PARAM_DELAY_COMMIT, ParameterType.INTEGER, false));
     }
     
     /**
@@ -54,7 +62,7 @@ public class TestTaskTypeImpl implements TaskType {
 
     @Override
     public TaskResult run(TaskContext ctx) throws TaskException {
-        String identifier = ctx.getBatchRun().getBatch().getFullName() 
+        String identifier = ctx.getBatchContext().getBatchRun().getBatch().getFullName() 
                 + ":" + ctx.getTask().getFullName();
         LOGGER.log(Level.INFO, "running task " + identifier);
         
@@ -110,10 +118,14 @@ public class TestTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public void cleanup(TaskContext ctx) {
-        
+    public void cleanup(TaskContext ctx) throws TaskException {
+        throw new TaskException("unsupported");
     }
-
+    
+    @Override
+    public boolean supportsCleanup() {
+        return false;
+    }
 
     @Override
     public String getName() {

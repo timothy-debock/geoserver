@@ -4,11 +4,16 @@
  */
 package org.geoserver.taskmanager.web;
 
+import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.Configuration;
+import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.web.model.ConfigurationsModel;
 import org.geoserver.taskmanager.web.panel.DropDownPanel;
+import org.geoserver.taskmanager.web.panel.MultiLabelCheckBoxPanel;
 import org.geoserver.web.ComponentAuthorizer;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -23,12 +28,10 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,7 +64,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
         super.onInitialize();
         
         add(dialog = new GeoServerDialog("dialog"));
-        dialog.setInitialHeight(100); 
+        dialog.setInitialHeight(150); 
         ((ModalWindow) dialog.get("dialog")).showUnloadConfirmation(false); 
 
         add(new AjaxLink<Object>("addNew") {
@@ -127,30 +130,36 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                List<String> nonDeletable = new ArrayList<String>();
+                boolean someCant = false;
                 for (Configuration config : configurationsPanel.getSelection()) {
-                    if (!TaskManagerBeans.get().getDataUtil().isDeletable(config)) {
-                        nonDeletable.add(config.getName());
+                    BatchElement be = taskInUseByExternalBatch(config);
+                    if (be != null) {
+                        error(new ParamResourceModel("taskInUse",
+                                AbstractConfigurationsPage.this, config.getName(),
+                                be.getTask().getName(), be.getBatch().getName()).getString());
+                        someCant = true;
+                    } else if (!TaskManagerBeans.get().getDataUtil().isDeletable(config)) {
+                        error(new ParamResourceModel("stillRunning",
+                                AbstractConfigurationsPage.this, config.getName()).getString());
+                        someCant = true;
+                    } else if (!TaskManagerBeans.get().getSecUtil().isAdminable(
+                        AbstractConfigurationsPage.this.getSession().getAuthentication(), config)) {
+                        error(new ParamResourceModel("noDeleteRights",
+                                AbstractConfigurationsPage.this, config.getName()).getString());
+                        someCant = true;
                     }
                 }
-                if (!nonDeletable.isEmpty()) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(new ParamResourceModel("cannotDelete",
-                           AbstractConfigurationsPage.this).getString());
-                    for (String batchName : nonDeletable) {
-                        sb.append(escapeHtml(batchName)).append(", ");
-                    }              
-                    sb.setLength(sb.length() - 2);
-                    error(sb.toString());
-                    target.add(feedbackPanel);
-                } else {
-                
+                if (someCant) {
+                    addFeedbackPanels(target);
+                } else {                
                     dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
                     dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
     
                         private static final long serialVersionUID = -5552087037163833563L;
                         
                         private String error = null;
+                        
+                        private IModel<Boolean> shouldCleanupModel = new Model<Boolean>();
     
                         @Override
                         protected Component getContents(String id) {
@@ -161,14 +170,29 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                                 sb.append("\n&nbsp;&nbsp;");
                                 sb.append(escapeHtml(config.getName()));
                             }
-                            return new MultiLineLabel(id, sb.toString())
-                                    .setEscapeModelStrings(false);
+                            return new MultiLabelCheckBoxPanel(id, sb.toString(),
+                                new ParamResourceModel("cleanUp", getPage()).getString(),
+                                shouldCleanupModel);
                         }
     
                         @Override
                         protected boolean onSubmit(AjaxRequestTarget target, Component contents) {
                             try {
                                 for (Configuration config : configurationsPanel.getSelection()) {
+                                    if (shouldCleanupModel.getObject()) {
+                                        if (TaskManagerBeans.get().getTaskUtil().canCleanup(config)) {
+                                            if (TaskManagerBeans.get().getTaskUtil().cleanup(config)) {
+                                                info(new ParamResourceModel("cleanUp.success",
+                                                        getPage(), config.getName()).getString());                                                   
+                                            } else {
+                                                error(new ParamResourceModel("cleanUp.error",
+                                                        getPage(), config.getName()).getString());    
+                                            }
+                                        } else {
+                                            info(new ParamResourceModel("cleanUp.ignore",
+                                                    getPage(), config.getName()).getString());   
+                                        }
+                                    }
                                     TaskManagerBeans.get().getDao().remove(config);
                                 }
                                 configurationsPanel.clearSelection();
@@ -186,8 +210,8 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                         public void onClose(AjaxRequestTarget target) {
                             if (error != null) {
                                 error(error);
-                                target.add(feedbackPanel);
-                            }
+                            } 
+                            addFeedbackPanels(target);
                             target.add(configurationsPanel);
                             target.add(remove);
                         }
@@ -198,7 +222,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
         remove.setOutputMarkupId(true);
         remove.setEnabled(false);
         
-        // the removal button
+        // the copy button
         add(copy = new AjaxLink<Object>("copySelected") {
             private static final long serialVersionUID = 3581476968062788921L;
 
@@ -206,7 +230,13 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
             public void onClick(AjaxRequestTarget target) {
                 Configuration copy = TaskManagerBeans.get().getDao().copyConfiguration(
                         configurationsPanel.getSelection().get(0).getName());
-                
+                //make sure we can't copy with workspace we don't have access to
+                WorkspaceInfo wi = GeoServerApplication.get().getCatalog().getWorkspaceByName(copy.getWorkspace());
+                if (wi == null ||
+                    !TaskManagerBeans.get().getSecUtil().isAdminable(
+                            AbstractConfigurationsPage.this.getSession().getAuthentication(), wi)) {
+                    copy.setWorkspace(null);
+                }
                 setResponsePage(new ConfigurationPage(copy));
             }
         });
@@ -245,6 +275,19 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
             }
         });
         configurationsPanel.setOutputMarkupId(true);
+    }
+    
+    private BatchElement taskInUseByExternalBatch(Configuration config) {
+        for (Task task : config.getTasks().values()) {
+            task = TaskManagerBeans.get().getDataUtil().init(task);
+            for (BatchElement element : task.getBatchElements()) {
+                if (element.getBatch().getConfiguration() == null
+                        && element.getBatch().isActive()) {
+                    return element;
+                }
+            }
+        } 
+        return null;
     }
 
 }

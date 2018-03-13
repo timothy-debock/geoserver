@@ -64,4 +64,9 @@ public class DefaultDialectImpl implements Dialect {
                 .append(" ;");
         return sb.toString();
     }
+
+    @Override
+    public boolean autoUpdateView() {
+        return false;
+    }
 }

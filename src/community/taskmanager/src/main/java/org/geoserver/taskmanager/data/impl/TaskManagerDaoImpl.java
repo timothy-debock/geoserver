@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional("tmTransactionManager")
 public class TaskManagerDaoImpl implements TaskManagerDao {
     
     @Autowired
@@ -213,7 +213,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<BatchRun> getCurrentBatchRuns(final Batch batch) {
-        return (List<BatchRun>) (getSession().createCriteria(RunImpl.class) /*.setLockMode(LockMode.PESSIMISTIC_READ)*/
+        return (List<BatchRun>) (getSession().createCriteria(RunImpl.class)
                 .createAlias("batchRun", "batchRun")
                 .createAlias("batchRun.batch", "batch")           
                 .add(Restrictions.eq("batch.id", batch.getId()))
@@ -269,14 +269,9 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .setMaxResults(1).uniqueResult();
     }
     
-    /*public boolean isInterruptMe(BatchRun batchRun) {
-        return (Boolean) (getSession().createCriteria(BatchRun.class)
-                .add(Restrictions.idEq(batchRun.getId()))
-                .setProjection(Projections.property("interruptMe")).uniqueResult());
-    }*/
-    
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(transactionManager = "tmTransactionManager", 
+        propagation = Propagation.REQUIRES_NEW)
     public Configuration copyConfiguration(String configName) {
         ConfigurationImpl clone = (ConfigurationImpl) getConfiguration(configName);
         getSession().evict(clone);
@@ -308,21 +303,8 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
             if (Hibernate.isInitialized(batch.getBatchRuns())) {
                 batch.getBatchRuns().clear();
             }
-        }
-        return clone;
-    }
-    
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Task copyTask(String taskName) {
-        TaskImpl clone = (TaskImpl) getSession().createCriteria(TaskImpl.class)
-                .add(Restrictions.eq("removeStamp", 0L))
-                .add(Restrictions.eq("name", taskName)).uniqueResult();;
-        ((TaskImpl) clone).setId(null);
-        ((TaskImpl) clone).setBatchElements(new ArrayList<BatchElement>());
-        for (Parameter param : clone.getParameters().values()) {
-            param.setTask(clone);
-            ((ParameterImpl) param).setId(null);
+            //disable cloned batches
+            batch.setEnabled(false);
         }
         return clone;
     }
