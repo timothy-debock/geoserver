@@ -28,6 +28,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,7 +73,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                     Configuration configuration = TaskManagerBeans.get().getFac().createConfiguration();
                     configuration.setTemplate(templates);
 
-                    setResponsePage(new ConfigurationPage(new Model<Configuration>(configuration)));
+                    setResponsePage(new ConfigurationPage(configuration));
 
                 } else {
                     dialog.setTitle(new ParamResourceModel("addNewDialog.title", getPage()));
@@ -110,7 +111,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                             }
 
                             setResponsePage(
-                                    new ConfigurationPage(new Model<Configuration>(configuration)));
+                                    new ConfigurationPage(configuration));
 
                             return true;
                         }
@@ -126,54 +127,72 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
-                dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
-
-                    private static final long serialVersionUID = -5552087037163833563L;
-                    
-                    private String error = null;
-
-                    @Override
-                    protected Component getContents(String id) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(new ParamResourceModel("confirmDeleteDialog.content",
-                                getPage()).getString());
-                        for (Configuration config : configurationsPanel.getSelection()) {
-                            sb.append("\n&nbsp;&nbsp;");
-                            sb.append(escapeHtml(config.getName()));
-                        }
-                        return new MultiLineLabel(id, sb.toString())
-                                .setEscapeModelStrings(false);
+                List<String> nonDeletable = new ArrayList<String>();
+                for (Configuration config : configurationsPanel.getSelection()) {
+                    if (!TaskManagerBeans.get().getDataUtil().isDeletable(config)) {
+                        nonDeletable.add(config.getName());
                     }
-
-                    @Override
-                    protected boolean onSubmit(AjaxRequestTarget target, Component contents) {
-                        try {
-                            for (Configuration config : configurationsPanel.getSelection()) {
-                                TaskManagerBeans.get().getDao().remove(config);
-                            }
-                            configurationsPanel.clearSelection();
-                            remove.setEnabled(false);
-                        } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, e.getMessage(), e);
-                            Throwable rootCause = ExceptionUtils.getRootCause(e);
-                            error = rootCause == null ? e.getLocalizedMessage() : 
-                                rootCause.getLocalizedMessage();
-                        }
-                        return true;
-                    }
-                    
-                    @Override
-                    public void onClose(AjaxRequestTarget target) {
-                        if (error != null) {
-                            error(error);
-                            target.add(feedbackPanel);
-                        }
-                        target.add(configurationsPanel);
-                        target.add(remove);
-                    }
-                });
+                }
+                if (!nonDeletable.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(new ParamResourceModel("cannotDelete",
+                           AbstractConfigurationsPage.this).getString());
+                    for (String batchName : nonDeletable) {
+                        sb.append(escapeHtml(batchName)).append(", ");
+                    }              
+                    sb.setLength(sb.length() - 2);
+                    error(sb.toString());
+                    target.add(feedbackPanel);
+                } else {
                 
+                    dialog.setTitle(new ParamResourceModel("confirmDeleteDialog.title", getPage()));
+                    dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
+    
+                        private static final long serialVersionUID = -5552087037163833563L;
+                        
+                        private String error = null;
+    
+                        @Override
+                        protected Component getContents(String id) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(new ParamResourceModel("confirmDeleteDialog.content",
+                                    getPage()).getString());
+                            for (Configuration config : configurationsPanel.getSelection()) {
+                                sb.append("\n&nbsp;&nbsp;");
+                                sb.append(escapeHtml(config.getName()));
+                            }
+                            return new MultiLineLabel(id, sb.toString())
+                                    .setEscapeModelStrings(false);
+                        }
+    
+                        @Override
+                        protected boolean onSubmit(AjaxRequestTarget target, Component contents) {
+                            try {
+                                for (Configuration config : configurationsPanel.getSelection()) {
+                                    TaskManagerBeans.get().getDao().remove(config);
+                                }
+                                configurationsPanel.clearSelection();
+                                remove.setEnabled(false);
+                            } catch (Exception e) {
+                                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                                error = rootCause == null ? e.getLocalizedMessage() : 
+                                    rootCause.getLocalizedMessage();
+                            }
+                            return true;
+                        }
+                        
+                        @Override
+                        public void onClose(AjaxRequestTarget target) {
+                            if (error != null) {
+                                error(error);
+                                target.add(feedbackPanel);
+                            }
+                            target.add(configurationsPanel);
+                            target.add(remove);
+                        }
+                    });
+                }
             }  
         });
         remove.setOutputMarkupId(true);
@@ -188,7 +207,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                 Configuration copy = TaskManagerBeans.get().getDao().copyConfiguration(
                         configurationsPanel.getSelection().get(0).getName());
                 
-                setResponsePage(new ConfigurationPage(new Model<Configuration>(copy)));
+                setResponsePage(new ConfigurationPage(copy));
             }
         });
         copy.setOutputMarkupId(true);

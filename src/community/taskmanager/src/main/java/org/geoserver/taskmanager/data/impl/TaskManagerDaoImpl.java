@@ -7,6 +7,7 @@ package org.geoserver.taskmanager.data.impl;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Identifiable;
 import org.geoserver.taskmanager.data.Parameter;
@@ -66,6 +67,11 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     public Run save(final Run run) {
         return saveObject(run);
     }
+
+    @Override
+    public BatchRun save(final BatchRun br) {
+        return saveObject(br);
+    }
     
     @Override
     public Configuration save(final Configuration config) {
@@ -87,17 +93,23 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<Batch> getBatches() {
-        return getSession().createCriteria(BatchImpl.class)
+    public List<Batch> getBatches(boolean hideSpecial) {
+        Criteria criteria = getSession().createCriteria(BatchImpl.class)
                 .createAlias("configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
                 .add(Restrictions.eq("removeStamp", 0L))
                 .add(Restrictions.or(
                         Restrictions.isNull("configuration"),
-                        Restrictions.and(
-                                Restrictions.eq("configuration.removeStamp", 0L),                        
-                                Restrictions.eq("configuration.template", false)
+                        Restrictions.and( 
+                                Restrictions.eq("configuration.removeStamp", 0L),                   
+                                Restrictions.eq("configuration.validated", true)
                         )
-                 )).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+                 ));
+        if (hideSpecial) {
+            criteria.add(Restrictions.or(
+                    Restrictions.isNull("configuration"),
+                    Restrictions.not(Restrictions.like("name", "@%"))));
+        }
+        return criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
     }
     
     @SuppressWarnings("unchecked")
@@ -135,6 +147,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .createAlias("batch", "batch")
                 .createAlias("task", "task")
                 .add(Restrictions.eq("batch.id", batch.getId()))
+                .add(Restrictions.eq("removeStamp", 0L))
                 .setProjection(Projections.property("task.id"));
         Criteria criteria = getSession().createCriteria(TaskImpl.class)
                 .createAlias("configuration", "configuration")
@@ -197,6 +210,18 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .add(Restrictions.isNull("end"))).uniqueResult();
     }
     
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<BatchRun> getCurrentBatchRuns(final Batch batch) {
+        return (List<BatchRun>) (getSession().createCriteria(RunImpl.class) /*.setLockMode(LockMode.PESSIMISTIC_READ)*/
+                .createAlias("batchRun", "batchRun")
+                .createAlias("batchRun.batch", "batch")           
+                .add(Restrictions.eq("batch.id", batch.getId()))
+                .add(Restrictions.in("status", new Run.Status[] {Run.Status.RUNNING, Run.Status.READY_TO_COMMIT, Run.Status.COMMITTING}))
+                .setProjection(Projections.groupProperty("batchRun"))
+                .list());
+    }
+    
     @Override
     public Run getCommittingRun(final Task task) {
         return (Run) (getSession().createCriteria(RunImpl.class).setLockMode(LockMode.PESSIMISTIC_READ)
@@ -243,7 +268,13 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .addOrder(Order.desc("start")))
                 .setMaxResults(1).uniqueResult();
     }
-
+    
+    /*public boolean isInterruptMe(BatchRun batchRun) {
+        return (Boolean) (getSession().createCriteria(BatchRun.class)
+                .add(Restrictions.idEq(batchRun.getId()))
+                .setProjection(Projections.property("interruptMe")).uniqueResult());
+    }*/
+    
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Configuration copyConfiguration(String configName) {
@@ -277,6 +308,21 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
             if (Hibernate.isInitialized(batch.getBatchRuns())) {
                 batch.getBatchRuns().clear();
             }
+        }
+        return clone;
+    }
+    
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Task copyTask(String taskName) {
+        TaskImpl clone = (TaskImpl) getSession().createCriteria(TaskImpl.class)
+                .add(Restrictions.eq("removeStamp", 0L))
+                .add(Restrictions.eq("name", taskName)).uniqueResult();;
+        ((TaskImpl) clone).setId(null);
+        ((TaskImpl) clone).setBatchElements(new ArrayList<BatchElement>());
+        for (Parameter param : clone.getParameters().values()) {
+            param.setTask(clone);
+            ((ParameterImpl) param).setId(null);
         }
         return clone;
     }

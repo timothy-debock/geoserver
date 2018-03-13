@@ -78,7 +78,7 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         
         Batch dummy1 = dao.save(dummyBatch1());
                         
-        List<Batch> Batches = dao.getBatches();
+        List<Batch> Batches = dao.getBatches(false);
         
         tester.startPage(page);        
 
@@ -123,8 +123,8 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         Batch dummy1 = dao.save(dummyBatch1());
         Batch dummy2 = dao.save(dummyBatch2());
                                 
-        assertTrue(containsConfig(dao.getBatches(), dummy1));  
-        assertTrue(containsConfig(dao.getBatches(), dummy2));
+        assertTrue(containsConfig(dao.getBatches(false), dummy1));  
+        assertTrue(containsConfig(dao.getBatches(false), dummy2));
         
         //sort descending on name
         tester.clickLink("batchesPanel:form:batchesPanel:listContainer:sortableLinks:1:header:link", true);
@@ -147,8 +147,8 @@ public class BatchesPageTest extends GeoServerWicketTestSupport {
         //confirm      
         tester.executeAjaxEvent("batchesPanel:dialog:dialog:content:form:submit", "click");    
 
-        assertFalse(containsConfig(dao.getBatches(), dummy1));
-        assertTrue(containsConfig(dao.getBatches(), dummy2));
+        assertFalse(containsConfig(dao.getBatches(false), dummy1));
+        assertTrue(containsConfig(dao.getBatches(false), dummy2));
         
         assertFalse(containsConfig(getBatchesFromTable(table), dummy1));
         assertTrue(containsConfig(getBatchesFromTable(table), dummy2));
