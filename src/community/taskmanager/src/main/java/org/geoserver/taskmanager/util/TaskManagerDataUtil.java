@@ -7,7 +7,9 @@ package org.geoserver.taskmanager.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +23,7 @@ import org.geoserver.taskmanager.data.Run;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
+import org.geoserver.taskmanager.data.Run.Status;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,6 +142,7 @@ public class TaskManagerDataUtil {
         BatchElement batchElement = getOrCreateBatchElement(batch, task);
         if (!batch.getElements().contains(batchElement)) {
             batch.getElements().add(batchElement);
+            batchElement.setBatch(batch);
         }
         return batchElement;
     }
@@ -158,6 +162,7 @@ public class TaskManagerDataUtil {
         BatchElement batchElement = getOrCreateBatchElement(batch, task);
         batch.getElements().remove(batchElement);
         batch.getElements().add(position, batchElement);
+        batchElement.setBatch(batch);
         return batchElement;
     }
         
@@ -187,15 +192,26 @@ public class TaskManagerDataUtil {
         return null;
     }
     
+    public Set<String> getAssociatedAttributeNames(Task task) {
+        Set<String> attNames = new HashSet<String>();
+        for (Parameter pam : task.getParameters().values()) {
+            String attName = getAssociatedAttributeName(pam);
+            if (attName != null) {
+                attNames.add(attName);
+            }
+        }
+        return attNames;
+    }
+    
     /**
      * List all associated parameters of attribute
      * 
      * @param att the attribute
      * @return the parameters
      */
-    public List<Parameter> getAssociatedParameters(Attribute att) {
+    public List<Parameter> getAssociatedParameters(Attribute att, Configuration config) {
         List<Parameter> result = new ArrayList<Parameter>();
-        for (Task task : att.getConfiguration().getTasks().values()) {
+        for (Task task : config.getTasks().values()) {
             for (Parameter param : task.getParameters().values()) {
                 if (att.getName().equals(getAssociatedAttributeName(param))) {
                     result.add(param);
@@ -204,13 +220,38 @@ public class TaskManagerDataUtil {
         }
         return result;
     }
+
+    /**
+     * Verifiy if batch is deletable (not running)
+     * 
+     * @param batch the batch to verify
+     * @return whether it is deletable
+     */
+    public boolean isDeletable(Batch batch) {
+        return dao.getCurrentBatchRuns(batch).isEmpty();
+    }
+    
+    /**
+     * Verifiy if configuration is deletable (no batches are running)
+     * 
+     * @param config the config to verify
+     * @return whether it is deletable
+     */
+    public boolean isDeletable(Configuration config) {
+        for (Batch batch : config.getBatches().values()) {
+            if (!dao.getCurrentBatchRuns(batch).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     // -----------------------
     // Transactional methods
     // -----------------------
     
     @Transactional 
-    public Configuration saveAndRemove(Configuration config, Collection<Task> tasks, 
+    public Configuration saveScheduleAndRemove(Configuration config, Collection<Task> tasks, 
             Collection<Batch> batches) {
         config = bjService.saveAndSchedule(config);
         for (Task task : tasks) {
@@ -310,6 +351,34 @@ public class TaskManagerDataUtil {
         } else {
             return null;
         }
+    }  
+    
+    /**
+     * Close a batch run (do this when the batch run is no longer running,
+     * but its status suggests it is.)
+     * 
+     * @param br
+     */
+    @Transactional
+    public BatchRun closeBatchRun(BatchRun br, String message) {
+        for (Run run : br.getRuns()) {
+            if (!run.getStatus().isClosed()) {
+                if (run.getEnd() == null) {
+                    //the task stopped while running
+                    run.setStatus(Status.FAILED);
+                    run.setEnd(new Date());
+                } else if (br.getStatus() == Status.COMMITTING) {
+                    //if the batch run was already in the commit phase,
+                    //we were already past the point of rolling back
+                    run.setStatus(Status.NOT_COMMITTED);
+                } else { //the task was finished, but was neither committed or rolled back
+                    run.setStatus(Status.NOT_ROLLED_BACK);
+                }
+                run.setMessage(message);
+                br = dao.save(run).getBatchRun();
+            }
+        }
+        return dao.reload(br);
     }
 
 }

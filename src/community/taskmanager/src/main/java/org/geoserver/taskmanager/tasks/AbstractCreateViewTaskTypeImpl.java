@@ -16,13 +16,12 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 
 import org.geoserver.taskmanager.data.Attribute;
-import org.geoserver.taskmanager.data.Batch;
-import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTableImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
@@ -57,20 +56,25 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
     }
 
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues) throws TaskException {
-        final DbSource db = (DbSource) parameterValues.get(PARAM_DB_NAME);
-        final String viewName = (String) parameterValues.get(PARAM_VIEW_NAME);
+    public TaskResult run(TaskContext ctx) throws TaskException {
+        final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
+        final String viewName = (String) ctx.getParameterValues().get(PARAM_VIEW_NAME);
         final String tempViewName = SqlUtil.qualified(SqlUtil.schema(viewName),
                 "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
-        tempValues.put(new DbTableImpl(db, viewName), new DbTableImpl(db, tempViewName));
+        ctx.getTempValues().put(new DbTableImpl(db, viewName), new DbTableImpl(db, tempViewName));
         
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
-                StringBuilder sb = new StringBuilder("CREATE VIEW ")
+
+                String sqlCreateSchemaIfNotExists = db.getDialect().createSchema(
+                        conn,
+                        SqlUtil.schema(tempViewName));
+
+                StringBuilder sb = new StringBuilder(sqlCreateSchemaIfNotExists);
+                sb.append("CREATE VIEW ")
                         .append(tempViewName).append(" AS ")
-                        .append(buildQueryDefinition(parameterValues, tempValues, 
-                                task.getConfiguration().getAttributes()));
+                        .append(buildQueryDefinition(ctx.getParameterValues(), ctx.getTempValues(), 
+                                ctx.getTask().getConfiguration().getAttributes()));
                 LOGGER.log(Level.FINE, "creating temporary View: " + sb.toString());
                 stmt.executeUpdate(sb.toString());
             }
@@ -116,10 +120,10 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
             Map<Object, Object> tempValues, Map<String, Attribute> attributes) ;
 
     @Override
-    public void cleanup(Task task, Map<String, Object> parameterValues)
+    public void cleanup(TaskContext ctx)
             throws TaskException {
-        final DbSource db = (DbSource) parameterValues.get(PARAM_DB_NAME);
-        final String viewName = (String) parameterValues.get(PARAM_VIEW_NAME);
+        final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
+        final String viewName = (String) ctx.getParameterValues().get(PARAM_VIEW_NAME);
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()){
                 stmt.executeUpdate("DROP VIEW IF EXISTS " + db.getDialect().quote(viewName));

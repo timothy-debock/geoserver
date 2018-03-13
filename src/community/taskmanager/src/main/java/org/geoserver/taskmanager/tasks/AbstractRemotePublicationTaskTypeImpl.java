@@ -25,11 +25,10 @@ import org.geoserver.catalog.MetadataLinkInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.config.GeoServerDataDirectory;
-import org.geoserver.taskmanager.data.Batch;
-import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
@@ -78,10 +77,9 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     }
 
     @Override
-    public TaskResult run(Batch batch, Task task, Map<String, Object> parameterValues,
-            Map<Object, Object> tempValues) throws TaskException {
-        final ExternalGS extGS = (ExternalGS) parameterValues.get(PARAM_EXT_GS);   
-        final LayerInfo layer = (LayerInfo) parameterValues.get(PARAM_LAYER);
+    public TaskResult run(TaskContext ctx) throws TaskException {
+        final ExternalGS extGS = (ExternalGS) ctx.getParameterValues().get(PARAM_EXT_GS);   
+        final LayerInfo layer = (LayerInfo) ctx.getParameterValues().get(PARAM_LAYER);
         final ResourceInfo resource = layer.getResource();
         final StoreInfo store = resource.getStore();
         final StoreType storeType = store instanceof CoverageStoreInfo ? 
@@ -144,7 +142,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 
                 if (createStore) {
                     try {
-                        if (!createStore(extGS, restManager, store, parameterValues)) {
+                        if (!createStore(extGS, restManager, store, ctx.getParameterValues())) {
                             throw new TaskException("Failed to create store " + ws + ":" + store.getName());
                         }
                     } catch (IOException e) {
@@ -179,7 +177,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     fte.setNativeName(resource.getNativeName());
                     re = fte;
                 }
-                postProcess(re, parameterValues);
+                postProcess(re, ctx.getParameterValues());
 
                 // sync metadata
                 re.setName(resource.getName());
@@ -328,10 +326,10 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     }
 
     @Override
-    public void cleanup(Task task, Map<String, Object> parameterValues)
+    public void cleanup(TaskContext ctx)
             throws TaskException {
-        final ExternalGS extGS = (ExternalGS) parameterValues.get(PARAM_EXT_GS);   
-        final LayerInfo layer = (LayerInfo) parameterValues.get(PARAM_LAYER);
+        final ExternalGS extGS = (ExternalGS) ctx.getParameterValues().get(PARAM_EXT_GS);   
+        final LayerInfo layer = (LayerInfo) ctx.getParameterValues().get(PARAM_LAYER);
         final ResourceInfo resource = layer.getResource();
         final StoreInfo store = resource.getStore();
         final StoreType storeType = store instanceof CoverageStoreInfo ? 

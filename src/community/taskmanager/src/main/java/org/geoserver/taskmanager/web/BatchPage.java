@@ -22,6 +22,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -84,6 +85,9 @@ public class BatchPage extends GeoServerSecuredPage {
         super.onInitialize();
         
         add(dialog = new GeoServerDialog("dialog"));
+        
+        add(new WebMarkupContainer("notvalidated").setVisible(batchModel.getObject().getConfiguration() != null
+                && !batchModel.getObject().getConfiguration().isValidated()));
                 
         Form<Batch> form = new Form<Batch>("batchForm", batchModel);
         add(form);
@@ -102,7 +106,10 @@ public class BatchPage extends GeoServerSecuredPage {
         
         List<String> workspaces = new ArrayList<String>();
         for (WorkspaceInfo wi : GeoServerApplication.get().getCatalog().getWorkspaces()) {
-            workspaces.add(wi.getName());
+            if (wi.getName().equals(batchModel.getObject().getWorkspace()) ||
+                    TaskManagerBeans.get().getSecUtil().isAdminable(getSession().getAuthentication(), wi)) {
+                workspaces.add(wi.getName());
+            }
         }
                 
         form.add(new DropDownChoice<String>("workspace", 
@@ -148,7 +155,7 @@ public class BatchPage extends GeoServerSecuredPage {
         });
         
         if (batchModel.getObject().getId() != null
-                && !TaskManagerBeans.get().getSecUtil().isWritable(
+                && !TaskManagerBeans.get().getSecUtil().isAdminable(
                 getSession().getAuthentication(), batchModel.getObject())) {
             form.get("name").setEnabled(false);
             form.get("workspace").setEnabled(false);
@@ -271,7 +278,7 @@ public class BatchPage extends GeoServerSecuredPage {
                                 getPage()).getString());
                         for (BatchElement be : elementsPanel.getSelection()) {
                             sb.append("\n&nbsp;&nbsp;");
-                            sb.append(escapeHtml(be.getTask().getName()));
+                            sb.append(escapeHtml(be.getTask().getFullName()));
                         }
                         return new MultiLineLabel(id, sb.toString())
                                 .setEscapeModelStrings(false);

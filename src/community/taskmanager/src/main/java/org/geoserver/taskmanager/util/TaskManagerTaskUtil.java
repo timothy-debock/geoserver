@@ -19,17 +19,21 @@ import java.util.logging.Logger;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
+import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.ValidationError.ValidationErrorType;
+import org.geoserver.taskmanager.web.action.Action;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
 /**
@@ -45,12 +49,25 @@ public class TaskManagerTaskUtil {
     
     @Autowired
     private LookupService<TaskType> taskTypes;
+
+    @Autowired
+    private LookupService<Action> actions;
     
     @Autowired
     private TaskManagerFactory fac;
 
     @Autowired
     private TaskManagerDataUtil dataUtil;
+    
+    @Lookup
+    public TaskContext createContext(Task task) {
+        return null;
+    }
+    
+    @Lookup
+    public TaskContext createContext(Task task, BatchRun batchRun, Map<Object, Object> tempValues) {
+        return null;
+    }
             
     private String getRawParameterValue(Parameter parameter) {
         String attName = dataUtil.getAssociatedAttributeName(parameter);
@@ -72,7 +89,7 @@ public class TaskManagerTaskUtil {
      * @param task the task
      * @return the raw parameters.
      */
-    public Map<String, String> getRawParameterValues(Task task) {
+    private Map<String, String> getRawParameterValues(Task task) {
         Map<String, String> rawParameterValues = new HashMap<String, String>();
         for (Parameter parameter : task.getParameters().values()) {
             String rawValue = getRawParameterValue(parameter);
@@ -111,7 +128,7 @@ public class TaskManagerTaskUtil {
      * @return the parsed parameters
      * @throws TaskException if any of the parameters are invalid or missing.
      */
-    public Map<String, Object> parseParameters(TaskType taskType, 
+    private Map<String, Object> parseParameters(TaskType taskType, 
             Map<String, String> rawParameters) throws TaskException {
         List<ValidationError> validationErrors = new ArrayList<ValidationError>();
         
@@ -150,6 +167,37 @@ public class TaskManagerTaskUtil {
     }
     
     /**
+     * Clean-up a task.
+     * 
+     * @param task the task.
+     * @return true if the cleanup was entirely successful, false if one or more task clean-ups failed,
+     * in which case the logs should be checked.
+     */
+    public boolean cleanup(Task task) {
+        TaskType type = taskTypes.get(task.getType());
+        try {
+            type.cleanup(createContext(task));
+            return true;
+        } catch (TaskException e) {
+            LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Clean-up a task.
+     * 
+     * @param task the task.
+     * @return true if the cleanup was entirely successful, false if one or more task clean-ups failed,
+     * in which case the logs should be checked.
+     * @throws TaskException 
+     */
+    public Map<String, Object> getParameterValues(Task task) throws TaskException {
+        return parseParameters(taskTypes.get(task.getType()), 
+                getRawParameterValues(task));
+    }
+    
+    /**
      * Clean-up a configuration.
      * 
      * @param config the configuration.
@@ -159,15 +207,7 @@ public class TaskManagerTaskUtil {
     public boolean cleanup(Configuration config) {
         boolean success = true;
         for (Task task : config.getTasks().values()) {
-            Map<String, String> rawParameterValues = getRawParameterValues(task);
-            TaskType type = taskTypes.get(task.getType());
-            try {
-                Map<String, Object> parameterValues = parseParameters(type, rawParameterValues);
-                type.cleanup(task, parameterValues);
-            } catch (TaskException e) {
-                LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
-                success = false;                
-            }
+            success = success && cleanup(task);
         }
         return success;        
     }
@@ -193,7 +233,6 @@ public class TaskManagerTaskUtil {
         }
         return task;
     }
-    
     private static class AttributeInfo {
         private ParameterType type;
         private List<String> dependsOn;
@@ -228,8 +267,8 @@ public class TaskManagerTaskUtil {
      * @param string 
      * @return the task
      */
-    private List<String> mergeDomain(Attribute attribute) {
-        List<Parameter> params = dataUtil.getAssociatedParameters(attribute);
+    private List<String> mergeDomain(Attribute attribute, Configuration config) {
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
         
         Set<AttributeInfo> attInfos = new HashSet<AttributeInfo>();
         for (Parameter param : params) {
@@ -278,9 +317,20 @@ public class TaskManagerTaskUtil {
     public Map<String, List<String>> getDomains(Configuration configuration) {
         Map<String, List<String>> domains = new HashMap<String, List<String>>();
         for (Attribute att : configuration.getAttributes().values()) {
-            domains.put(att.getName(), mergeDomain(att));
+            domains.put(att.getName(), mergeDomain(att, configuration));
         }
         return domains;
+    }
+
+    public Set<ParameterType> getTypesForAttribute(Attribute attribute, Configuration config) {
+        HashSet<ParameterType> parameterTypes = new HashSet<>();
+
+        for (Parameter parameter : dataUtil.getAssociatedParameters(attribute, config)) {
+            TaskType taskType = taskTypes.get(parameter.getTask().getType());
+            parameterTypes.add(taskType.getParameterInfo().get(parameter.getName()).getType());
+        }
+
+        return parameterTypes;
     }
     
     /**
@@ -289,17 +339,19 @@ public class TaskManagerTaskUtil {
      * @param configuration the configuration
      * @param the domains
      */
-    public void updateDomains(Configuration configuration, Map<String, List<String>> domains) {
+    public void updateDomains(Configuration configuration, Map<String, List<String>> domains,
+            Set<String> updateAttributes) {
         Iterator<String> it = domains.keySet().iterator();
         while(it.hasNext()) {
             String attName = it.next();
             if (!configuration.getAttributes().containsKey(attName)) {
                 it.remove();
-            }
+            } 
         }
         for (Attribute att : configuration.getAttributes().values()) {
-            if (!domains.containsKey(att.getName())) {
-                domains.put(att.getName(), mergeDomain(att));
+            if (!domains.containsKey(att.getName()) ||
+                    updateAttributes != null && updateAttributes.contains(att.getName())) {
+                domains.put(att.getName(), mergeDomain(att, configuration));
             }
         }
     }
@@ -310,9 +362,10 @@ public class TaskManagerTaskUtil {
      * @param attribute the attribute.
      * @param domains the domains.
      */
-    public void updateDependentDomains(Attribute attribute, Map<String, List<String>> domains) {
+    public void updateDependentDomains(Attribute attribute, Configuration config,
+            Map<String, List<String>> domains) {
         Set<String> dependentAttributes = new HashSet<String>();
-        List<Parameter> params = dataUtil.getAssociatedParameters(attribute);
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
         for (Parameter param : params) {
             TaskType taskType = taskTypes.get(param.getTask().getType());
             ParameterInfo info = taskType.getParameterInfo().get(param.getName());
@@ -330,7 +383,7 @@ public class TaskManagerTaskUtil {
         for (String attName : dependentAttributes) {
             Attribute att = attribute.getConfiguration().getAttributes().get(attName);
             if (att != null) {
-                domains.put(attName, mergeDomain(att));
+                domains.put(attName, mergeDomain(att, config));
             }
         }
     }
@@ -416,6 +469,28 @@ public class TaskManagerTaskUtil {
         }
         
         return validationErrors;
+    }
+    
+    /**
+     * Get attribute domain based on associated parameters.
+     * 
+     * @param type the type
+     * @param string 
+     * @return the task
+     */
+    public List<Action> getActionsForAttribute(Attribute attribute, Configuration config) {
+        List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
+        
+        Set<Action> result = new HashSet<Action>();
+        for (Parameter param : params) {
+            TaskType taskType = taskTypes.get(param.getTask().getType());
+            ParameterInfo info = taskType.getParameterInfo().get(param.getName());
+            for (String actionName : info.getType().getActions()) {
+                result.add(actions.get(actionName));
+            }
+        }
+        
+        return new ArrayList<Action>(result);
     }
     
 
