@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LookupGSServiceImpl extends LookupServiceImpl<ExternalGS> {
     
-    @Autowired
+    @Autowired(required = false)
     public void setExternalGS(List<ExternalGS> externalGS) {
         setNamed(externalGS);
     }

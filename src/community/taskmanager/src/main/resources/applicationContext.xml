@@ -55,6 +55,8 @@
         
     <context:component-scan base-package="org.geoserver.taskmanager.web.action" />
     
+    <context:component-scan base-package="org.geoserver.taskmanager.fileservice.impl"/>
+    
     <bean class="org.geoserver.taskmanager.util.ConfigurationBeansLoader">
        <constructor-arg ref="resourceStore"></constructor-arg>
     </bean>

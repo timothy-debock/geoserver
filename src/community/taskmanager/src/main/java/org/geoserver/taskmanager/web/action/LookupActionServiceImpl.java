@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LookupActionServiceImpl extends LookupServiceImpl<Action> {
     
-    @Autowired
+    @Autowired(required = false)
     public void setActions(List<Action> actions) {
         setNamed(actions);
     }
