@@ -2,6 +2,7 @@ package org.geoserver.taskmanager.tasks;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -95,11 +96,11 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 store.setWorkspace(ws);
                 store.setName(layerName.getLocalPart());
                 try {
+                    URL url = new URL("file:" + file.getPath());
                     if (isShapeFile) {
-                        store.getConnectionParameters().put("url", file.toURI().toURL());
+                        store.getConnectionParameters().put("url", url);
                     } else {
-                        ((CoverageStoreInfo) store).setURL(
-                                file.toURI().toURL().toString());
+                        ((CoverageStoreInfo) store).setURL(url.toString());
                         ((CoverageStoreInfo) store).setType(
                                 GridFormatFinder.findFormat(file).getName());
                     }

@@ -36,7 +36,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
     @Test
     public void testFileRegistry() {
-        Assert.assertEquals(2, fileServiceRegistry.names().size());
+        Assert.assertEquals(3, fileServiceRegistry.names().size());
 
         String firstService = fileServiceRegistry.names().iterator().next();
         Assert.assertNotNull(fileServiceRegistry.get(firstService));

@@ -21,13 +21,48 @@ import java.util.List;
  */
 public interface FileService extends Serializable, Named {
 
-    boolean checkFileExists(Path filePath) throws IOException;
+    /**
+     * List existing sub folders in this file service.
+     * 
+     * @return list of existing sub folders
+     * @throws IOException
+     */
+    List<Path> listSubfolders() throws IOException;
 
+    /**
+     * Create a file in the file service
+     * 
+     * @param filePath the path of the file, relative to this service
+     * @param content the content of the file
+     * @return a location string that can be used to configure a Geoserver store
+     * @throws IOException
+     */
     String create(Path filePath, InputStream content) throws IOException;
 
+    /**
+     * Check if this file exists.
+     * 
+     * @param filePath the path of the file, relative to this service
+     * @return whether the file exists
+     * @throws IOException
+     */
+    boolean checkFileExists(Path filePath) throws IOException;
+
+    /**
+     * Delete this file.
+     * 
+     * @param filePath the path of the file, relative to this service
+     * @return whether anything was actually deleted.
+     * @throws IOException
+     */
     boolean delete(Path filePath) throws IOException;
 
+    /**
+     * Read this file.
+     * 
+     * @param filePath the path of the file, relative to this service
+     * @return inputstream with data
+     * @throws IOException
+     */
     InputStream read(Path filePath) throws IOException;
-
-    List<Path> listSubfolders() throws IOException;
 }
