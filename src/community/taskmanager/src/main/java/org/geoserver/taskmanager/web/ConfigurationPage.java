@@ -454,12 +454,14 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                 final GeoServerTablePanel<Task> thisPanel = this;     
                 if (property.equals(TasksModel.NAME)) {                    
                     IModel<String> nameModel = (IModel<String>) property.getModel(itemModel);
+                    String oldName = nameModel.getObject();
                     return new SimpleAjaxSubmitLink(id, nameModel) {
 
                         private static final long serialVersionUID = 2023797271780630795L;
 
                         @Override
                         protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
+                            
                             dialog.setInitialWidth(400);
                             dialog.setInitialHeight(100);                            
                             dialog.setTitle(new ParamResourceModel("changeTaskName", getPage()));
@@ -492,6 +494,9 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                                 @Override
                                 protected boolean onSubmit(AjaxRequestTarget target,
                                         Component contents) {
+                                    configurationModel.getObject().getTasks().remove(oldName);
+                                    configurationModel.getObject().getTasks().put(
+                                            nameModel.getObject(), itemModel.getObject());
                                     target.add(thisPanel);
                                     return true;
                                 }

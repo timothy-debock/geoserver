@@ -60,7 +60,9 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends Identifiable> T reload(T object) {
-        return (T) getSession().get(object.getClass(), object.getId());
+        return (T) getSession().createCriteria(object.getClass())
+                .add(Restrictions.idEq(object.getId()))
+                .uniqueResult();
     }
 
     @Override
@@ -125,12 +127,14 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
 
     @Override
     public Configuration getConfiguration(long id) {
-        return (Configuration) getSession().get(ConfigurationImpl.class, id);
+        return (Configuration) getSession().createCriteria(ConfigurationImpl.class)
+                .add(Restrictions.idEq(id)).uniqueResult();
     }
 
     @Override
     public Batch getBatch(long id) {
-        return (Batch) getSession().get(BatchImpl.class, id);
+        return (Batch) getSession().createCriteria(BatchImpl.class)
+                .add(Restrictions.idEq(id)).uniqueResult();
     }       
 
     @Override
