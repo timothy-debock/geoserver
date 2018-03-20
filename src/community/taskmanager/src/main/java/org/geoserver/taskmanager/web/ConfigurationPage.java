@@ -167,8 +167,15 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                 getSession().getAuthentication(), 
                 GeoServerApplication.get().getCatalog().getDefaultWorkspace());
         form.add(new DropDownChoice<String>("workspace",
-                new PropertyModel<String>(configurationModel, "workspace"), workspaces)
-                .setNullValid(canBeNull).setRequired(!canBeNull));
+                new PropertyModel<String>(configurationModel, "workspace"), workspaces) {
+                        private static final long serialVersionUID = -6665795544099616226L;
+
+                        @Override
+                        public boolean isRequired() {
+                            return !canBeNull && (form.findSubmittingButton() == saveButton 
+                                    || form.findSubmittingButton() == applyButton);
+                        }
+                }.setNullValid(canBeNull));
 
         TextField<String> name = new TextField<String>("description",
                 new PropertyModel<String>(configurationModel, "description"));

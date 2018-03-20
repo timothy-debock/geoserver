@@ -223,6 +223,15 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     }
     
     @Override
+    public BatchRun getBatchRunBySchedulerReference(final String schedulerReference) {
+        return (BatchRun) (getSession().createCriteria(BatchRunImpl.class)
+                .add(Restrictions.eq("schedulerReference", schedulerReference))
+                .addOrder(Order.desc("id")) //assuming sequential id generation
+                .setMaxResults(1)
+                .uniqueResult());
+    }
+    
+    @Override
     public Run getCommittingRun(final Task task) {
         return (Run) (getSession().createCriteria(RunImpl.class).setLockMode(LockMode.PESSIMISTIC_READ)
                 .createAlias("batchElement", "batchElement")
