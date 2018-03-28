@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.data;
+package org.geoserver.taskmanager.fileservice;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -37,9 +37,17 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
     @Test
     public void testFileRegistry() {
         Assert.assertEquals(3, fileServiceRegistry.names().size());
+        
+        FileService fs = fileServiceRegistry.get("s3-test");
+        Assert.assertNotNull(fs);
+        Assert.assertTrue(fs instanceof S3FileServiceImpl);
+        Assert.assertEquals("http://dov-minio-s3-on-1.vm.cumuli.be:9000",
+                ((S3FileServiceImpl) fs).getEndpoint());
 
-        String firstService = fileServiceRegistry.names().iterator().next();
-        Assert.assertNotNull(fileServiceRegistry.get(firstService));
+        fs = fileServiceRegistry.get("Temporary Directory");
+        Assert.assertNotNull(fs);
+        Assert.assertTrue(fs instanceof FileServiceImpl);
+        Assert.assertEquals("/tmp", ((FileServiceImpl) fs).getRootFolder());
     }
 
     @Test

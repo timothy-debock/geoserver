@@ -42,7 +42,12 @@ public class FileServiceImpl implements FileService, ServletContextAware {
 
     @Override
     public String getName() {
-        return "Local: " + name;
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Local File System: " + name;
     }
 
     public void setRootFolder(String rootFolder) {
@@ -105,6 +110,7 @@ public class FileServiceImpl implements FileService, ServletContextAware {
             throw new IOException("No rootFolder is not configured in this file service.");
         }
         File file = new File(rootFolder.toUri());
+        file.mkdirs();
         String[] folders = file.list(FileFilterUtils.directoryFileFilter());
         ArrayList<Path> paths = new ArrayList<>();
         for (String folder : folders) {
@@ -128,6 +134,10 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         } else {
             throw new IllegalStateException("Unable to determine data directory");
         }
+    }
+
+    public String getRootFolder() {
+        return rootFolder.toString();
     }
 
 }

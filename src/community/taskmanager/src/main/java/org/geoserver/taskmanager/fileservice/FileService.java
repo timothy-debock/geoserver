@@ -20,6 +20,13 @@ import java.util.List;
  *
  */
 public interface FileService extends Serializable, Named {
+    
+    /**
+     * User-friendly description of this file service. 
+     * 
+     * @return description
+     */
+    public String getDescription();
 
     /**
      * List existing sub folders in this file service.

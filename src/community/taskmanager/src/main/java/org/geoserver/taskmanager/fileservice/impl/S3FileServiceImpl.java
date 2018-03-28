@@ -76,10 +76,23 @@ public class S3FileServiceImpl implements FileService {
     public void setPassword(String password) {
         this.password = password;
     }
+    
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
 
     @Override
     public String getName() {
-        return "S3: " + alias;
+        return "s3-" + alias;
+    }
+
+    @Override
+    public String getDescription() {
+        return "S3 Service: " + alias;
     }
 
     @Override

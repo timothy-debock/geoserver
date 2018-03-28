@@ -20,6 +20,7 @@ import org.geoserver.taskmanager.fileservice.FileService;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
+import org.apache.wicket.markup.html.form.IChoiceRenderer;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,7 +72,26 @@ public class FileUploadPanel extends Panel {
 
         fileServiceChoice =
                 new DropDownChoice<String>("fileServiceSelection", new Model<String>(),
-                        new ArrayList<>(TaskManagerBeans.get().getFileServices().names())) {
+                        new ArrayList<>(TaskManagerBeans.get().getFileServices().names()),
+                        new IChoiceRenderer<String>() {
+                            private static final long serialVersionUID = -1102965730550597918L;
+
+                            @Override
+                            public Object getDisplayValue(String object) {
+                                return TaskManagerBeans.get().getFileServices().get(object).getDescription();
+                            }
+
+                            @Override
+                            public String getIdValue(String object, int index) {
+                                return object;
+                            }
+
+                            @Override
+                            public String getObject(String id, IModel<? extends List<? extends String>> choices) {
+                                return id;
+                            }                   
+                    
+                }) {
                     private static final long serialVersionUID = 2231004332244002574L;
 
                     @Override
@@ -173,7 +193,7 @@ public class FileUploadPanel extends Panel {
 
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                dialog.setTitle(new ParamResourceModel("FileUpload.panel.createFolder", getPage()));
+                dialog.setTitle(new ParamResourceModel("createFolder", FileUploadPanel.this));
                 dialog.setInitialHeight(100);
                 dialog.setInitialWidth(630);
                 dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
