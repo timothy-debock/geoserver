@@ -121,10 +121,10 @@ public class FileUploadPanel extends Panel {
                 List<String> availableFolders = new ArrayList<String>();
                 if (serviceName != null) {
                     try {
-                        List<Path> paths =
+                        List<String> paths =
                                 TaskManagerBeans.get().getFileServices().get(serviceName).listSubfolders();
-                        for (Path path : paths) {
-                            availableFolders.add(path.toString());
+                        for (String path : paths) {
+                            availableFolders.add(path);
                         }
                     } catch (IOException e) {
                         FileUploadPanel.this.error("Could not get folders for service:" + e.getMessage());
@@ -165,7 +165,7 @@ public class FileUploadPanel extends Panel {
                 FileService fileService =
                         TaskManagerBeans.get().getFileServices().get(fileServiceChoice.getModelObject());
                 try {
-                    Path filePath = Paths.get(folderChoice.getModelObject() + "/" + upload.getClientFileName());
+                    String filePath = folderChoice.getModelObject() + "/" + upload.getClientFileName();
                     if (fileService.checkFileExists(filePath)) {
                         fileService.delete(filePath);
                     }
