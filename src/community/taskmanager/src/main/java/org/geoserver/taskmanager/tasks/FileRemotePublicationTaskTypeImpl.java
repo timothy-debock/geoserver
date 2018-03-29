@@ -38,6 +38,7 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
 
     @PostConstruct
     public void initParamInfo() {
+        super.initParamInfo();
         paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.URI, false));
     }
     
@@ -47,15 +48,17 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
         final StoreType storeType = store instanceof CoverageStoreInfo ? StoreType.COVERAGESTORES
                 : StoreType.DATASTORES;
         
+        boolean upload = false;
         URI uri = (URI) ctx.getParameterValues().get(PARAM_FILE);
         if (uri == null) {
             try {
                 uri = new URI(getLocation(store));
+                upload = uri.getScheme().toLowerCase().equals("file");
             } catch (URISyntaxException e) {
                 throw new IOException(e);
             }
         }
-        if (uri.getScheme().toLowerCase().equals("file")) {
+        if (upload) {
             final File file = Resources.fromURL(uri.toString()).file();
             return restManager.getPublisher().createStore(store.getWorkspace().getName(), storeType,
                     store.getName(), UploadMethod.FILE, store.getType().toLowerCase(),
