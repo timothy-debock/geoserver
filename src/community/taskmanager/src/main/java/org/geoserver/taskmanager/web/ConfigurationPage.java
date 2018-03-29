@@ -557,7 +557,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
 
                                 @Override
                                 protected Component getContents(String id) {
-                                    return new TaskParameterPanel(id, itemModel);
+                                    return new TaskParameterPanel(id, itemModel, attributesModel);
                                 }
 
                                 @Override
