@@ -9,7 +9,6 @@ import org.geoserver.taskmanager.util.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.file.Path;
 import java.util.List;
 
 
@@ -34,7 +33,7 @@ public interface FileService extends Serializable, Named {
      * @return list of existing sub folders
      * @throws IOException
      */
-    List<Path> listSubfolders() throws IOException;
+    List<String> listSubfolders() throws IOException;
 
     /**
      * Create a file in the file service
@@ -44,7 +43,7 @@ public interface FileService extends Serializable, Named {
      * @return a location string that can be used to configure a Geoserver store
      * @throws IOException
      */
-    String create(Path filePath, InputStream content) throws IOException;
+    String create(String filePath, InputStream content) throws IOException;
 
     /**
      * Check if this file exists.
@@ -53,7 +52,7 @@ public interface FileService extends Serializable, Named {
      * @return whether the file exists
      * @throws IOException
      */
-    boolean checkFileExists(Path filePath) throws IOException;
+    boolean checkFileExists(String filePath) throws IOException;
 
     /**
      * Delete this file.
@@ -62,7 +61,7 @@ public interface FileService extends Serializable, Named {
      * @return whether anything was actually deleted.
      * @throws IOException
      */
-    boolean delete(Path filePath) throws IOException;
+    boolean delete(String filePath) throws IOException;
 
     /**
      * Read this file.
@@ -71,5 +70,5 @@ public interface FileService extends Serializable, Named {
      * @return inputstream with data
      * @throws IOException
      */
-    InputStream read(Path filePath) throws IOException;
+    InputStream read(String filePath) throws IOException;
 }

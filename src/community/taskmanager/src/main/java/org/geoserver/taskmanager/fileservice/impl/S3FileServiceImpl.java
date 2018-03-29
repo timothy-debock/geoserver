@@ -19,8 +19,6 @@ import org.geoserver.taskmanager.fileservice.FileService;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,12 +94,12 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean checkFileExists(Path filePath) throws IOException {
+    public boolean checkFileExists(String filePath) throws IOException {
         if (filePath == null) {
             throw new IOException("Name of a file can not be null.");
         }
         try {
-            return getS3Client().doesObjectExist(getBucketName(filePath), filePath.getFileName().toString());
+            return getS3Client().doesObjectExist(getBucketName(filePath), getFileName(filePath));
         } catch (AmazonClientException e) {
             throw new IOException(e);
         }
@@ -109,7 +107,7 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public String create(Path filePath, InputStream content) throws IOException {
+    public String create(String filePath, InputStream content) throws IOException {
         //Check parameters
         if (content == null) {
             throw new IOException("Content of a file can not be null.");
@@ -134,7 +132,7 @@ public class S3FileServiceImpl implements FileService {
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(
                     getBucketName(filePath),
-                    filePath.getFileName().toString(),
+                    getFileName(filePath),
                     scratchFile);
 
             putObjectRequest.withMetadata(metadata);
@@ -151,13 +149,13 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean delete(Path filePath) throws IOException {
+    public boolean delete(String filePath) throws IOException {
         if (filePath == null) {
             throw new IOException("Name of a file can not be null.");
         }
         if (checkFileExists(filePath)) {
             try {
-                getS3Client().deleteObject(getBucketName(filePath), filePath.getFileName().toString());
+                getS3Client().deleteObject(getBucketName(filePath), getFileName(filePath));
             } catch (AmazonClientException e) {
                 throw new IOException(e);
             }
@@ -168,11 +166,11 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public InputStream read(Path filePath) throws IOException {
+    public InputStream read(String filePath) throws IOException {
         if (filePath == null) {
             throw new IOException("Name of a file can not be null.");
         }
-        GetObjectRequest objectRequest = new GetObjectRequest(getBucketName(filePath), filePath.getFileName().toString());
+        GetObjectRequest objectRequest = new GetObjectRequest(getBucketName(filePath), getFileName(filePath));
         try {
             return getS3Client().getObject(objectRequest).getObjectContent();
         } catch (AmazonClientException e) {
@@ -181,12 +179,12 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<Path> listSubfolders() throws IOException {
+    public List<String> listSubfolders() throws IOException {
         try {
             List<Bucket> buckets = getS3Client().listBuckets();
-            ArrayList<Path> paths = new ArrayList<>();
+            ArrayList<String> paths = new ArrayList<>();
             for (Bucket bucket : buckets) {
-                paths.add(Paths.get(bucket.getName()));
+                paths.add(bucket.getName());
             }
             return paths;
         } catch (AmazonClientException e) {
@@ -221,11 +219,24 @@ public class S3FileServiceImpl implements FileService {
         return s3;
     }
 
-    private String getBucketName(Path filePath) {
-        if (filePath.getParent() != null) {
-            return filePath.getParent().toString();
+    private static String getBucketName(String filePath) {
+        int lastSlashPosition = filePath.lastIndexOf('/');
+        if (lastSlashPosition > 0) {
+            return filePath.substring(0, lastSlashPosition);
         }
         return "";
+    }
+    
+    private static String getFileName(String filePath) {
+        int lastSlashPosition = filePath.lastIndexOf('/');
+        if (lastSlashPosition >= 0) {
+            return filePath.substring(lastSlashPosition);
+        }
+        return "";
+    }
+
+    public void rename(String schemeSpecificPart, String schemeSpecificPart2) {
+       //TODO: implement (Timothy?? :P)
     }
 
 }

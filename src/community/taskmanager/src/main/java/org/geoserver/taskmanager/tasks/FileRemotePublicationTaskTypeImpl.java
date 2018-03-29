@@ -9,13 +9,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.util.Map;
+
+import javax.annotation.PostConstruct;
 
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.platform.resource.Resources;
 import org.geoserver.taskmanager.external.ExternalGS;
+import org.geoserver.taskmanager.schedule.ParameterInfo;
+import org.geoserver.taskmanager.schedule.ParameterType;
+import org.geoserver.taskmanager.schedule.TaskContext;
+import org.geoserver.taskmanager.schedule.TaskException;
 import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
@@ -28,17 +33,27 @@ import it.geosolutions.geoserver.rest.encoder.utils.NestedElementEncoder;
 public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTaskTypeImpl {
 
     public static final String NAME = "RemoteFilePublication";
+
+    public static final String PARAM_FILE = "file";
+
+    @PostConstruct
+    public void initParamInfo() {
+        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.URI, false));
+    }
     
     @Override
     protected boolean createStore(ExternalGS extGS, GeoServerRESTManager restManager,
-            StoreInfo store, Map<String, Object> parameterValues) throws IOException {
+            StoreInfo store, TaskContext ctx) throws IOException, TaskException {        
         final StoreType storeType = store instanceof CoverageStoreInfo ? StoreType.COVERAGESTORES
                 : StoreType.DATASTORES;
-        URI uri;
-        try {
-            uri = new URI(getLocation(store));
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
+        
+        URI uri = (URI) ctx.getParameterValues().get(PARAM_FILE);
+        if (uri == null) {
+            try {
+                uri = new URI(getLocation(store));
+            } catch (URISyntaxException e) {
+                throw new IOException(e);
+            }
         }
         if (uri.getScheme().toLowerCase().equals("file")) {
             final File file = Resources.fromURL(uri.toString()).file();

@@ -55,12 +55,12 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public boolean checkFileExists(Path filePath) throws IOException {
+    public boolean checkFileExists(String filePath) throws IOException {
         return Files.exists(getAbsolutePath(filePath));
     }
 
     @Override
-    public String create(Path filePath, InputStream content) throws IOException {
+    public String create(String filePath, InputStream content) throws IOException {
         //Check parameters
         if (content == null) {
             throw new IOException("Content of a file can not be null.");
@@ -82,7 +82,7 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public boolean delete(Path filePath) throws IOException {
+    public boolean delete(String filePath) throws IOException {
         if (filePath == null) {
             throw new IOException("Name of a filePath can not be null.");
         }
@@ -95,7 +95,7 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public InputStream read(Path filePath) throws IOException {
+    public InputStream read(String filePath) throws IOException {
         if (checkFileExists(filePath)) {
             File file = new File(getAbsolutePath(filePath).toUri());
             return FileUtils.openInputStream(file);
@@ -105,25 +105,25 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public List<Path> listSubfolders() throws IOException {
+    public List<String> listSubfolders() throws IOException {
         if (rootFolder == null) {
             throw new IOException("No rootFolder is not configured in this file service.");
         }
         File file = new File(rootFolder.toUri());
         file.mkdirs();
         String[] folders = file.list(FileFilterUtils.directoryFileFilter());
-        ArrayList<Path> paths = new ArrayList<>();
+        ArrayList<String> paths = new ArrayList<>();
         for (String folder : folders) {
-            paths.add(Paths.get(folder));
+            paths.add(folder);
         }
         return paths;
     }
 
-    private Path getAbsolutePath(Path file) throws IOException {
+    private Path getAbsolutePath(String file) throws IOException {
         if (rootFolder == null) {
             throw new IOException("No rootFolder is not configured in this file service.");
         }
-        return rootFolder.resolve(file);
+        return rootFolder.resolve(Paths.get(file));
     }
 
     @Override
