@@ -25,7 +25,7 @@ public interface FileService extends Serializable, Named {
      * 
      * @return description
      */
-    public String getDescription();
+        String getDescription();
 
     /**
      * List existing sub folders in this file service.
