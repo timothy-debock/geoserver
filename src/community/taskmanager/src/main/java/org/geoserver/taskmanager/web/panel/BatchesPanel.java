@@ -100,7 +100,6 @@ public class BatchesPanel extends Panel {
                 Batch batch = TaskManagerBeans.get().getFac().createBatch();
                 if (configurationModel != null) {
                     batch.setConfiguration(configurationModel.getObject());
-                    batch.setWorkspace(configurationModel.getObject().getWorkspace());
                 }
                 setResponsePage(new BatchPage(new Model<Batch>(batch), getPage()));
             }

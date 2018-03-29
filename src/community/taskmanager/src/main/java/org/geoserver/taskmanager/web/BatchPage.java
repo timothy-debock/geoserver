@@ -112,13 +112,17 @@ public class BatchPage extends GeoServerSecuredPage {
                 workspaces.add(wi.getName());
             }
         }
-        boolean canBeNull = GeoServerApplication.get().getCatalog().getDefaultWorkspace() != null &&
+        boolean canBeNull = (GeoServerApplication.get().getCatalog().getDefaultWorkspace() != null &&
                 TaskManagerBeans.get().getSecUtil().isAdminable(
-                getSession().getAuthentication(), 
-                GeoServerApplication.get().getCatalog().getDefaultWorkspace());
+                        getSession().getAuthentication(), 
+                        GeoServerApplication.get().getCatalog().getDefaultWorkspace()));
         form.add(new DropDownChoice<String>("workspace", 
                 new PropertyModel<String>(batchModel, "workspace"), workspaces)
-                .setNullValid(canBeNull).setRequired(!canBeNull));
+                .setNullValid(canBeNull).setRequired(!canBeNull)
+                //theoretically a batch can have a separate workspace from config, but it is
+                //confusing to users so turning this off by default.
+                .setEnabled(batchModel.getObject().getConfiguration() == null
+                        || batchModel.getObject().getWorkspace() != null));
         
         form.add(new TextField<String>("description", 
                 new PropertyModel<String>(batchModel, "description")));
@@ -229,7 +233,10 @@ public class BatchPage extends GeoServerSecuredPage {
                     protected Component getContents(String id) {
                         tasks = new TreeMap<String, Task>();
                         for (Task task : TaskManagerBeans.get().getDao().getTasksAvailableForBatch(batchModel.getObject())) {
-                            if (!addedTasks.contains(task)) {
+                            if (!addedTasks.contains(task) && 
+                                    TaskManagerBeans.get().getSecUtil().isWriteable(
+                                            BatchPage.this.getSession().getAuthentication(), 
+                                            task.getConfiguration())) {
                                 tasks.put(task.getFullName(), task);
                             }
                         }

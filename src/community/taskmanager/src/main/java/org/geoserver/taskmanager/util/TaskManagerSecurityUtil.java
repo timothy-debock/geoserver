@@ -53,10 +53,15 @@ public class TaskManagerSecurityUtil {
     }
 
     public boolean isReadable(Authentication user, Batch batch) {
-        WorkspaceInfo wi = getWorkspace(batch.getWorkspace());
+        WorkspaceInfo wi = null;        
         WorkspaceInfo wif = null;
         if (batch.getConfiguration() != null) {
             wif = getWorkspace(batch.getConfiguration().getWorkspace());
+            if (batch.getWorkspace() != null) { //otherwise ignore this, don't use default ws
+                wi = getWorkspace(batch.getWorkspace());
+            }
+        } else {
+            wi = getWorkspace(batch.getWorkspace());
         }
         boolean check1, check2;
         if (wi != null) {
@@ -74,12 +79,27 @@ public class TaskManagerSecurityUtil {
         }
         return check1 && check2;
     }
+    
+    public boolean isWriteable(Authentication user, Configuration config) {
+        WorkspaceInfo wi = getWorkspace(config.getWorkspace());
+        if (wi == null) { //lack of default workspace (allow) versus incorrect workspace (deny unless admin)
+            return config.getWorkspace() == null || secManager.checkAuthenticationForAdminRole(user);
+        } else {
+            WorkspaceAccessLimits limits = secureCatalog.getResourceAccessManager().getAccessLimits(user, wi);
+            return limits == null || limits.isWritable();
+        }
+    }
 
     public boolean isWritable(Authentication user, Batch batch) {
-        WorkspaceInfo wi = getWorkspace(batch.getWorkspace());
+        WorkspaceInfo wi = null;        
         WorkspaceInfo wif = null;
         if (batch.getConfiguration() != null) {
             wif = getWorkspace(batch.getConfiguration().getWorkspace());
+            if (batch.getWorkspace() != null) { //otherwise ignore this, don't use default ws
+                wi = getWorkspace(batch.getWorkspace());
+            }
+        } else {
+            wi = getWorkspace(batch.getWorkspace());
         }
         boolean check1, check2;
         if (wi != null) {
@@ -109,10 +129,15 @@ public class TaskManagerSecurityUtil {
     }
 
     public boolean isAdminable(Authentication user, Batch batch) {
-        WorkspaceInfo wi = getWorkspace(batch.getWorkspace());
+        WorkspaceInfo wi = null;        
         WorkspaceInfo wif = null;
-        if (batch.getConfiguration() != null) {
+        if (batch.getConfiguration() != null) { //otherwise ignore this, don't use default ws
             wif = getWorkspace(batch.getConfiguration().getWorkspace());
+            if (batch.getWorkspace() != null) {
+                wi = getWorkspace(batch.getWorkspace());
+            }
+        } else {
+            wi = getWorkspace(batch.getWorkspace());
         }
         boolean check1, check2;
         if (wi != null) {
