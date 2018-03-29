@@ -113,8 +113,10 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         file.mkdirs();
         String[] folders = file.list(FileFilterUtils.directoryFileFilter());
         ArrayList<String> paths = new ArrayList<>();
-        for (String folder : folders) {
-            paths.add(folder);
+        if (folders != null) {  
+          for (String folder : folders) {
+              paths.add(folder);
+          }
         }
         return paths;
     }
