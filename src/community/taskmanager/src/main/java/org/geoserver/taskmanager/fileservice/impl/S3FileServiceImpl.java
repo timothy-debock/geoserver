@@ -6,21 +6,33 @@ package org.geoserver.taskmanager.fileservice.impl;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadResult;
+import com.amazonaws.services.s3.model.CopyPartRequest;
+import com.amazonaws.services.s3.model.CopyPartResult;
+import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.tasks.DbRemotePublicationTaskTypeImpl;
+import org.geotools.util.logging.Logging;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * S3 remote file storage.
@@ -28,6 +40,9 @@ import java.util.List;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public class S3FileServiceImpl implements FileService {
+
+
+    private static final Logger LOGGER = Logging.getLogger(S3FileServiceImpl.class);
 
     private static final long serialVersionUID = -5960841858385823283L;
 
@@ -40,6 +55,8 @@ public class S3FileServiceImpl implements FileService {
     private String user;
 
     private String password;
+
+    public static String S3_NAME_PREFIX = "s3-";
 
     public S3FileServiceImpl() {
     }
@@ -85,7 +102,7 @@ public class S3FileServiceImpl implements FileService {
 
     @Override
     public String getName() {
-        return "s3-" + alias;
+        return S3_NAME_PREFIX + alias;
     }
 
     @Override
@@ -192,6 +209,70 @@ public class S3FileServiceImpl implements FileService {
         }
     }
 
+
+    public void rename(String filePathSource, String filePathTarget) throws IOException {
+        copy(filePathSource, filePathTarget);
+        delete(filePathSource);
+    }
+
+    private void copy(String filePathSource, String filePathTarget) throws IOException {
+        AmazonS3 s3Client = getS3Client();
+
+        // Create lists to hold copy responses
+        List<CopyPartResult> copyResponses = new ArrayList<>();
+
+        // Step 2: Initialize
+        InitiateMultipartUploadRequest initiateRequest =
+                new InitiateMultipartUploadRequest(  getBucketName(filePathTarget),getFileName(filePathTarget));
+
+        InitiateMultipartUploadResult initResult = s3Client.initiateMultipartUpload(initiateRequest);
+
+        try {
+
+            // Get object size.
+            GetObjectMetadataRequest metadataRequest =
+                    new GetObjectMetadataRequest(getBucketName(filePathSource), getFileName(filePathSource));
+
+            ObjectMetadata metadataResult = s3Client.getObjectMetadata(metadataRequest);
+            long objectSize = metadataResult.getContentLength(); // in bytes
+
+            // Step 4. Copy parts.
+            long partSize = 5 * 1024 * 1024; // 5 MB
+            long bytePos = 0;
+
+            String uploadId = initResult.getUploadId();
+
+            for (int i = 1; bytePos < objectSize; i++)
+            {
+                // Step 5. Save copy response.
+                long lastByte = bytePos + partSize - 1 >= objectSize ? objectSize - 1 : bytePos + partSize - 1;
+                CopyPartRequest copyRequest = new CopyPartRequest()
+                                .withDestinationBucketName(getBucketName(filePathTarget))
+                                .withDestinationKey(getFileName(filePathTarget))
+                                .withSourceBucketName(getBucketName(filePathSource))
+                                .withSourceKey(getFileName(filePathSource))
+                                .withUploadId(initResult.getUploadId())
+                                .withFirstByte(bytePos)
+                                .withLastByte(lastByte)
+                                .withPartNumber(i);
+
+                copyResponses.add(s3Client.copyPart(copyRequest));
+                bytePos += partSize;
+            }
+            // Step 7. Complete copy operation.
+            CompleteMultipartUploadRequest completeRequest = new
+                    CompleteMultipartUploadRequest(
+                    getBucketName(filePathTarget),
+                    getFileName(filePathTarget),
+                    initResult.getUploadId(),
+                    GetETags(copyResponses));
+            s3Client.completeMultipartUpload(completeRequest);
+        } catch (Exception e) {
+            LOGGER.severe(e.getMessage());
+            throw new IOException(e);
+        }
+    }
+
     private AmazonS3 getS3Client() {
         if (endpoint == null) {
             throw new IllegalArgumentException("The endpoint is required, add a property: alias.s3.endpoint");
@@ -230,13 +311,19 @@ public class S3FileServiceImpl implements FileService {
     private static String getFileName(String filePath) {
         int lastSlashPosition = filePath.lastIndexOf('/');
         if (lastSlashPosition >= 0) {
-            return filePath.substring(lastSlashPosition);
+            return filePath.substring(lastSlashPosition + 1);
         }
         return "";
     }
 
-    public void rename(String schemeSpecificPart, String schemeSpecificPart2) {
-       //TODO: implement (Timothy?? :P)
+
+    private List<PartETag> GetETags(List<CopyPartResult> responses) {
+        List<PartETag> etags = new ArrayList<>();
+        for (CopyPartResult response : responses)
+        {
+            etags.add(new PartETag(response.getPartNumber(), response.getETag()));
+        }
+        return etags;
     }
 
 }

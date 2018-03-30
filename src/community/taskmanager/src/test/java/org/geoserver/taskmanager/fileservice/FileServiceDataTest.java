@@ -75,6 +75,9 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
     }
 
+    //****************************************************************************************************************//
+    //*** S3 Related tests *******************************************************************************************//
+    //****************************************************************************************************************//
     @Test
     public void testFileServiceCreateSubFolders() throws IOException {
         FileServiceImpl service = new FileServiceImpl();
@@ -147,6 +150,30 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         service.delete(filenamePath);
     }
 
+    @Test
+    public void testFileServiceS3RenameFile() throws IOException {
+
+        S3FileServiceImpl service = getS3FileService();
+
+        String filenameTarget = System.currentTimeMillis() + "-test-target.txt";
+        String filenamePathTarget = "newbucket/" + filenameTarget;
+
+        String filenameOriginal = System.currentTimeMillis() + "-test-original.txt";
+        String filenamePathOriginal = "newbucket/" + filenameOriginal;
+
+        Assert.assertFalse(service.checkFileExists(filenamePathOriginal));
+
+        service.create(filenamePathOriginal, IOUtils.toInputStream("test the file service", "UTF-8"));
+        Assert.assertTrue(service.checkFileExists(filenamePathOriginal));
+
+        service.rename(filenamePathOriginal, filenamePathTarget);
+
+        Assert.assertFalse(service.checkFileExists(filenamePathOriginal));
+        Assert.assertTrue(service.checkFileExists(filenamePathTarget));
+
+        service.delete(filenamePathTarget);
+    }
+
     /**
      * Add the properties to your S3 service here.
      * @return
@@ -168,4 +195,8 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
         return s3FileService;
     }
+
+
+
+
 }

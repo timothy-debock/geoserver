@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.fileservice.FileService;
 import org.geoserver.taskmanager.fileservice.impl.S3FileServiceImpl;
@@ -20,9 +21,12 @@ import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.LookupService;
+import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CopyS3FileTaskTypeImpl implements TaskType {
+
+    private static final Logger LOGGER = Logging.getLogger(CopyS3FileTaskTypeImpl.class);
 
     public static final String NAME = "CopyTable";
     
@@ -51,11 +55,13 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
         final URI sourceURI = (URI) ctx.getParameterValues().get(PARAM_SOURCE);
         final URI targetURI = (URI) ctx.getParameterValues().get(PARAM_TARGET);
         
-        S3FileServiceImpl sourceService = fileServiceRegistry.get("s3-" + sourceURI.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl sourceService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
+                + sourceURI.getScheme(), S3FileServiceImpl.class);
         if (sourceService == null) {
             throw new TaskException("S3 Service for alias " + sourceURI.getScheme()  + "not found." );
         }
-        S3FileServiceImpl targetService = fileServiceRegistry.get("s3-" + targetURI.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl targetService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
+                + targetURI.getScheme(), S3FileServiceImpl.class);
         if (targetService == null) {
             throw new TaskException("S3 Service for alias " + targetURI.getScheme()  + "not found." );
         }
@@ -86,7 +92,11 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
 
             @Override
             public void commit() throws TaskException {
-                targetService.rename(tempURI.getSchemeSpecificPart(), targetURI.getSchemeSpecificPart());
+                try {
+                    targetService.rename(tempURI.getSchemeSpecificPart(), targetURI.getSchemeSpecificPart());
+                } catch (IOException e) {
+                    throw new TaskException(e);
+                }
             }
 
             @Override
@@ -105,7 +115,8 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
     public void cleanup(TaskContext ctx) throws TaskException {
         URI targetUri = (URI) ctx.getParameterValues().get(PARAM_TARGET);
         
-        S3FileServiceImpl targetService = fileServiceRegistry.get("s3-" + targetUri.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl targetService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
+                + targetUri.getScheme(), S3FileServiceImpl.class);
         if (targetService == null) {
             throw new TaskException("S3 Service for alias " + targetUri.getScheme()  + "not found." );
         }
