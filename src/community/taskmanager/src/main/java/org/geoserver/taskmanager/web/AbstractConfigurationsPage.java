@@ -185,7 +185,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                                                 info(new ParamResourceModel("cleanUp.success",
                                                         getPage(), config.getName()).getString());                                                   
                                             } else {
-                                                error(new ParamResourceModel("cleanUp.error",
+                                                error(new ParamResourceModel("cleanUp.failed",
                                                         getPage(), config.getName()).getString());    
                                             }
                                         } else {

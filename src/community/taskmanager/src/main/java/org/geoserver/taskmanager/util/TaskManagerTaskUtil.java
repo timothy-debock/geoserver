@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Attribute;
+import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Parameter;
@@ -220,7 +221,30 @@ public class TaskManagerTaskUtil {
      */
     public boolean cleanup(Configuration config) {
         boolean success = true;
+        
+        // let's try to figure out the ideal order to clean-up tasks,
+        // merging the orders of the different batches and turning them around
+        // this algorithm will work perfectly if there are no contradictions in there
+        // (for example B1 = T1,T2    and B2 = T2,T1)
+        // in that case, the chosen order will depend on coincidence
+        List<Task> orderedTasks = new ArrayList<Task>();
         for (Task task : config.getTasks().values()) {
+            int position = orderedTasks.size();
+            task = dataUtil.init(task);
+            for (BatchElement el : task.getBatchElements()) {
+                if (el.getIndex() > 0) {
+                    int indexTaskBefore = 
+                            orderedTasks.indexOf(el.getBatch().getElements().get(el.getIndex() - 1).getTask());
+                    if (indexTaskBefore >= 0 && indexTaskBefore < position) {
+                        position = indexTaskBefore;
+                    }
+                }
+            }
+            orderedTasks.add(position, task);
+        }
+        
+        //now clean-up            
+        for (Task task : orderedTasks) {
             if (canCleanup(task)) {
                 success = success && cleanup(task);
             }

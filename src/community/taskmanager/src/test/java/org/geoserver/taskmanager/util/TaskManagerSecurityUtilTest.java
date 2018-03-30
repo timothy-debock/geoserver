@@ -112,6 +112,7 @@ public class TaskManagerSecurityUtilTest extends AbstractTaskManagerTest {
         batch = fac.createBatch();        
         batch.setName("my_batch");
         batch.setConfiguration(config);
+        batch.setWorkspace("cite");
         batch = bjService.saveAndSchedule(batch);
     }
     

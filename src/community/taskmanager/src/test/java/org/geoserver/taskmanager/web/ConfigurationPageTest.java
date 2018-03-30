@@ -281,8 +281,8 @@ public class ConfigurationPageTest extends AbstractWicketTaskManagerTest {
         formTester.setValue("name", "my_configuration");
         tester.clickLink("configurationForm:save");
 
-        assertFeedback("topFeedback", "unique name");
-        assertFeedback("bottomFeedback", "unique name");
+        assertFeedback("topFeedback", "unique");
+        assertFeedback("bottomFeedback", "unique");
         
     }
     

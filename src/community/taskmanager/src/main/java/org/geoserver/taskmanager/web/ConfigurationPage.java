@@ -375,7 +375,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                                             info(new ParamResourceModel("cleanUp.success",
                                                     getPage(), task.getName()).getString());
                                         } else {
-                                            error(new ParamResourceModel("cleanUp.error",
+                                            error(new ParamResourceModel("cleanUp.failed",
                                                     getPage(), task.getName()).getString());
                                         }
                                     } else {
