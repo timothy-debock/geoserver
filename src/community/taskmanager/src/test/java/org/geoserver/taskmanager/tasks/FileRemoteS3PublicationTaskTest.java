@@ -5,11 +5,8 @@
 package org.geoserver.taskmanager.tasks;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
-import it.geosolutions.geoserver.rest.decoder.RESTCoverage;
-import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.data.CatalogWriter;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
-import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Task;
@@ -61,7 +58,6 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     
     private static final String ATT_LAYER = "layer";
     private static final String ATT_EXT_GS = "geoserver";
-    private static final String ATT_FAIL = "fail";
     private static final String ATT_FILE = "file";
         
     @Autowired

@@ -9,16 +9,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.xml.namespace.QName;
 
 import org.geoserver.catalog.CoverageInfo;
-import org.geoserver.data.CatalogWriter;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Batch;
@@ -27,7 +20,6 @@ import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.external.ExternalGS;
-import org.geoserver.taskmanager.fileservice.FileService;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
@@ -52,13 +44,7 @@ import it.geosolutions.geoserver.rest.decoder.RESTCoverage;
  * @author Niels Charlier
  */
 public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
-
-    private final static Logger LOGGER = Logger.getLogger("FileRemotePublicationTaskTest");
     
-    //configure these constants
-    private static QName REMOTE_COVERAGE = new QName("gs", "mylayer", "gs");
-    private static String REMOTE_COVERAGE_FILE_LOCATION = "test/salinity.tif";
-
     private static final String ATT_LAYER = "layer";
     private static final String ATT_EXT_GS = "geoserver";
     private static final String ATT_FAIL = "fail";

@@ -35,8 +35,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.Trigger.TriggerState;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
