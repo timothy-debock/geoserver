@@ -155,7 +155,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
             FileService fileService = fileServices.get("s3-test");
             Assume.assumeNotNull(fileService);
             Assume.assumeTrue("File exists on s3 service",
-                    fileService.checkFileExists(Paths.get(REMOTE_FILE_LOCATION)));
+                    fileService.checkFileExists(REMOTE_FILE_LOCATION));
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
             Assume.assumeTrue("S3 service is configured and available", false);

@@ -158,7 +158,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
                 "your-s3-password",
                 "alias"
         );
-        List<Path> folders = null;
+        List<String> folders = null;
         try {
             folders = s3FileService.listSubfolders();
         } catch (Exception e) {
