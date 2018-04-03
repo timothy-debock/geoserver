@@ -135,8 +135,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));
         assertTrue(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
@@ -162,8 +161,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));
         assertTrue(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
@@ -189,8 +187,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME_NEW_SCHEMA), "_temp%"));
         assertTrue(viewExists(SqlUtil.schema(VIEW_NAME_NEW_SCHEMA), SqlUtil.notQualified(VIEW_NAME_NEW_SCHEMA)));
@@ -214,8 +211,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME_NEW_SCHEMA), "_temp%"));
         assertTrue(viewExists(SqlUtil.schema(VIEW_NAME_NEW_SCHEMA), SqlUtil.notQualified(VIEW_NAME_NEW_SCHEMA)));
@@ -250,8 +246,7 @@ public class CreateViewTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));    
         assertFalse(viewExists(SqlUtil.schema(VIEW_NAME), "_temp%"));

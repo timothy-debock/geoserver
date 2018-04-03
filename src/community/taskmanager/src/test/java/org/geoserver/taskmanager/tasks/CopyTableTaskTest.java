@@ -140,9 +140,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
-        }
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         String[] splitTargetTableName = TARGET_TABLE_NAME.split("\\.", 2);
         if (splitTargetTableName.length == 2) {
@@ -185,8 +183,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
             // waiting to be done.
         }
 
@@ -245,8 +242,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
             // waiting to be done.
         }
 
@@ -289,8 +285,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
             // waiting to be done.
         }
 
@@ -341,9 +336,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
-        }
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME), "_temp%"));
         assertFalse(tableExists(TARGETDB_NAME, SqlUtil.schema(TARGET_TABLE_NAME),
@@ -370,8 +363,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
         }
 
         String[] splitTargetTableName = TARGET_TABLE_NAME_NEW_SCHEMA.split("\\.", 2);

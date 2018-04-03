@@ -127,8 +127,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertEquals(4, testTaskType.getStatus().get("my_batch:my_config/task1").intValue());
         assertEquals(4, testTaskType.getStatus().get("my_batch:my_config/task2").intValue());
@@ -151,8 +150,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertNull(testReportService.getLastReport());
     }
@@ -169,8 +167,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task1").intValue());
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task2").intValue());
@@ -209,8 +206,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         br.setInterruptMe(true);
         br = dao.save(br);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task1").intValue());
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task2").intValue());
@@ -231,8 +227,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertNull(testReportService.getLastReport());
     }
@@ -249,8 +244,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task1").intValue());
         assertEquals(0, testTaskType.getStatus().get("my_batch:my_config/task2").intValue());

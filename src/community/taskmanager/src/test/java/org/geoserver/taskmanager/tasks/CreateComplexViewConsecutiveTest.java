@@ -134,8 +134,7 @@ public class CreateComplexViewConsecutiveTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertTrue(viewExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
 

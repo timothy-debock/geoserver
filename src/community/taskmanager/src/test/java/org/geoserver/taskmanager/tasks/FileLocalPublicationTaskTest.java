@@ -130,8 +130,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
@@ -169,8 +168,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
@@ -208,8 +206,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertNull(catalog.getLayerByName(LAYER_NAME));
         assertNull(catalog.getStoreByName(WORKSPACE, COVERAGE_NAME, CoverageStoreInfo.class));

@@ -150,8 +150,7 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
         
@@ -189,8 +188,7 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
 

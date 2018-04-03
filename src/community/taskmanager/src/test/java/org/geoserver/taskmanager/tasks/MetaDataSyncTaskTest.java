@@ -149,8 +149,7 @@ public class MetaDataSyncTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
         
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
         
@@ -177,8 +176,7 @@ public class MetaDataSyncTaskTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         cov = restManager.getReader().getCoverage("wcs", "DEM", "DEM");
         assertEquals(ci.getTitle(), cov.getTitle());

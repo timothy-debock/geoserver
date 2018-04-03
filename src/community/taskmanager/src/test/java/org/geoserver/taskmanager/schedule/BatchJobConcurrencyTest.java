@@ -140,11 +140,9 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
         assertTrue(testTaskType.getStatus().get("batch_2:my_config/task2").intValue() >= 2);
 
         //make sure it is all finished before we delete
-        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
 
-        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
     }
     
     @Test
@@ -177,11 +175,9 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
         assertEquals(4, testTaskType.getStatus().get("batch_2:my_config/task2").intValue());
         
         //make sure it is all finished before we delete
-        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger1.getKey()) != TriggerState.NONE) {}
 
-        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger2.getKey()) != TriggerState.NONE) {}
     }
     
 }

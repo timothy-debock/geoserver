@@ -149,8 +149,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
 
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
         }
 
         assertFalse(viewOrTableExists(SqlUtil.schema(VIEW_NAME), "_temp%"));
@@ -189,8 +188,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
                 .build();
         scheduler.scheduleJob(trigger);
         
-        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.COMPLETE
-                && scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {}
 
         assertFalse(viewOrTableExists(SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
         assertFalse(viewOrTableExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));

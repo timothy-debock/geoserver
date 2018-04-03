@@ -18,6 +18,7 @@ import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geotools.util.logging.Logging;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -189,21 +190,28 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         
     @Override
     public void interrupt(BatchRun batchRun) {
-        if (batchRun.getSchedulerReference() != null) {
-            TriggerState state;
-            try {
-                state = scheduler.getTriggerState(TriggerKey.triggerKey(batchRun.getSchedulerReference()));
-                if (state == TriggerState.COMPLETE || state == TriggerState.ERROR
-                        || state == TriggerState.NONE) {
-                    dataUtil.closeBatchRun(batchRun, "manually closed due to inactivity");
-                    return;
+        if (!batchRun.getStatus().isClosed())  {
+            if (batchRun.getSchedulerReference() != null) {
+                try {
+                    TriggerKey triggerKey = TriggerKey.triggerKey(batchRun.getSchedulerReference());
+                    boolean lastFire = scheduler.getTrigger(triggerKey).getNextFireTime() == null;
+                    TriggerState state = scheduler.getTriggerState(triggerKey);
+                    
+                    //the blocked check only works thanks to @DisallowConcurrentExecution
+                    //otherwise it would go straight back to waiting and we wouldn't know
+                    //when the job was finished.
+                    if ((lastFire && state == TriggerState.NONE) || 
+                            (!lastFire && state != TriggerState.BLOCKED)) {
+                        dataUtil.closeBatchRun(batchRun, "manually closed due to inactivity");
+                        return;
+                    }
+                } catch (SchedulerException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
-            } catch (SchedulerException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
+            batchRun.setInterruptMe(true);
+            dao.save(batchRun);
         }
-        batchRun.setInterruptMe(true);
-        dao.save(batchRun);
     }
 
 
