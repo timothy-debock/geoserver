@@ -14,6 +14,7 @@ import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.fileservice.impl.S3FileServiceImpl;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
@@ -34,6 +35,7 @@ import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -51,9 +53,10 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
     private static QName REMOTE_COVERAGE = new QName("gs", "mylayer", "gs");
-    private static String REMOTE_COVERAGE_FILE_LOCATION = "test/salinity.tif";
-    private static String REMOTE_COVERAGE_URL = "test://" + REMOTE_COVERAGE_FILE_LOCATION;
-    private static String REMOTE_COVERAGE_OTHER_URL = "dovminio://test/salinity.tif";
+    private static String REMOTE_COVERAGE_ALIAS = "test";
+    private static String REMOTE_COVERAGE_FILE_LOCATION = "test/be_b_c.geotiff.tiff";
+    private static String REMOTE_COVERAGE_URL = REMOTE_COVERAGE_ALIAS + "://" + REMOTE_COVERAGE_FILE_LOCATION;
+    private static String REMOTE_COVERAGE_OTHER_URL = "dovminio:test/be_b_c.geotiff.tiff";
     private static String REMOTE_COVERAGE_TYPE = "S3GeoTiff";
     
     private static final String ATT_LAYER = "layer";
@@ -89,24 +92,23 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     private Batch batch;
     
     @Override
-    public boolean setupDataDirectory() throws Exception {             
-        DATA_DIRECTORY.addWcs11Coverages();
-
+    public boolean setupDataDirectory() throws Exception {
         try {
-            FileService fileService = fileServices.get("s3-test");
+            FileService fileService = fileServices.get(S3FileServiceImpl.S3_NAME_PREFIX + 
+                    REMOTE_COVERAGE_ALIAS);
             Assume.assumeNotNull(fileService);
             Assume.assumeTrue("File exists on s3 service",
                     fileService.checkFileExists(REMOTE_COVERAGE_FILE_LOCATION));
         } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
             Assume.assumeTrue("S3 service is configured and available", false);
         }
-
+        
+        DATA_DIRECTORY.addWcs11Coverages();
         Map<String, String> params = new HashMap<String, String>();
         params.put(CatalogWriter.COVERAGE_TYPE_KEY, REMOTE_COVERAGE_TYPE);
         params.put(CatalogWriter.COVERAGE_URL_KEY, REMOTE_COVERAGE_URL);
         DATA_DIRECTORY.addCustomCoverage(REMOTE_COVERAGE, params);
-
         return true;
     }
     
@@ -148,9 +150,7 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     }
 
     @Test
-    public void testS3SuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
-        Assume.assumeTrue(false);
-        
+    public void testS3SuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {       
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, 
                 REMOTE_COVERAGE.getPrefix() + ":" + REMOTE_COVERAGE.getLocalPart());
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
@@ -187,7 +187,6 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     
     @Test
     public void testS3ReplaceUrlSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
-
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, 
                 REMOTE_COVERAGE.getPrefix() + ":" + REMOTE_COVERAGE.getLocalPart());
         dataUtil.setConfigurationAttribute(config, ATT_FILE, REMOTE_COVERAGE_OTHER_URL);

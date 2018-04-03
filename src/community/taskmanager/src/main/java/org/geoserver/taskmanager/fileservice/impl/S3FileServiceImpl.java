@@ -6,13 +6,11 @@ package org.geoserver.taskmanager.fileservice.impl;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadResult;
 import com.amazonaws.services.s3.model.CopyPartRequest;
 import com.amazonaws.services.s3.model.CopyPartResult;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
@@ -24,7 +22,6 @@ import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.taskmanager.fileservice.FileService;
-import org.geoserver.taskmanager.tasks.DbRemotePublicationTaskTypeImpl;
 import org.geotools.util.logging.Logging;
 
 import java.io.File;
@@ -134,7 +131,7 @@ public class S3FileServiceImpl implements FileService {
         }
 
         if (checkFileExists(filePath)) {
-            throw new IOException("The file allready exists");
+            throw new IOException("The file already exists");
         }
         File scratchFile = File.createTempFile("prefix", String.valueOf(System.currentTimeMillis()));
         try {
@@ -240,7 +237,7 @@ public class S3FileServiceImpl implements FileService {
             long partSize = 5 * 1024 * 1024; // 5 MB
             long bytePos = 0;
 
-            String uploadId = initResult.getUploadId();
+            //String uploadId = initResult.getUploadId();
 
             for (int i = 1; bytePos < objectSize; i++)
             {

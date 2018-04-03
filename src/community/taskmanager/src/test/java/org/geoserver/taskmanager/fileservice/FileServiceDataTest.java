@@ -101,7 +101,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
     }
 
     /**
-     * Enable this test if you have acces to aws compatible service.
+     * This test assumes access to aws compatible service.
      *
      * @throws IOException
      */
@@ -132,7 +132,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
 
     /**
-     * Enable this test if you have acces to aws compatible service.
+     * This test assumes access to aws compatible service.
      *
      * @throws IOException
      */
