@@ -53,7 +53,8 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
         if (uri == null) {
             try {
                 uri = new URI(getLocation(store));
-                upload = uri.getScheme().toLowerCase().equals("file");
+                upload = uri.getScheme() == null || 
+                        uri.getScheme().toLowerCase().equals("file");
             } catch (URISyntaxException e) {
                 throw new IOException(e);
             }

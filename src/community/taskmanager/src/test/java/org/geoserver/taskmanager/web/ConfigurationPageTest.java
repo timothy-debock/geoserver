@@ -113,7 +113,7 @@ public class ConfigurationPageTest extends AbstractWicketTaskManagerTest {
         formTester.setValue("userPanel:name",  "task3");
         formTester.submit("submit");
         assertFeedback("dialog:dialog:content:form:userPanel:feedback", "required");
-        formTester.select("userPanel:type",  7); 
+        formTester.select("userPanel:type",  8); 
         formTester.submit("submit");
         assertEquals(3, tasksPanel.getDataProvider().size());
         assertEquals(3, config.getTasks().size());
