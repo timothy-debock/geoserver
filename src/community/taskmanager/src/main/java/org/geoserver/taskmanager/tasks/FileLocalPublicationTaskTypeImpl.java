@@ -19,6 +19,7 @@ import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.catalog.Wrapper;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
@@ -93,8 +94,10 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
         final boolean isShapeFile = url != null && url.getFile().toUpperCase().endsWith(".SHP");
                 
         if (createLayer) {
-            final StoreInfo _store = catalog.getStoreByName(ws, layerName.getLocalPart(), StoreInfo.class);
-            final CoverageInfo _resource = catalog.getResourceByName(layerName, CoverageInfo.class);
+            final StoreInfo _store = catalog.getStoreByName(ws, layerName.getLocalPart(), 
+                    StoreInfo.class);
+            final CoverageInfo _resource = catalog.getResourceByName(layerName, 
+                    CoverageInfo.class);
             createStore = _store == null;
             createResource = _resource == null;
             
@@ -112,7 +115,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 store.setEnabled(true);
                 catalog.add(store);
             } else {
-                store = _store;
+                store = unwrap(_store, StoreInfo.class);
             }
             
             CatalogBuilder builder = new CatalogBuilder(catalog);
@@ -135,7 +138,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 }
                 catalog.add(resource);
             } else {
-                resource = _resource;
+                resource = unwrap(_resource, CoverageInfo.class);
             }
             
             layer = builder.buildLayer(resource);
@@ -195,6 +198,14 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
     private static String determineFormatFromSpecialScheme(String scheme) {
         //currently only S3GeoTiff supports schemes other than File and HTTP
         return "S3GeoTiff";
+    }
+    
+    private static <T> T unwrap(T o, Class<T> clazz) {
+        if (o instanceof Wrapper) {
+            return ((Wrapper) o).unwrap(clazz);
+        } else {
+            return o;
+        }
     }
 
 }

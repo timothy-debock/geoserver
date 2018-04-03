@@ -14,6 +14,7 @@ import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.catalog.Wrapper;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
@@ -107,7 +108,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                 store.setEnabled(true);
                 catalog.add(store);
             } else {
-                store = _store;
+                store = unwrap(_store, DataStoreInfo.class);
             }
             
             CatalogBuilder builder = new CatalogBuilder(catalog);
@@ -125,7 +126,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                 resource.setName(layerName.getLocalPart());
                 catalog.add(resource);
             } else {
-                resource = _resource;
+                resource = unwrap(_resource, FeatureTypeInfo.class);
             }
             
             try {
@@ -190,6 +191,14 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
         catalog.remove(layer);
         catalog.remove(resource);
         catalog.remove(store);
+    }
+    
+    private static <T> T unwrap(T o, Class<T> clazz) {
+        if (o instanceof Wrapper) {
+            return ((Wrapper) o).unwrap(clazz);
+        } else {
+            return o;
+        }
     }
 
 }
