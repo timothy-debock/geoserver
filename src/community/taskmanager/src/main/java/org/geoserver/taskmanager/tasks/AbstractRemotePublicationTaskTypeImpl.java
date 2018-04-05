@@ -4,18 +4,26 @@
  */
 package org.geoserver.taskmanager.tasks;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.wicket.util.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageDimensionInfo;
 import org.geoserver.catalog.CoverageInfo;
@@ -25,7 +33,11 @@ import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.MetadataLinkInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
+import org.geoserver.catalog.StyleInfo;
 import org.geoserver.config.GeoServerDataDirectory;
+import org.geoserver.platform.resource.Files;
+import org.geoserver.platform.resource.Resource;
+import org.geoserver.platform.resource.Resource.Type;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
@@ -34,6 +46,9 @@ import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geotools.referencing.CRS;
+import org.geotools.styling.AbstractStyleVisitor;
+import org.geotools.styling.ExternalGraphic;
+import org.geotools.styling.Style;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -250,8 +265,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
                             " on " + extGS.getName() +
                             ", creating.");
-                    if (!restManager.getPublisher().publishStyleInWorkspace(wsStyle,
-                            geoServerDataDirectory.style(layer.getDefaultStyle()).file(),
+                    if (!restManager.getStyleManager().publishStyleZippedInWorkspace(wsStyle,
+                            createStyleZipFile(layer.getDefaultStyle()),
                             layer.getDefaultStyle().getName())) {
                         throw new TaskException("Failed to create style " + 
                             layer.getDefaultStyle().getName());
@@ -338,6 +353,68 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             }
             
         };
+    }
+
+    private File createStyleZipFile(StyleInfo style) throws TaskException {        
+        try {
+            Style parsedStyle = geoServerDataDirectory.parsedStyle(style);
+            List<Resource> pictures = new ArrayList<Resource>();
+            parsedStyle.accept(new AbstractStyleVisitor() {
+                @Override
+                public void visit(ExternalGraphic exgr) {
+                    if (exgr.getOnlineResource() == null) {
+                        return;
+                    }
+    
+                    URI uri = exgr.getOnlineResource().getLinkage();
+                    if (uri == null) {
+                        return;
+                    }
+    
+                    Resource resPicture = null;
+                    try {
+                        resPicture = uriToResource(uri);
+                        if (resPicture != null && resPicture.getType() != Type.UNDEFINED) {
+                            pictures.add(resPicture);
+                        }
+                    } catch (IllegalArgumentException|MalformedURLException e) {
+                        LOGGER.log(Level.WARNING, "Error attemping to process SLD resource", e);
+                    } 
+                }
+            });
+            
+            File zipFile = File.createTempFile("style", ".zip");
+            try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));) { 
+                Resource resStyle = geoServerDataDirectory.style(style);
+                ZipEntry zipEntry = new ZipEntry(resStyle.name());
+                out.putNextEntry(zipEntry);
+                try (InputStream in = resStyle.in()) {
+                    IOUtils.copy(in, out);
+                }
+                out.closeEntry();                
+                for (Resource resPicture : pictures) {
+                    zipEntry = new ZipEntry(resPicture.name());
+                    out.putNextEntry(zipEntry);
+                    try (InputStream in = resPicture.in()) {
+                        IOUtils.copy(in, out);
+                    }
+                    out.closeEntry();
+                }                
+                return zipFile;
+            }
+        } catch(IOException e) {
+            throw new TaskException(e);
+        } 
+    }
+    
+    private Resource uriToResource(URI uri) throws MalformedURLException {
+        if(uri.getScheme()!=null && !uri.getScheme().equals("file")) {
+            return null;
+        } else if(uri.getScheme().equals("file") && uri.isAbsolute() && !uri.isOpaque()) {
+            return Files.asResource(new File(uri.toURL().getFile()));
+        } else {
+            return geoServerDataDirectory.get(uri.getSchemeSpecificPart());
+        }
     }
 
     @Override

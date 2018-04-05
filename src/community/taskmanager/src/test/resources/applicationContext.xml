@@ -28,6 +28,7 @@
         <property name="name" value="mypostgresdb" />
         <property name="host" value="localhost" />
         <property name="db" value="mydb" />
+        <property name="schema" value="gw_beleid" />
         <property name="username" value="postgres" />
         <property name="password" value="postgres" />
     </bean>
