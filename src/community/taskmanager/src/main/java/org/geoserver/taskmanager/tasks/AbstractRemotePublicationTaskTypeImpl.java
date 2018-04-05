@@ -243,13 +243,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 }
 
                 // resource might have already been created together with store
-                if ((storeType == StoreType.DATASTORES
+                if (createStore && (storeType == StoreType.DATASTORES
                         ? restManager.getReader().existsFeatureType(ws, store.getName(),
-                                resource.getName())
+                                store.getName())
                         : restManager.getReader().existsCoverage(ws, store.getName(),
-                                resource.getName()))) {
+                                store.getName()))) {
                     if (!restManager.getPublisher().configureResource(ws, storeType,
-                            store.getName(), re)) {
+                            store.getName(), store.getName(), re)) {
                         throw new TaskException(
                                 "Failed to configure resource " + ws + ":" + resource.getName());
                     }

@@ -123,12 +123,13 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
     public void testSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
         //set some metadata
         CoverageInfo ci = geoServer.getCatalog().getCoverageByName("DEM");
+        ci.setName("mydem");
         ci.setTitle("my title ë");
         ci.setAbstract("my abstract ë");
         ci.getDimensions().get(0).setName("CUSTOM_DIMENSION");
         geoServer.getCatalog().save(ci);
         
-        dataUtil.setConfigurationAttribute(config, ATT_LAYER, "DEM");
+        dataUtil.setConfigurationAttribute(config, ATT_LAYER, "mydem");
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
         config = dao.save(config);
         
@@ -143,10 +144,11 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
         
         assertTrue(restManager.getReader().existsCoveragestore("wcs", "DEM"));
-        assertTrue(restManager.getReader().existsCoverage("wcs", "DEM", "DEM"));
-        assertTrue(restManager.getReader().existsLayer("wcs", "DEM", true));
+        assertTrue(restManager.getReader().existsCoverage("wcs", "DEM", "mydem"));
+        assertTrue(restManager.getReader().existsLayer("wcs", "mydem", true));
+        assertFalse(restManager.getReader().existsCoverage("wcs", "DEM", "DEM"));
         
-        RESTCoverage cov = restManager.getReader().getCoverage("wcs", "DEM", "DEM");
+        RESTCoverage cov = restManager.getReader().getCoverage("wcs", "DEM", "mydem");
         assertEquals(ci.getTitle(), cov.getTitle());
         assertEquals(ci.getAbstract(), cov.getAbstract());
         assertEquals(ci.getDimensions().get(0).getName(), 
@@ -155,8 +157,12 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         assertTrue(taskUtil.cleanup(config));      
         
         assertFalse(restManager.getReader().existsCoveragestore("wcs", "DEM"));
-        assertFalse(restManager.getReader().existsCoverage("wcs", "DEM", "DEM"));
-        assertFalse(restManager.getReader().existsLayer("wcs", "DEM", true));
+        assertFalse(restManager.getReader().existsCoverage("wcs", "DEM", "mydem"));
+        assertFalse(restManager.getReader().existsLayer("wcs", "mydem", true));
+        
+        //restore name
+        ci.setName("DEM");
+        geoServer.getCatalog().save(ci);
     }
     
     @Test
