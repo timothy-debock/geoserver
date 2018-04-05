@@ -9,18 +9,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.tester.FormTester;
-import org.geoserver.taskmanager.AbstractWicketTaskManagerTest;
 import org.geoserver.taskmanager.data.Attribute;
+import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Task;
-import org.geoserver.taskmanager.data.TaskManagerDao;
-import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.data.impl.ConfigurationImpl;
 import org.geoserver.taskmanager.tasks.CopyTableTaskTypeImpl;
 import org.geoserver.taskmanager.tasks.CreateViewTaskTypeImpl;
@@ -40,10 +39,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ConfigurationPageTest extends AbstractWicketTaskManagerTest {
+public class ConfigurationPageTest extends AbstractBatchesPanelTest<ConfigurationPage> {
     
-    private TaskManagerFactory fac;
-    private TaskManagerDao dao;
     private TaskManagerDataUtil util;
     private TaskManagerTaskUtil tutil;
     private Configuration config;
@@ -52,7 +49,7 @@ public class ConfigurationPageTest extends AbstractWicketTaskManagerTest {
         DATA_DIRECTORY.addWcs11Coverages();
         return true;
     }
-    
+        
     public Configuration createConfiguration() {
         Configuration config = fac.createConfiguration();  
         config.setName("my_configuration");
@@ -67,15 +64,34 @@ public class ConfigurationPageTest extends AbstractWicketTaskManagerTest {
         
         return dao.save(config);
     }
+
+    @Override
+    protected Configuration getConfiguration() {
+        return config;
+    }
+
+    @Override
+    protected ConfigurationPage newPage() {
+        return new ConfigurationPage(config = dao.reload(config));
+    }
+
+    @Override
+    protected String prefix() {
+        return "configurationForm:";
+    }
+
+    @Override
+    protected Collection<Batch> getBatches() {
+        return config.getBatches().values();
+    }
     
     @Before
-    public void before() {
-        fac = TaskManagerBeans.get().getFac();
-        dao = TaskManagerBeans.get().getDao();
+    public void before() { 
+        super.before();
         util = TaskManagerBeans.get().getDataUtil();
         tutil = TaskManagerBeans.get().getTaskUtil();
         login();
-        config = createConfiguration();        
+        config = createConfiguration();       
     }
     
     @After

@@ -16,6 +16,7 @@ import java.util.List;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.util.tester.FormTester;
 import org.geoserver.taskmanager.AbstractWicketTaskManagerTest;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.TaskManagerDao;
@@ -41,6 +42,7 @@ public class ConfigurationsPageTest extends AbstractWicketTaskManagerTest {
 
         config = fac.createConfiguration();
         config.setTemplate(true);
+        config.setDescription("template description");
         config.setName("my_template");
         config = dao.save(config);
     }
@@ -54,6 +56,7 @@ public class ConfigurationsPageTest extends AbstractWicketTaskManagerTest {
     private Configuration dummyConfiguration1() {
         Configuration config = fac.createConfiguration();
         config.setName("Z-CONFIG");
+        config.setDescription("z description");
         return config;
     }
     
@@ -118,6 +121,51 @@ public class ConfigurationsPageTest extends AbstractWicketTaskManagerTest {
         tester.executeAjaxEvent("dialog:dialog:content:form:submit", "click");
         
         tester.assertRenderedPage(ConfigurationPage.class);
+
+        tester.assertModelValue("configurationForm:description", null);
+
+    }
+
+    @Test
+    public void testEdit() {
+        Configuration dummy1 = dao.save(dummyConfiguration1());
+        
+        login();
+        
+        ConfigurationsPage page = new ConfigurationsPage();
+        tester.startPage(page);        
+        
+        tester.clickLink("configurationsPanel:listContainer:items:1:itemProperties:1:component:link");
+               
+        tester.assertRenderedPage(ConfigurationPage.class);
+
+        tester.assertModelValue("configurationForm:name", dummy1.getName());
+
+        tester.assertModelValue("configurationForm:description", dummy1.getDescription());
+
+        dao.delete(dummy1);
+    }
+    
+    @Test
+    public void testNewFromTemplate() {
+        login();
+        
+        ConfigurationsPage page = new ConfigurationsPage();
+        tester.startPage(page);        
+        
+        tester.clickLink("addNew");
+        
+        tester.assertComponent("dialog:dialog:content:form:userPanel", DropDownPanel.class);
+        
+        FormTester formTester = tester.newFormTester("dialog:dialog:content:form");
+        
+        formTester.select("userPanel:dropdown", 0);
+        
+        tester.executeAjaxEvent("dialog:dialog:content:form:submit", "click");
+        
+        tester.assertRenderedPage(ConfigurationPage.class);
+        
+        tester.assertModelValue("configurationForm:description", "template description");
     }
     
     @Test
@@ -149,7 +197,7 @@ public class ConfigurationsPageTest extends AbstractWicketTaskManagerTest {
         //click delete
         ModalWindow w  = (ModalWindow) tester.getComponentFromLastRenderedPage("dialog:dialog");
         assertFalse(w.isShown());            
-        tester.clickLink("removeSelected", true);
+        tester.clickLink("removeSelected");
         assertTrue(w.isShown());
                 
         //confirm      
@@ -163,6 +211,31 @@ public class ConfigurationsPageTest extends AbstractWicketTaskManagerTest {
         
         dao.delete(dummy2);
         
+    }
+
+    
+    @Test
+    public void testCopy() throws Exception {        
+        ConfigurationsPage page = new ConfigurationsPage();
+        
+        Configuration dummy1 = dao.save(dummyConfiguration1());
+        
+        tester.startPage(page);        
+
+        //select
+        CheckBox selector = ((CheckBox) tester.getComponentFromLastRenderedPage(
+                "configurationsPanel:listContainer:items:1:selectItemContainer:selectItem"));
+        tester.getRequest().setParameter(selector.getInputName(), "true");
+        tester.executeAjaxEvent(selector, "click");
+        
+        //click copy
+        tester.clickLink("copySelected");
+        
+        dao.delete(dummy1);
+        
+        tester.assertRenderedPage(ConfigurationPage.class);
+        
+        tester.assertModelValue("configurationForm:description", "z description");        
     }
     
     protected List<Configuration> getConfigurationsFromTable(GeoServerTablePanel<Configuration> table) {
