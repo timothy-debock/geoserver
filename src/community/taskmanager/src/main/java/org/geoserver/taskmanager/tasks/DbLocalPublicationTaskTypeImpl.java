@@ -19,6 +19,7 @@ import org.geoserver.catalog.impl.CatalogFactoryImpl;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.ExtTypes;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
@@ -71,11 +72,22 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
 
     @Override
     public TaskResult run(TaskContext ctx) throws TaskException {
+        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);        
+        final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
+        final DbTable table = (DbTable)   
+                ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME),
+                   new BatchContext.Dependency() {
+                    @Override
+                    public void revert() throws TaskException {
+                         FeatureTypeInfo resource = catalog.getResourceByName(layerName, FeatureTypeInfo.class);
+                         DbTable table = (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME));
+                         resource.setNativeName(table.getTableName());
+                         catalog.save(resource);
+                    }
+                });
+        
         CatalogFactory catalogFac = new CatalogFactoryImpl(catalog);
         
-        final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
-        final DbTable table = (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
-        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
         
         final NamespaceInfo ns = catalog.getNamespaceByURI(layerName.getNamespaceURI());
         final WorkspaceInfo ws = catalog.getWorkspaceByName(ns.getName());
@@ -87,7 +99,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
         final LayerInfo layer;
         final DataStoreInfo store;
         final FeatureTypeInfo resource;
-                
+              
         if (createLayer) {
             String schema = SqlUtil.schema(table.getTableName());
             String dbName = schema == null ? db.getName() : (db.getName() + "_" + schema);
@@ -184,8 +196,12 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
         final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
         final String workspace = catalog.getNamespaceByURI(layerName.getNamespaceURI()).getPrefix();
         
+        final DbTable table = (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
+        String schema = SqlUtil.schema(table.getTableName());
+        String dbName = schema == null ? db.getName() : (db.getName() + "_" + schema);
+        
         final LayerInfo layer = catalog.getLayerByName(layerName);               
-        final DataStoreInfo store = catalog.getStoreByName(workspace, db.getName(), DataStoreInfo.class);
+        final DataStoreInfo store = catalog.getStoreByName(workspace, dbName, DataStoreInfo.class);
         final FeatureTypeInfo resource = catalog.getResourceByName(layerName, FeatureTypeInfo.class);
         
         catalog.remove(layer);

@@ -96,6 +96,7 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
                 } catch (IOException e) {
                     throw new TaskException(e);
                 }
+                ctx.getBatchContext().delete(targetURI);
             }
 
             @Override

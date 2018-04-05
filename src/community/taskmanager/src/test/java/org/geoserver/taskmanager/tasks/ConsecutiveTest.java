@@ -6,6 +6,8 @@ package org.geoserver.taskmanager.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
@@ -14,6 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Batch;
@@ -28,6 +32,7 @@ import org.geoserver.taskmanager.util.SqlUtil;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.Scheduler;
@@ -48,10 +53,12 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
     //configure these constants
     private static final String SOURCEDB_NAME = "testsourcedb";
     private static final String TARGETDB_NAME = "testtargetdb";
+    private static final String TARGETDB_PUB_NAME = "mypostgresdb";
     private static final String TABLE_NAME = "gw_beleid.grondwaterlichamen_new";
     private static final String VIEW_NAME = "gw_beleid.vw_grondwaterlichamen";
-    private static final String SELECT = "dataengine_id";
-    private static final String WHERE = "GWL like 'BL%'";
+    private static final String SELECT = "\"DATAENGINE_ID\"";
+    private static final String WHERE = "\"GWL\" like 'BL%'";
+    private static final String LAYER_NAME = "grondwaterlichamen";
     private static final int NUMBER_OF_RECORDS = 7;
     private static final int NUMBER_OF_COLUMNS = 1;
     
@@ -62,6 +69,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
     private static final String ATT_VIEW_NAME = "view_name";
     private static final String ATT_SELECT = "select";
     private static final String ATT_WHERE = "where";
+    private static final String ATT_LAYER = "layer";
     private static final String ATT_FAIL = "fail";
     
     @Autowired
@@ -84,10 +92,19 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         
     @Autowired
     private Scheduler scheduler;
+
+    @Autowired
+    private Catalog catalog;
     
     private Configuration config;
     
     private Batch batch;
+
+
+    @Override
+    public boolean setupDataDirectory() throws Exception {
+        return true;
+    }
     
     @Before
     public void setupBatch() {
@@ -113,7 +130,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         dataUtil.setTaskParameterToAttribute(task2, CreateViewTaskTypeImpl.PARAM_SELECT, ATT_SELECT);
         dataUtil.setTaskParameterToAttribute(task2, CreateViewTaskTypeImpl.PARAM_WHERE, ATT_WHERE);
         dataUtil.addTaskToConfiguration(config, task2);
-
+        
         config = dao.save(config);
         task1 = config.getTasks().get("task1");
         task2 = config.getTasks().get("task2");
@@ -156,8 +173,8 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         assertTrue(viewOrTableExists(SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
         assertTrue(viewOrTableExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
         assertEquals(NUMBER_OF_RECORDS, getNumberOfRecords(VIEW_NAME));   
-        assertEquals(NUMBER_OF_COLUMNS, getNumberOfColumns(VIEW_NAME));   
-        
+        assertEquals(NUMBER_OF_COLUMNS, getNumberOfColumns(VIEW_NAME));  
+                
         assertTrue(taskUtil.cleanup(config));
         assertFalse(viewOrTableExists(SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
         assertFalse(viewOrTableExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));  
@@ -194,8 +211,67 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         assertFalse(viewOrTableExists(SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
     }
     
+    @Test
+    public void testPublishSuccessAndCleanup() throws SchedulerException, SQLException {
+        try (Connection conn = dbSources.get(TARGETDB_PUB_NAME).getDataSource().getConnection()) {            
+        } catch (SQLException e) {
+            Assume.assumeTrue(false);
+        }
+        
+        Task task3 = fac.createTask();
+        task3.setName("task3");
+        task3.setType(DbLocalPublicationTaskTypeImpl.NAME);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_DB_NAME, ATT_TARGET_DB);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_TABLE_NAME, ATT_VIEW_NAME);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_LAYER, ATT_LAYER);
+        dataUtil.addTaskToConfiguration(config, task3);
+        
+        dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_PUB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_VIEW_NAME, VIEW_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_SELECT, SELECT);
+        dataUtil.setConfigurationAttribute(config, ATT_WHERE, WHERE);
+        dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);
+        config = dao.save(config);
+        task3 = config.getTasks().get("task3");
+        dataUtil.addBatchElement(batch, task3);
+        batch = bjService.saveAndSchedule(batch);
+
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .forJob(batch.getFullName())
+                .startNow()
+                .build();
+        scheduler.scheduleJob(trigger);
+
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        }
+
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), "_temp%"));
+        assertTrue(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
+        assertTrue(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
+        assertEquals(NUMBER_OF_RECORDS, getNumberOfRecords(TARGETDB_PUB_NAME, VIEW_NAME));   
+        assertEquals(NUMBER_OF_COLUMNS, getNumberOfColumns(TARGETDB_PUB_NAME, VIEW_NAME));  
+        
+        assertNotNull(catalog.getLayerByName(LAYER_NAME));
+        FeatureTypeInfo fti = catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class);
+        assertNotNull(fti);
+        assertEquals(VIEW_NAME, fti.getNativeName());
+        
+        assertTrue(taskUtil.cleanup(config));
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));  
+        assertNull(catalog.getLayerByName(LAYER_NAME));
+        assertNull(catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class));
+
+    }
+    
     private int getNumberOfRecords(String tableName) throws SQLException {
-        DbSource ds = dbSources.get(TARGETDB_NAME);
+        return getNumberOfRecords(TARGETDB_NAME, tableName);
+    }
+    
+    private int getNumberOfRecords(String dbName, String tableName) throws SQLException {
+        DbSource ds = dbSources.get(dbName);
         try (Connection conn = ds.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
@@ -207,7 +283,11 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
     }
     
     private int getNumberOfColumns(String tableName) throws SQLException {
-        DbSource ds = dbSources.get(TARGETDB_NAME);
+        return getNumberOfColumns(TARGETDB_NAME, tableName);
+    }
+    
+    private int getNumberOfColumns(String dbName, String tableName) throws SQLException {
+        DbSource ds = dbSources.get(dbName);
         try (Connection conn = ds.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
@@ -218,7 +298,11 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
     }
     
     private boolean viewOrTableExists(String schema, String pattern) throws SQLException {
-        DbSource ds = dbSources.get(TARGETDB_NAME);
+        return viewOrTableExists(TARGETDB_NAME, schema, pattern);
+    }
+    
+    private boolean viewOrTableExists(String dbName, String schema, String pattern) throws SQLException {
+        DbSource ds = dbSources.get(dbName);
         try (Connection conn = ds.getDataSource().getConnection()) {
             DatabaseMetaData md = conn.getMetaData();
             if(md.storesUpperCaseIdentifiers()){

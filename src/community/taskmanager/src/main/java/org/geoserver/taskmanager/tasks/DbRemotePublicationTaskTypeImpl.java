@@ -5,7 +5,6 @@
 package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -13,9 +12,11 @@ import org.geoserver.catalog.StoreInfo;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.ExternalGS;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
+import org.geoserver.taskmanager.schedule.TaskRunnable;
 import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.stereotype.Component;
 
@@ -67,8 +68,16 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     }
 
     @Override
-    protected void postProcess(GSResourceEncoder re, Map<String, Object> parameterValues) {
-        final DbTable table = (DbTable) parameterValues.get(PARAM_TABLE_NAME);
+    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable update) throws TaskException {
+        final DbTable table =  (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME),
+                new BatchContext.Dependency() {
+            @Override
+            public void revert() throws TaskException {
+                 DbTable table = (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME));
+                 ((GSFeatureTypeEncoder) re).setNativeName(SqlUtil.notQualified(table.getTableName()));
+                 update.run();
+            }                    
+        });
         if (table != null) {
             ((GSFeatureTypeEncoder) re).setNativeName(SqlUtil.notQualified(table.getTableName()));
         }

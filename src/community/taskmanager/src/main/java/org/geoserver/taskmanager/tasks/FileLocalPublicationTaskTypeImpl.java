@@ -22,6 +22,7 @@ import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.Wrapper;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
 import org.geoserver.taskmanager.external.ExtTypes;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
@@ -71,11 +72,28 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
     public TaskResult run(TaskContext ctx) throws TaskException {
         CatalogFactory catalogFac = new CatalogFactoryImpl(catalog);
         
-        final URI uri = (URI) ctx.getParameterValues().get(PARAM_FILE);
-        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);
-        
+        final Name layerName = (Name) ctx.getParameterValues().get(PARAM_LAYER);        
         final NamespaceInfo ns = catalog.getNamespaceByURI(layerName.getNamespaceURI());
         final WorkspaceInfo ws = catalog.getWorkspaceByName(ns.getName());
+        
+        final URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
+                new BatchContext.Dependency() {
+            @Override
+            public void revert() throws TaskException {
+                 StoreInfo store = catalog.getStoreByName(ws, layerName.getLocalPart(), StoreInfo.class);
+                 URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
+                 if (store instanceof CoverageStoreInfo) {
+                     ((CoverageStoreInfo) store).setURL(uri.toString());
+                 } else {
+                     try {
+                        store.getConnectionParameters().put("url", uri.toURL());
+                    } catch (MalformedURLException e) {
+                        throw new TaskException(e);
+                    }
+                 }
+                 catalog.save(store);
+            }
+        });   
         
         final boolean createLayer = catalog.getLayerByName(layerName) == null;
         final boolean createStore;

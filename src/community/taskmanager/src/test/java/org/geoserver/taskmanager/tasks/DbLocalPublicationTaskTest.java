@@ -152,7 +152,7 @@ public class DbLocalPublicationTaskTest extends AbstractTaskManagerTest {
         
         
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
-        assertNotNull(catalog.getStoreByName("gs", DB_NAME, DataStoreInfo.class));
+        assertNotNull(catalog.getStoreByName(WORKSPACE, DB_NAME, DataStoreInfo.class));
         FeatureTypeInfo fti = catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class);
         assertNotNull(fti);
         assertEquals(TABLE_NAME, fti.getNativeName());

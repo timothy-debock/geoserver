@@ -17,6 +17,7 @@ import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.platform.resource.Resources;
 import org.geoserver.taskmanager.external.ExternalGS;
+import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
@@ -49,7 +50,16 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
                 : StoreType.DATASTORES;
         
         boolean upload = false;
-        URI uri = (URI) ctx.getParameterValues().get(PARAM_FILE);
+        URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
+                new BatchContext.Dependency() {
+                    @Override
+                    public void revert() throws TaskException {
+                        URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
+                        restManager.getStoreManager().update(store.getWorkspace().getName(), 
+                                new GSStoreEncoder(storeType, store.getWorkspace().getName(), store.getType(), 
+                                    store.getName(), uri.toString()));
+                    }
+                });
         if (uri == null) {
             try {
                 uri = new URI(getLocation(store));
@@ -107,7 +117,7 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
 
     @Override
     protected boolean mustCleanUpStore() {
-        return false;
+        return true;
     }
 
     @Override

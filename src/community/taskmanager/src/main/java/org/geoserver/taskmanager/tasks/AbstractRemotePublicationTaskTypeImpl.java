@@ -44,6 +44,7 @@ import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
+import org.geoserver.taskmanager.schedule.TaskRunnable;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geotools.referencing.CRS;
 import org.geotools.styling.AbstractStyleVisitor;
@@ -195,7 +196,6 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                     }
                     re = fte;
                 }
-                postProcess(re, ctx.getParameterValues());
 
                 // sync metadata
                 re.setName(resource.getName());
@@ -241,6 +241,16 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                                 di.getDimensionType() == null ? null : di.getDimensionType().identifier());
                     }
                 }
+                
+                postProcess(re, ctx, new TaskRunnable() {
+                    @Override
+                    public void run() throws TaskException {
+                        if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
+                            throw new TaskException(
+                                    "Failed to configure resource " + ws + ":" + resource.getName());
+                        }
+                    }                    
+                });
 
                 // resource might have already been created together with store
                 if (createStore && (storeType == StoreType.DATASTORES
@@ -457,5 +467,5 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     
     protected abstract boolean mustCleanUpStore();
 
-    protected void postProcess(GSResourceEncoder re, Map<String, Object> parameterValues) {}
+    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable update) throws TaskException {}
 }

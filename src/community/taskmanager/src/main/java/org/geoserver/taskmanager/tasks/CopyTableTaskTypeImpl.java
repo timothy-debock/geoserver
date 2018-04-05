@@ -159,7 +159,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                             boolean isSpatialIndex = columnNames.size() == 1
                                     && spatialColumns.contains(columnNames.iterator().next());
 
-                            sb.append(sourcedb.getDialect().createIndex(
+                            sb.append(targetdb.getDialect().createIndex(
                                     tempTableName,
                                     columnNames,
                                     isSpatialIndex,
@@ -167,7 +167,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         }
                         //we are copying a view and need to create the spatial index.
                         if(indexAndColumnMap.isEmpty() && !spatialColumns.isEmpty()){
-                            sb.append(sourcedb.getDialect().createIndex(
+                            sb.append(targetdb.getDialect().createIndex(
                                     tempTableName,
                                     spatialColumns,
                                     true,

@@ -39,7 +39,7 @@ public class DefaultDialectImpl implements Dialect {
         //regular index
         sb.append(" (");
         for (String columnName : columnNames) {
-            sb.append(columnName);
+            sb.append(quote(columnName));
             sb.append(",");
         }
         sb.setLength(sb.length() - 1);
