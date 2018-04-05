@@ -214,12 +214,14 @@ public class ConfigurationPage extends GeoServerSecuredPage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                //restore tasks
-                configurationModel.getObject().getTasks().clear();
-                configurationModel.getObject().getTasks().putAll(oldTasks);
-                //restore batches
-                configurationModel.getObject().getBatches().clear();
-                configurationModel.getObject().getBatches().putAll(oldBatches);
+                if (!initMode) {
+                    //restore tasks
+                    configurationModel.getObject().getTasks().clear();
+                    configurationModel.getObject().getTasks().putAll(oldTasks);
+                    //restore batches
+                    configurationModel.getObject().getBatches().clear();
+                    configurationModel.getObject().getBatches().putAll(oldBatches);
+                }
                 doReturn();
             }
         });
