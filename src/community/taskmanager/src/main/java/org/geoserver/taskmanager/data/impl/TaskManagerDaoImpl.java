@@ -101,15 +101,14 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .add(Restrictions.eq("removeStamp", 0L))
                 .add(Restrictions.or(
                         Restrictions.isNull("configuration"),
-                        Restrictions.and( 
-                                Restrictions.eq("configuration.removeStamp", 0L),                   
-                                Restrictions.eq("configuration.validated", true)
-                        )
-                 ));
+                        Restrictions.eq("configuration.removeStamp", 0L))
+                 );
         if (hideSpecial) {
             criteria.add(Restrictions.or(
                     Restrictions.isNull("configuration"),
-                    Restrictions.not(Restrictions.like("name", "@%"))));
+                    Restrictions.and( 
+                            Restrictions.eq("configuration.validated", true), 
+                            Restrictions.not(Restrictions.like("name", "@%")))));
         }
         return criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
     }

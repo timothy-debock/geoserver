@@ -193,7 +193,8 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
             if (batchRun.getSchedulerReference() != null) {
                 try {
                     TriggerKey triggerKey = TriggerKey.triggerKey(batchRun.getSchedulerReference());
-                    boolean lastFire = scheduler.getTrigger(triggerKey).getNextFireTime() == null;
+                    Trigger trigger = scheduler.getTrigger(triggerKey);
+                    boolean lastFire = trigger != null ? (trigger.getNextFireTime() == null) : true;
                     TriggerState state = scheduler.getTriggerState(triggerKey);
                     
                     //the blocked check only works thanks to @DisallowConcurrentExecution
