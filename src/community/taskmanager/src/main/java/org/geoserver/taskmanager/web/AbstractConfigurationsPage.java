@@ -193,7 +193,7 @@ public class AbstractConfigurationsPage extends GeoServerSecuredPage {
                                                     getPage(), config.getName()).getString());   
                                         }
                                     }
-                                    TaskManagerBeans.get().getDao().remove(config);
+                                    TaskManagerBeans.get().getBjService().remove(config);
                                 }
                                 configurationsPanel.clearSelection();
                                 remove.setEnabled(false);

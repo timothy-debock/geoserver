@@ -249,7 +249,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                             throw new TaskException(
                                     "Failed to configure resource " + ws + ":" + resource.getName());
                         }
-                    }                    
+                    }
                 });
 
                 // resource might have already been created together with store

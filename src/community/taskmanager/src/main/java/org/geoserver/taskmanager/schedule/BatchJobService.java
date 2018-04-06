@@ -62,4 +62,8 @@ public interface BatchJobService {
      */
     String scheduleNow(Batch batch);
 
+    Configuration remove(Configuration config);
+
+    Batch remove(Batch batch);
+
 }

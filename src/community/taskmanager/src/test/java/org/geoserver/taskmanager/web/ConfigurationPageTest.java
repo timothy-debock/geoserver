@@ -33,17 +33,22 @@ import org.geoserver.taskmanager.web.panel.NamePanel;
 import org.geoserver.taskmanager.web.panel.NewTaskPanel;
 import org.geoserver.taskmanager.web.panel.PanelListPanel;
 import org.geoserver.taskmanager.web.panel.TaskParameterPanel;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.data.resource.ResourceConfigurationPage;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 
 public class ConfigurationPageTest extends AbstractBatchesPanelTest<ConfigurationPage> {
     
     private TaskManagerDataUtil util;
     private TaskManagerTaskUtil tutil;
     private Configuration config;
+    private Scheduler scheduler;
     
     protected boolean setupDataDirectory() throws Exception {
         DATA_DIRECTORY.addWcs11Coverages();
@@ -90,8 +95,9 @@ public class ConfigurationPageTest extends AbstractBatchesPanelTest<Configuratio
         super.before();
         util = TaskManagerBeans.get().getDataUtil();
         tutil = TaskManagerBeans.get().getTaskUtil();
+        scheduler = GeoServerApplication.get().getBeanOfType(Scheduler.class);
         login();
-        config = createConfiguration();       
+        config = createConfiguration();
     }
     
     @After
@@ -197,9 +203,15 @@ public class ConfigurationPageTest extends AbstractBatchesPanelTest<Configuratio
         assertEquals(CopyTableTaskTypeImpl.NAME, config.getTasks().get("task3").getType());
 
     }
+    
     @SuppressWarnings("unchecked")
     @Test
-    public void testDeleteTasksAndSaveApplyCancel() {  
+    public void testDeleteTasksAndSaveApplyCancel() throws SchedulerException { 
+        Batch dummyBatch = dummyBatch1();
+        dummyBatch.setEnabled(true);
+        dummyBatch = dao.save(dummyBatch);
+        config = dao.reload(config);
+        
         ConfigurationPage page = new ConfigurationPage(config);        
         tester.startPage(page);
         tester.assertRenderedPage(ConfigurationPage.class);
@@ -252,11 +264,14 @@ public class ConfigurationPageTest extends AbstractBatchesPanelTest<Configuratio
         formTester.setValue("name", "the_greatest_configuration");       
         
         tester.clickLink("configurationForm:apply");     
-        tester.assertRenderedPage(ConfigurationPage.class);        
+        tester.assertRenderedPage(ConfigurationPage.class);   
                 
         config = dao.reload(config);
         assertEquals("the_greatest_configuration", config.getName());
         assertEquals(0, config.getTasks().size());
+        
+        //new batch has been scheduled
+        assertNotNull(scheduler.getJobDetail(JobKey.jobKey(dummyBatch.getId().toString())));
         
         //save
         formTester.setValue("name", "foo_bar_configuration");    
@@ -264,6 +279,8 @@ public class ConfigurationPageTest extends AbstractBatchesPanelTest<Configuratio
         tester.assertRenderedPage(ConfigurationsPage.class);
         config = dao.reload(config);
         assertEquals("foo_bar_configuration", config.getName());
+        
+        dao.delete(dummyBatch);
     }
     
     @Test

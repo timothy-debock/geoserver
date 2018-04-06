@@ -258,7 +258,7 @@ public class TaskManagerDataUtil {
             dao.remove(task);
         }
         for (Batch batch : batches) {
-            dao.remove(batch);
+            bjService.remove(batch);
         }
         return config;
     }

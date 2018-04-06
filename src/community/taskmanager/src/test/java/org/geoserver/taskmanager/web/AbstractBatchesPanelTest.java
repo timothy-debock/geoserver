@@ -47,14 +47,14 @@ public abstract class AbstractBatchesPanelTest<T extends Page> extends AbstractW
 
     protected abstract String prefix();
         
-    private Batch dummyBatch1() {
+    protected Batch dummyBatch1() {
         Batch batch = fac.createBatch();
         batch.setName("Z-BATCH");
         batch.setConfiguration(getConfiguration());
         return batch;
     }
     
-    private Batch dummyBatch2() {
+    protected Batch dummyBatch2() {
         Batch batch = fac.createBatch();
         batch.setName("A-BATCH");
         batch.setConfiguration(getConfiguration());

@@ -163,7 +163,7 @@ public class BatchesPanel extends Panel {
                                             removedBatches.add(batch);
                                         }
                                     } else {
-                                        TaskManagerBeans.get().getDao().remove(batch);
+                                        TaskManagerBeans.get().getBjService().remove(batch);
                                     }
                                 }
                                 batchesPanel.clearSelection();

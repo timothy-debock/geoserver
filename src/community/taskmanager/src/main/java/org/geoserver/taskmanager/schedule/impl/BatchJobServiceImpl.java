@@ -61,47 +61,42 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
 
     @Transactional("tmTransactionManager")
     protected void schedule(Batch batch) throws SchedulerException {
-        JobKey jobKey = JobKey.jobKey(batch.getFullName());        
+        JobKey jobKey = JobKey.jobKey(batch.getId().toString());        
         
-        try {
-            boolean exists = scheduler.checkExists(jobKey);
-            
-            if (!batch.isActive()) {
-                if (exists) {
-                    scheduler.deleteJob(jobKey);
-                }
-                
-                LOGGER.log(Level.INFO, "Successfully unscheduled batch " + batch.getFullName());
-                
-            } else {                
-                if (!exists) {        
-                    JobDetail jobDetail = JobBuilder.newJob(BatchJobImpl.class)
-                            .withIdentity(jobKey)
-                            .storeDurably().build();
+        boolean exists = scheduler.checkExists(jobKey);
 
-                    scheduler.addJob(jobDetail, true);
-                }
-
-                TriggerKey triggerKey = TriggerKey.triggerKey(batch.getFullName());
-                scheduler.unscheduleJob(triggerKey);
-               
-                if (batch.isEnabled() && batch.getFrequency() != null
-                        && !batch.getElements().isEmpty()
-                        && (batch.getConfiguration() == null || batch.getConfiguration().isValidated())) {
-                    Trigger trigger = TriggerBuilder.newTrigger()
-                            .withIdentity(triggerKey)
-                            .forJob(jobKey)
-                            .withSchedule(CronScheduleBuilder.cronSchedule(batch.getFrequency())).build();
-                    
-                    scheduler.scheduleJob(trigger);            
-                }
-                
-                LOGGER.log(Level.INFO, "Successfully (re)scheduled batch " + batch.getName());
+        if (!batch.isActive()) {
+            if (exists) {
+                scheduler.deleteJob(jobKey);
             }
-            
-        } catch (SchedulerException e) {
-           
+
+            LOGGER.log(Level.INFO, "Successfully unscheduled batch " + batch.getFullName());
+
+        } else {
+            if (!exists) {
+                JobDetail jobDetail = JobBuilder.newJob(BatchJobImpl.class).withIdentity(jobKey)
+                        .storeDurably().build();
+
+                scheduler.addJob(jobDetail, true);
+            }
+
+            TriggerKey triggerKey = TriggerKey.triggerKey(batch.getId().toString());
+            scheduler.unscheduleJob(triggerKey);
+
+            if (batch.isEnabled() && batch.getFrequency() != null && !batch.getElements().isEmpty()
+                    && (batch.getConfiguration() == null
+                            || batch.getConfiguration().isValidated())) {
+                Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
+                        .forJob(jobKey)
+                        .withSchedule(CronScheduleBuilder.cronSchedule(batch.getFrequency()))
+                        .build();
+
+                scheduler.scheduleJob(trigger);
+            }
+
+            LOGGER.log(Level.INFO, "Successfully (re)scheduled batch " + batch.getFullName());
         }
+
     }
     
     @Override
@@ -113,6 +108,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
             try {
                 schedule(batch);
             } catch (SchedulerException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 throw new IllegalArgumentException(e);
             }
         }
@@ -123,17 +119,43 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     @Transactional("tmTransactionManager")
     public Configuration saveAndSchedule(Configuration config) {
         config = dao.save(config);
-
         if (!config.isTemplate()) {
             try {
                 for (Batch batch : config.getBatches().values()) {
                     schedule(batch);
                 }
             } catch (SchedulerException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 throw new IllegalArgumentException(e);
             }
         }
         return config;
+    }
+    
+    @Override
+    @Transactional("tmTransactionManager")
+    public Batch remove(Batch batch) {
+        try {
+            scheduler.deleteJob(JobKey.jobKey(batch.getId().toString()));
+        } catch (SchedulerException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new IllegalArgumentException(e);
+        }
+        return dao.remove(batch);
+    }
+    
+    @Override
+    @Transactional("tmTransactionManager")
+    public Configuration remove(Configuration config) {
+        for (Batch batch : config.getBatches().values()) {
+            try {
+                scheduler.deleteJob(JobKey.jobKey(batch.getId().toString()));
+            } catch (SchedulerException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                throw new IllegalArgumentException(e);
+            }
+        }
+        return dao.remove(config);
     }
     
     @Override
