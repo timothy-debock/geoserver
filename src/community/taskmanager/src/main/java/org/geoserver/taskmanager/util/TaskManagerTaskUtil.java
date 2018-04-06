@@ -243,13 +243,13 @@ public class TaskManagerTaskUtil {
             orderedTasks.add(position, task);
         }
         
-        //now clean-up            
+        //now clean-up
         for (Task task : orderedTasks) {
             if (canCleanup(task)) {
-                success = success && cleanup(task);
+                success = cleanup(task) && success;
             }
         }
-        return success;        
+        return success;
     }
     
     /**
