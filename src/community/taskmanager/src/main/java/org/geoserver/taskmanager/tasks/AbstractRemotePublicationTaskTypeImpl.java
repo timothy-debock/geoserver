@@ -120,6 +120,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         final boolean createStore;
         final boolean createWorkspace;
         final boolean createStyle;
+
+        final String storeName = getStoreName(store, ctx);
         
         if (createLayer) { 
             //layer doesn't exist yet, publish                  
@@ -130,18 +132,18 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             createStyle = layer.getDefaultStyle() != null
                     && !restManager.getReader().existsStyle(wsStyle, layer.getDefaultStyle().getName());
             createStore = !(storeType == StoreType.DATASTORES ?
-                    restManager.getReader().existsDatastore(ws, store.getName()) :
-                    restManager.getReader().existsCoveragestore(ws, store.getName()));
+                    restManager.getReader().existsDatastore(ws, storeName) :
+                    restManager.getReader().existsCoveragestore(ws, storeName));
             createResource = !(storeType == StoreType.DATASTORES ?
-                    restManager.getReader().existsFeatureType(ws, store.getName(), resource.getName()) :
-                    restManager.getReader().existsCoverage(ws, store.getName(), resource.getName()));
+                    restManager.getReader().existsFeatureType(ws, storeName, resource.getName()) :
+                    restManager.getReader().existsCoverage(ws, storeName, resource.getName()));
 
             try {
                 
                 if (!createResource) {
                     //we are in the awkward situation where the resource exists, but not the layer
                     //the only solution is to delete the rogue resource, otherwise we cannot create the layer
-                    if (!restManager.getPublisher().removeResource(ws, storeType, store.getName(), resource.getName())) {
+                    if (!restManager.getPublisher().removeResource(ws, storeType, storeName, resource.getName())) {
                         throw new TaskException("Failed to delete resource " + ws + ":" + resource.getName());
                     }
                 }
@@ -162,13 +164,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 if (createStore) {
                     try {
                         if (!createStore(extGS, restManager, store, ctx)) {
-                            throw new TaskException("Failed to create store " + ws + ":" + store.getName());
+                            throw new TaskException("Failed to create store " + ws + ":" + storeName);
                         }
                     } catch (IOException e) {
-                        throw new TaskException("Failed to create store " + ws + ":" + store.getName(), e);
+                        throw new TaskException("Failed to create store " + ws + ":" + storeName, e);
                     } 
                 } else {
-                    LOGGER.log(Level.INFO, "Store exists: " + store.getName() + " on " + extGS.getName() +
+                    LOGGER.log(Level.INFO, "Store exists: " + storeName + " on " + extGS.getName() +
                             ", skipping creation.");
                 }
                 
@@ -248,7 +250,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 postProcess(re, ctx, new TaskRunnable() {
                     @Override
                     public void run() throws TaskException {
-                        if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
+                        if (!restManager.getPublisher().configureResource(ws, storeType, storeName, re)) {
                             throw new TaskException(
                                     "Failed to configure resource " + ws + ":" + resource.getName());
                         }
@@ -257,18 +259,13 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
 
                 // resource might have already been created together with store
                 if (createStore && (storeType == StoreType.DATASTORES
-                        ? restManager.getReader().existsFeatureType(ws, store.getName(),
-                                store.getName())
-                        : restManager.getReader().existsCoverage(ws, store.getName(),
-                                store.getName()))) {
-                    if (!restManager.getPublisher().configureResource(ws, storeType,
-                            store.getName(), store.getName(), re)) {
-                        throw new TaskException(
-                                "Failed to configure resource " + ws + ":" + resource.getName());
+                        ? restManager.getReader().existsFeatureType(ws, storeName, storeName)
+                        : restManager.getReader().existsCoverage(ws, storeName, storeName))) {
+                    if (!restManager.getPublisher().configureResource(ws, storeType, storeName, storeName, re)) {
+                        throw new TaskException("Failed to configure resource " + ws + ":" + resource.getName());
                     }
                 } else {
-                    if (!restManager.getPublisher().createResource(ws, storeType, store.getName(),
-                            re)) {
+                    if (!restManager.getPublisher().createResource(ws, storeType, storeName, re)) {
                         throw new TaskException(
                                 "Failed to create resource " + ws + ":" + resource.getName());
                     }
@@ -303,7 +300,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 //clean-up if necessary 
                 restManager.getPublisher().removeLayer(ws, layer.getName());
                 if (createStore) {
-                    restManager.getPublisher().removeStore(ws, store.getName(), storeType, true, Purge.ALL);
+                    restManager.getPublisher().removeStore(ws, storeName, storeType, true, Purge.ALL);
                 }
                 if (createStyle) {
                     restManager.getPublisher().removeStyle(layer.getDefaultStyle().getName(), true);
@@ -339,8 +336,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 if (createLayer) {                    
                     if (createResource) {
                         if (!(storeType == StoreType.COVERAGESTORES ?
-                                restManager.getPublisher().unpublishCoverage(ws, store.getName(), resource.getName()) :
-                                restManager.getPublisher().unpublishFeatureType(ws, store.getName(), resource.getName()))) {
+                                restManager.getPublisher().unpublishCoverage(ws, storeName, resource.getName()) :
+                                restManager.getPublisher().unpublishFeatureType(ws, storeName, resource.getName()))) {
                             throw new TaskException("Failed to remove layer/resource " + ws + ":" + resource.getName());
                         } 
                     } else {
@@ -349,8 +346,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                         }
                     }
                     if (createStore) {
-                        if (!restManager.getPublisher().removeStore(ws, store.getName(), storeType, true, Purge.ALL)) {
-                            throw new TaskException("Failed to remove store " + ws + ":" + store.getName());
+                        if (!restManager.getPublisher().removeStore(ws, storeName, storeType, true, Purge.ALL)) {
+                            throw new TaskException("Failed to remove store " + ws + ":" + storeName);
                         }
                     }
                     if (createStyle) {
@@ -439,6 +436,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         final LayerInfo layer = (LayerInfo) ctx.getParameterValues().get(PARAM_LAYER);
         final ResourceInfo resource = layer.getResource();
         final StoreInfo store = resource.getStore();
+        final String storeName = getStoreName(store, ctx);
         final StoreType storeType = store instanceof CoverageStoreInfo ? 
                 StoreType.COVERAGESTORES : StoreType.DATASTORES;
         final String ws = store.getWorkspace().getName();
@@ -450,15 +448,15 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         }
         if (restManager.getReader().existsLayer(ws, layer.getName(), true)) {
             if (!(storeType == StoreType.COVERAGESTORES ?
-                    restManager.getPublisher().unpublishCoverage(ws, store.getName(), resource.getName()) :
-                    restManager.getPublisher().unpublishFeatureType(ws, store.getName(), resource.getName()))) {
+                    restManager.getPublisher().unpublishCoverage(ws, storeName, resource.getName()) :
+                    restManager.getPublisher().unpublishFeatureType(ws, storeName, resource.getName()))) {
                 throw new TaskException("Failed to remove layer/resource " + ws + ":" + resource.getName());
             } 
-            if (!restManager.getPublisher().removeStore(ws, store.getName(), storeType, false, Purge.ALL)) {
+            if (!restManager.getPublisher().removeStore(ws, storeName, storeType, false, Purge.ALL)) {
                 if (mustCleanUpStore()) {
-                    throw new TaskException("Failed to remove store " + ws + ":" + store.getName());
+                    throw new TaskException("Failed to remove store " + ws + ":" + storeName);
                 } else {
-                    LOGGER.log(Level.INFO, "Failed to clean-up datastore " + store.getName() + 
+                    LOGGER.log(Level.INFO, "Failed to clean-up datastore " + storeName + 
                             ", possibly used by other layers.");
                 }
             }
@@ -471,6 +469,10 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             StoreInfo store, TaskContext ctx) throws IOException, TaskException;
     
     protected abstract boolean mustCleanUpStore();
-
+    
+    protected String getStoreName(StoreInfo store, TaskContext ctx) throws TaskException {
+        return store.getName();
+    }
+    
     protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable update) throws TaskException {}
 }

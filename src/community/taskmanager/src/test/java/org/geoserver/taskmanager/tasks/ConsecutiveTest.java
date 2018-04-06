@@ -336,9 +336,9 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
         
-        assertTrue(restManager.getReader().existsDatastore(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME));
-        assertTrue(restManager.getReader().existsFeatureType(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME, VIEW_NAME));
-        assertTrue(restManager.getReader().existsLayer(TARGETDB_PUB_NAME, TABLE_NAME, true));
+        assertTrue(restManager.getReader().existsLayer("gs", LAYER_NAME, true));
+        assertEquals(SqlUtil.notQualified(VIEW_NAME), restManager.getReader().getFeatureType(
+                restManager.getReader().getLayer("gs", LAYER_NAME)).getNativeName());
 
         //cleanup
         assertTrue(taskUtil.cleanup(config));
@@ -347,9 +347,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));  
         assertNull(catalog.getLayerByName(LAYER_NAME));
         assertNull(catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class));
-        assertFalse(restManager.getReader().existsDatastore(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME));
-        assertFalse(restManager.getReader().existsFeatureType(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME, VIEW_NAME));
-        assertFalse(restManager.getReader().existsLayer(TARGETDB_PUB_NAME, TABLE_NAME, true));
+        assertFalse(restManager.getReader().existsLayer("gs", LAYER_NAME, true));
     }
         
     private int getNumberOfRecords(String tableName) throws SQLException {

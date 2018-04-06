@@ -144,7 +144,7 @@ public class MetaDataSyncTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batchCreate.getFullName())
+                .forJob(batchCreate.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -171,7 +171,7 @@ public class MetaDataSyncTaskTest extends AbstractTaskManagerTest {
         geoServer.getCatalog().save(ci);   
         
         trigger = TriggerBuilder.newTrigger()
-                .forJob(batchSync.getFullName())
+                .forJob(batchSync.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);

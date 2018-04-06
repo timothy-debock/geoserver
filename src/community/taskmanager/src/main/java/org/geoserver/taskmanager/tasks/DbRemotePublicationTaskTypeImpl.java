@@ -55,11 +55,19 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
             final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
             final DbTable table = (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
             return restManager.getStoreManager().create(store.getWorkspace().getName(),
-                    db.postProcess(db.getStoreEncoder(store.getName()), table));
+                    db.postProcess(db.getStoreEncoder(getStoreName(store, ctx)), table));
         } catch (UnsupportedOperationException e) {
             throw new TaskException("Failed to create store " + store.getWorkspace().getName() + ":"
                     + store.getName(), e);
         }
+    }
+
+    @Override
+    protected String getStoreName(StoreInfo store, TaskContext ctx) throws TaskException {
+        final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
+        final DbTable table = (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
+        final String schema = table == null ? null : SqlUtil.schema(table.getTableName());
+        return schema == null ? db.getName() : (db.getName() + "_" + schema);
     }
 
     @Override
