@@ -81,7 +81,8 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                     public void revert() throws TaskException {
                          FeatureTypeInfo resource = catalog.getResourceByName(layerName, FeatureTypeInfo.class);
                          DbTable table = (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME));
-                         resource.setNativeName(table.getTableName());
+                         resource.setNativeName(
+                                 SqlUtil.notQualified(table.getTableName()));
                          catalog.save(resource);
                     }
                 });
@@ -136,6 +137,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                     throw new TaskException(e);
                 }
                 resource.setName(layerName.getLocalPart());
+                resource.setTitle(layerName.getLocalPart());
                 catalog.add(resource);
             } else {
                 resource = unwrap(_resource, FeatureTypeInfo.class);
