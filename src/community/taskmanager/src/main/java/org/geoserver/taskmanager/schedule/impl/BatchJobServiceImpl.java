@@ -197,7 +197,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     @Override
     public String scheduleNow(Batch batch) {
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         try {

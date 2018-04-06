@@ -172,7 +172,7 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
 
             @Override
             public void rollback() throws TaskException {
-                throw new TaskException("Cannot roll-baclk metadata synchronisation task");
+                throw new TaskException("Cannot roll-back metadata synchronisation task");
             }
             
         };
