@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -26,6 +27,7 @@ import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.external.DbSource;
+import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.SqlUtil;
@@ -41,6 +43,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.Trigger.TriggerState;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 
 /**
  * Tests temp values with commit and rollback, in this case of copy table followed by create view.
@@ -71,6 +75,10 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
     private static final String ATT_WHERE = "where";
     private static final String ATT_LAYER = "layer";
     private static final String ATT_FAIL = "fail";
+    private static final String ATT_EXT_GS = "ext_gs";
+    
+    @Autowired
+    private LookupService<ExternalGS> extGeoservers;
     
     @Autowired
     private TaskManagerDao dao;
@@ -161,7 +169,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         config = dao.save(config);
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
@@ -200,7 +208,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         batch = bjService.saveAndSchedule(batch);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -239,7 +247,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         batch = bjService.saveAndSchedule(batch);
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
@@ -256,7 +264,7 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
         FeatureTypeInfo fti = catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class);
         assertNotNull(fti);
-        assertEquals(VIEW_NAME, fti.getNativeName());
+        assertEquals(SqlUtil.notQualified(VIEW_NAME), fti.getNativeName());
         
         assertTrue(taskUtil.cleanup(config));
         assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
@@ -266,6 +274,84 @@ public class ConsecutiveTest extends AbstractTaskManagerTest {
 
     }
     
+    @Test
+    public void testRemotePublishSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
+        Assume.assumeTrue(extGeoservers.get("mygs").getRESTManager().getReader().existGeoserver());
+        try (Connection conn = dbSources.get(TARGETDB_PUB_NAME).getDataSource().getConnection()) {            
+        } catch (SQLException e) {
+            Assume.assumeTrue(false);
+        }
+        
+        Task task3 = fac.createTask();
+        task3.setName("task3");
+        task3.setType(DbLocalPublicationTaskTypeImpl.NAME);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_DB_NAME, ATT_TARGET_DB);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_TABLE_NAME, ATT_VIEW_NAME);
+        dataUtil.setTaskParameterToAttribute(task3, DbLocalPublicationTaskTypeImpl.PARAM_LAYER, ATT_LAYER);
+        dataUtil.addTaskToConfiguration(config, task3);
+
+        Task task4 = fac.createTask();
+        task4.setName("task4");
+        task4.setType(DbRemotePublicationTaskTypeImpl.NAME);
+        dataUtil.setTaskParameterToAttribute(task4, DbRemotePublicationTaskTypeImpl.PARAM_EXT_GS, ATT_EXT_GS);
+        dataUtil.setTaskParameterToAttribute(task4, DbRemotePublicationTaskTypeImpl.PARAM_DB_NAME, ATT_TARGET_DB);
+        dataUtil.setTaskParameterToAttribute(task4, DbRemotePublicationTaskTypeImpl.PARAM_TABLE_NAME, ATT_VIEW_NAME);
+        dataUtil.setTaskParameterToAttribute(task4, DbRemotePublicationTaskTypeImpl.PARAM_LAYER, ATT_LAYER);
+        dataUtil.addTaskToConfiguration(config, task4);
+        
+        dataUtil.setConfigurationAttribute(config, ATT_SOURCE_DB, SOURCEDB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TARGET_DB, TARGETDB_PUB_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_VIEW_NAME, VIEW_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_SELECT, SELECT);
+        dataUtil.setConfigurationAttribute(config, ATT_WHERE, WHERE);
+        dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
+        config = dao.save(config);
+        task3 = config.getTasks().get("task3");
+        dataUtil.addBatchElement(batch, task3);
+        task4 = config.getTasks().get("task4");
+        dataUtil.addBatchElement(batch, task4);
+        batch = bjService.saveAndSchedule(batch);
+
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .forJob(batch.getId().toString())
+                .startNow()
+                .build();
+        scheduler.scheduleJob(trigger);
+
+        while (scheduler.getTriggerState(trigger.getKey()) != TriggerState.NONE) {
+        }
+
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), "_temp%"));
+        assertTrue(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
+        assertTrue(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));
+        assertEquals(NUMBER_OF_RECORDS, getNumberOfRecords(TARGETDB_PUB_NAME, VIEW_NAME));   
+        assertEquals(NUMBER_OF_COLUMNS, getNumberOfColumns(TARGETDB_PUB_NAME, VIEW_NAME));  
+        
+        assertNotNull(catalog.getLayerByName(LAYER_NAME));
+        FeatureTypeInfo fti = catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class);
+        assertNotNull(fti);
+        assertEquals(SqlUtil.notQualified(VIEW_NAME), fti.getNativeName());
+        
+        GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
+        
+        assertTrue(restManager.getReader().existsDatastore(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME));
+        assertTrue(restManager.getReader().existsFeatureType(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME, VIEW_NAME));
+        assertTrue(restManager.getReader().existsLayer(TARGETDB_PUB_NAME, TABLE_NAME, true));
+
+        //cleanup
+        assertTrue(taskUtil.cleanup(config));
+        
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(TABLE_NAME), SqlUtil.notQualified(TABLE_NAME)));
+        assertFalse(viewOrTableExists(TARGETDB_PUB_NAME, SqlUtil.schema(VIEW_NAME), SqlUtil.notQualified(VIEW_NAME)));  
+        assertNull(catalog.getLayerByName(LAYER_NAME));
+        assertNull(catalog.getResourceByName(LAYER_NAME, FeatureTypeInfo.class));
+        assertFalse(restManager.getReader().existsDatastore(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME));
+        assertFalse(restManager.getReader().existsFeatureType(TARGETDB_PUB_NAME, TARGETDB_PUB_NAME, VIEW_NAME));
+        assertFalse(restManager.getReader().existsLayer(TARGETDB_PUB_NAME, TABLE_NAME, true));
+    }
+        
     private int getNumberOfRecords(String tableName) throws SQLException {
         return getNumberOfRecords(TARGETDB_NAME, tableName);
     }

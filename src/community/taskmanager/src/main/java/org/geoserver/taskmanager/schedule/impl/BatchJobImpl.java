@@ -55,8 +55,13 @@ public class BatchJobImpl implements Job {
         TaskManagerBeans beans = appContext.getBean(TaskManagerBeans.class);
         
         //get the batch
-        String batchName = (String) context.getJobDetail().getKey().getName();
-        Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchName)); 
+        Integer batchId;
+        try {
+            batchId = Integer.parseInt((String) context.getJobDetail().getKey().getName());
+        } catch (NumberFormatException e) {
+            throw new JobExecutionException(e);
+        }
+        Batch batch = beans.getDataUtil().init(beans.getDao().getBatch(batchId)); 
         
         LOGGER.log(Level.INFO, "Starting batch " + batch.getFullName());
         

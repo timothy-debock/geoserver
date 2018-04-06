@@ -135,7 +135,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
@@ -179,7 +179,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_FROM_VIEW_NAME);
         config = dao.save(config);
 
-        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getId().toString()).startNow()
                 .build();
         scheduler.scheduleJob(trigger);
 
@@ -238,7 +238,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_FROM_VIEW_NAME);
         config = dao.save(config);
 
-        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getId().toString()).startNow()
                 .build();
         scheduler.scheduleJob(trigger);
 
@@ -281,7 +281,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         dataUtil.setConfigurationAttribute(config, ATT_TARGET_TABLE_NAME, TARGET_TABLE_CAMELCASE_NAME);
         config = dao.save(config);
 
-        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getFullName()).startNow()
+        Trigger trigger = TriggerBuilder.newTrigger().forJob(batch.getId().toString()).startNow()
                 .build();
         scheduler.scheduleJob(trigger);
 
@@ -331,7 +331,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         batch = bjService.saveAndSchedule(batch);
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()
                 .build();
         scheduler.scheduleJob(trigger);
@@ -358,7 +358,7 @@ public class CopyTableTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()
                 .build();
         scheduler.scheduleJob(trigger);

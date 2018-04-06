@@ -88,7 +88,7 @@ public class BatchJobServiceTest extends AbstractTaskManagerTest {
     @Test
     public void testBatchJobService() throws SchedulerException {
         JobKey jobKey = new JobKey(batch.getId().toString());
-        TriggerKey triggerKey = new TriggerKey(batch.getFullName());
+        TriggerKey triggerKey = new TriggerKey(batch.getId().toString());
         
         //not scheduled yet        
         assertTrue(scheduler.checkExists(jobKey));

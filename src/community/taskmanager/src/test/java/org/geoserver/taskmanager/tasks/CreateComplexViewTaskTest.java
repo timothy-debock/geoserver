@@ -124,7 +124,7 @@ public class CreateComplexViewTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -158,7 +158,7 @@ public class CreateComplexViewTaskTest extends AbstractTaskManagerTest {
         batch = bjService.saveAndSchedule(batch);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);

@@ -124,10 +124,11 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         if (createLayer) { 
             //layer doesn't exist yet, publish                  
             createWorkspace = !restManager.getReader().existsWorkspace(ws);
-            String wsStyle = layer.getDefaultStyle().getWorkspace() == null ? null : 
+            String wsStyle = layer.getDefaultStyle() == null
+                    || layer.getDefaultStyle().getWorkspace() == null ? null : 
                 layer.getDefaultStyle().getWorkspace().getName();
-            createStyle = !restManager.getReader().existsStyle(wsStyle,
-                    layer.getDefaultStyle().getName());
+            createStyle = layer.getDefaultStyle() != null
+                    && !restManager.getReader().existsStyle(wsStyle, layer.getDefaultStyle().getName());
             createStore = !(storeType == StoreType.DATASTORES ?
                     restManager.getReader().existsDatastore(ws, store.getName()) :
                     restManager.getReader().existsCoveragestore(ws, store.getName()));
@@ -218,10 +219,12 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 re.setProjectionPolicy(resource.getProjectionPolicy() == null
                         ? ProjectionPolicy.NONE
                         : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
-                re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
-                        resource.getLatLonBoundingBox().getMinY(),
-                        resource.getLatLonBoundingBox().getMaxX(),
-                        resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
+                if (resource.getLatLonBoundingBox() != null) {
+                    re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
+                            resource.getLatLonBoundingBox().getMinY(),
+                            resource.getLatLonBoundingBox().getMaxX(),
+                            resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
+                }
                 if (resource.getNativeBoundingBox() != null) {
                     re.setNativeBoundingBox(resource.getNativeBoundingBox().getMinX(),
                             resource.getNativeBoundingBox().getMinY(),
@@ -286,7 +289,9 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 // config layer                
                 final GSLayerEncoder layerEncoder = new GSLayerEncoder();
                 layerEncoder.setAdvertised(false);
-                layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
+                if (layer.getDefaultStyle() != null) {
+                    layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
+                }
                 
                 // resource might have already been created together with store
                 if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {

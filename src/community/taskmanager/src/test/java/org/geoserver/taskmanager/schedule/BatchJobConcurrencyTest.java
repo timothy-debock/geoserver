@@ -120,12 +120,12 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
                 
         //start both tasks simultaneously
         Trigger trigger1 = TriggerBuilder.newTrigger()
-                .forJob(batch1.getFullName())
+                .forJob(batch1.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger1);
         Trigger trigger2 = TriggerBuilder.newTrigger()
-                .forJob(batch2.getFullName())
+                .forJob(batch2.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger2);
@@ -155,12 +155,12 @@ public class BatchJobConcurrencyTest extends AbstractTaskManagerTest {
         
         //start both tasks simultaneously
         Trigger trigger1 = TriggerBuilder.newTrigger()
-                .forJob(batch1.getFullName())
+                .forJob(batch1.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger1);
         Trigger trigger2 = TriggerBuilder.newTrigger()
-                .forJob(batch2.getFullName())
+                .forJob(batch2.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger2);

@@ -122,7 +122,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
     public void testSuccess() throws InterruptedException, SchedulerException {
                 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -162,7 +162,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         config = dao.save(config);
                 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -193,7 +193,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         config = dao.save(config);
                 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -239,7 +239,7 @@ public class BatchJobTest extends AbstractTaskManagerTest {
         config = dao.save(config);
                 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);

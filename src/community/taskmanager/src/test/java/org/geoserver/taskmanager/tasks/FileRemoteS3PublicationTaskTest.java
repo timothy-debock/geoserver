@@ -157,7 +157,7 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
@@ -194,7 +194,7 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
         config = dao.save(config);
         
         Trigger trigger = TriggerBuilder.newTrigger()
-                .forJob(batch.getFullName())
+                .forJob(batch.getId().toString())
                 .startNow()        
                 .build();
         scheduler.scheduleJob(trigger);
