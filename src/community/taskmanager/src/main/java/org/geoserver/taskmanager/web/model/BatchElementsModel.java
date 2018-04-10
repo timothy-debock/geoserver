@@ -33,7 +33,7 @@ public class BatchElementsModel extends GeoServerDataProvider<BatchElement> {
     }
 
     @Override
-    protected List<BatchElement> getItems() {
+    public List<BatchElement> getItems() {
         return new ArrayList<>(batchModel.getObject().getElements());
     }
     

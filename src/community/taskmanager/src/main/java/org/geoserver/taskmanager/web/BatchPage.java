@@ -120,8 +120,16 @@ public class BatchPage extends GeoServerSecuredPage {
                         getSession().getAuthentication(), 
                         GeoServerApplication.get().getCatalog().getDefaultWorkspace()));
         form.add(new DropDownChoice<String>("workspace", 
-                new PropertyModel<String>(batchModel, "workspace"), workspaces)
-                .setNullValid(canBeNull).setRequired(!canBeNull)
+                new PropertyModel<String>(batchModel, "workspace"), workspaces){
+            
+                        private static final long serialVersionUID = -9058423608027219299L;
+
+                        @Override
+                        public boolean isRequired() {
+                            return !canBeNull && (form.findSubmittingButton() == saveButton 
+                                    || form.findSubmittingButton() == applyButton);
+                        }
+                }.setNullValid(canBeNull)
                 //theoretically a batch can have a separate workspace from config, but it is
                 //confusing to users so turning this off by default.
                 .setEnabled(batchModel.getObject().getConfiguration() == null
