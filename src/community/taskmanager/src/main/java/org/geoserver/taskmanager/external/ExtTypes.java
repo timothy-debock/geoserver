@@ -60,52 +60,51 @@ public class ExtTypes {
 
     };
     
-    public final ParameterType tableName() {
-        return new ParameterType() {
-            private Set<String> getTables(String databaseName) {
-                Set<String> tables = new TreeSet<String>();
-                tables.add(""); //custom value is possible here
-                if (databaseName != null) {
-                    DbSource ds = dbSources.get(databaseName);
-                    if (ds != null) {
-                        try {
-                            Connection conn = ds.getDataSource().getConnection();
-                            DatabaseMetaData md = conn.getMetaData();
-                            ResultSet rs = md.getTables(null, ds.getSchema(), "%", 
-                                    new String[]{"TABLE", "VIEW"});
-                            while (rs.next()) {
-                                if (ds.getSchema() != null || rs.getString(2) == null) {
-                                    tables.add(rs.getString(3));
-                                } else {
-                                    tables.add(rs.getString(2) + "." + rs.getString(3));
-                                }
+    public final ParameterType tableName = new ParameterType() {
+        private Set<String> getTables(String databaseName) {
+            Set<String> tables = new TreeSet<String>();
+            tables.add(""); // custom value is possible here
+            if (databaseName != null) {
+                DbSource ds = dbSources.get(databaseName);
+                if (ds != null) {
+                    try {
+                        Connection conn = ds.getDataSource().getConnection();
+                        DatabaseMetaData md = conn.getMetaData();
+                        ResultSet rs = md.getTables(null, ds.getSchema(), "%",
+                                new String[] { "TABLE", "VIEW" });
+                        while (rs.next()) {
+                            if (ds.getSchema() != null || rs.getString(2) == null) {
+                                tables.add(rs.getString(3));
+                            } else {
+                                tables.add(rs.getString(2) + "." + rs.getString(3));
                             }
-                        } catch (SQLException e) {
-                            LOGGER.log(Level.WARNING, "Failed to retrieve tables from data source " + databaseName, e);
                         }
+                    } catch (SQLException e) {
+                        LOGGER.log(Level.WARNING,
+                                "Failed to retrieve tables from data source " + databaseName, e);
                     }
                 }
-                return tables;
-            }        
+            }
+            return tables;
+        }
 
-            @Override
-            public List<String> getDomain(List<String> dependsOnRawValues) {
-                return new ArrayList<String>(getTables(dependsOnRawValues.get(0)));
-            }
-            
-            @Override
-            public boolean validate(String value, List<String> dependsOnRawValues) {
-                //since the table may not yet exist  (could be result of other task
-                //do not validate its existence.
-                return true; 
-            }
-    
-            @Override
-            public Object parse(String value, List<String> dependsOnRawValues) {
-                return new DbTableImpl(dbSources.get(dependsOnRawValues.get(0)), value);
-            }
-    
-        };
+        @Override
+        public List<String> getDomain(List<String> dependsOnRawValues) {
+            return new ArrayList<String>(getTables(dependsOnRawValues.get(0)));
+        }
+
+        @Override
+        public boolean validate(String value, List<String> dependsOnRawValues) {
+            // since the table may not yet exist (could be result of other task
+            // do not validate its existence.
+            return true;
+        }
+
+        @Override
+        public Object parse(String value, List<String> dependsOnRawValues) {
+            return new DbTableImpl(dbSources.get(dependsOnRawValues.get(0)), value);
+        }
+
     };
     
     public final ParameterType extGeoserver = new ParameterType() {
@@ -149,12 +148,6 @@ public class ExtTypes {
         
         @Override
         public List<String> getDomain(List<String> dependsOnRawValues) {
-            /*List<String> layers = new ArrayList<>();
-            layers.add(""); //custom value is possible here
-            for (LayerInfo layer : geoServer.getCatalog().getLayers()) {
-                layers.add(layer.prefixedName());
-            }
-            return layers;*/
             return null;
         }
 

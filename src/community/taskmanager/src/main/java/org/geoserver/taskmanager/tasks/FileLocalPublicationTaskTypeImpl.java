@@ -59,7 +59,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
 
     @PostConstruct
     public void initParamInfo() {
-        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.URI, true));
+        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.UPLOADABLE_URI, true));
         paramInfo.put(PARAM_LAYER, new ParameterInfo(PARAM_LAYER, extTypes.layerName, true));
     }
 
@@ -148,6 +148,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                     }
                     resource.setName(layerName.getLocalPart());
                     resource.setTitle(layerName.getLocalPart());
+                    resource.setAdvertised(false);
                 } catch (Exception e) {
                     if (createStore) {
                         catalog.remove(store);
@@ -160,7 +161,6 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
             }
             
             layer = builder.buildLayer(resource);
-            layer.setAdvertised(false);
             catalog.add(layer);     
         } else {
             layer = null;
@@ -174,10 +174,10 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
 
             @Override
             public void commit() throws TaskException {
-                if (createLayer) {
-                    LayerInfo editLayer = catalog.getLayer(layer.getId());
-                    editLayer.setAdvertised(true);
-                    catalog.save(editLayer);
+                if (createResource) {
+                    ResourceInfo editResource = catalog.getResource(layer.getId(), ResourceInfo.class);
+                    editResource.setAdvertised(true);
+                    catalog.save(editResource);
                 }
             }
 

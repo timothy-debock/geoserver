@@ -285,12 +285,9 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 
                 // config layer                
                 final GSLayerEncoder layerEncoder = new GSLayerEncoder();
-                layerEncoder.setAdvertised(false);
                 if (layer.getDefaultStyle() != null) {
                     layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
-                }
-                
-                // resource might have already been created together with store
+                }                
                 if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
                     throw new TaskException(
                             "Failed to configure layer " + ws + ":" + resource.getName());

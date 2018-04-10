@@ -13,6 +13,7 @@ import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
+import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.Wrapper;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
@@ -60,7 +61,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
     public void initParamInfo() {
         ParameterInfo dbInfo = new ParameterInfo(PARAM_DB_NAME, extTypes.dbName, true);
         paramInfo.put(PARAM_DB_NAME, dbInfo);
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(), false)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName, false)
                 .dependsOn(dbInfo));
         paramInfo.put(PARAM_LAYER, new ParameterInfo(PARAM_LAYER, extTypes.layerName, true));
     }
@@ -138,6 +139,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                 }
                 resource.setName(layerName.getLocalPart());
                 resource.setTitle(layerName.getLocalPart());
+                resource.setAdvertised(false);
                 catalog.add(resource);
             } else {
                 resource = unwrap(_resource, FeatureTypeInfo.class);
@@ -145,7 +147,6 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
             
             try {
                 layer = builder.buildLayer(resource);
-                layer.setAdvertised(false);
                 catalog.add(layer);     
             } catch (IOException e) {
                 if (createStore) {
@@ -169,9 +170,9 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
             @Override
             public void commit() throws TaskException {
                 if (createLayer) {
-                    LayerInfo editLayer = catalog.getLayer(layer.getId());
-                    editLayer.setAdvertised(true);
-                    catalog.save(editLayer);
+                    ResourceInfo editResource = catalog.getResource(layer.getId(), ResourceInfo.class);
+                    editResource.setAdvertised(true);
+                    catalog.save(editResource);
                 }
             }
 

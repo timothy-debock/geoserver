@@ -29,7 +29,7 @@ public class CreateViewTaskTypeImpl extends AbstractCreateViewTaskTypeImpl {
     @PostConstruct
     public void initParamInfo() {
         super.initParamInfo();
-        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName(), true)
+        paramInfo.put(PARAM_TABLE_NAME, new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName, true)
                 .dependsOn(paramInfo.get(PARAM_DB_NAME)));
         paramInfo.put(PARAM_SELECT, new ParameterInfo(PARAM_SELECT, ParameterType.SQL, true));
         paramInfo.put(PARAM_WHERE, new ParameterInfo(PARAM_WHERE, ParameterType.SQL, false));

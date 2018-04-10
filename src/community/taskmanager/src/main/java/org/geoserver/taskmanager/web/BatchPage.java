@@ -93,15 +93,18 @@ public class BatchPage extends GeoServerSecuredPage {
         Form<Batch> form = new Form<Batch>("batchForm", batchModel);
         add(form);
   
-        AjaxSubmitLink saveButton = saveButton();  
+        AjaxSubmitLink saveButton = saveOrApplyButton("save", true);  
         form.add(saveButton);
+        AjaxSubmitLink applyButton = saveOrApplyButton("apply", false);  
+        form.add(applyButton);
                 
         form.add(new TextField<String>("name", new PropertyModel<String>(batchModel, "name")) {
             private static final long serialVersionUID = -3736209422699508894L;
 
             @Override
             public boolean isRequired() {
-                return form.findSubmittingButton() == saveButton;
+                return form.findSubmittingButton() == saveButton ||
+                        form.findSubmittingButton() == applyButton;
             }
         });
         
@@ -179,21 +182,25 @@ public class BatchPage extends GeoServerSecuredPage {
         
     }
     
-    protected AjaxSubmitLink saveButton() {
-        return new AjaxSubmitLink("save") {
+    protected AjaxSubmitLink saveOrApplyButton(final String id, final boolean doReturn) {
+        return new AjaxSubmitLink(id) {
             private static final long serialVersionUID = 3735176778941168701L;
 
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 try {
-                    Configuration config = batchModel.getObject().getConfiguration();
-                    batchModel.setObject(
-                            TaskManagerBeans.get().getDataUtil().saveScheduleAndRemove(batchModel.getObject(), removedElements));
+                    Configuration config = batchModel.getObject().getConfiguration();   
+                    batchModel.setObject(TaskManagerBeans.get().getDataUtil().saveScheduleAndRemove(
+                                    batchModel.getObject(), 
+                                    removedElements));                 
                     //update the old config (still used on configuration page)
                     if (config != null) {
-                        config.getBatches().put(batchModel.getObject().getName(), batchModel.getObject());
+                        batchModel.getObject().setConfiguration(config);
+                        config.getBatches().put(batchModel.getObject().getName(), batchModel.getObject());                        
                     }
-                    doReturn();                    
+                    if (doReturn) {
+                        doReturn();
+                    }
                 } catch (ConstraintViolationException e) { 
                     form.error(new ParamResourceModel("duplicate", getPage()).getString());
                     addFeedbackPanels(target);

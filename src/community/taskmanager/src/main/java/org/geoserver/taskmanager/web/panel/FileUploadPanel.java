@@ -101,7 +101,7 @@ public class FileUploadPanel extends Panel {
                         return hasBeenSubmitted();
                     }
                 };
-        add(fileServiceChoice);
+        add(fileServiceChoice.setNullValid(false));
 
         folderChoice = new DropDownChoice<String>("folderSelection", new Model<String>(), new ArrayList<>()) {
             private static final long serialVersionUID = 3543687800810146647L;
