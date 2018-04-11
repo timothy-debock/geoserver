@@ -174,7 +174,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
             @Override
             public void commit() throws TaskException {
                 if (createLayer) {
-                    ResourceInfo editResource = catalog.getResource(layer.getId(), ResourceInfo.class);
+                    ResourceInfo editResource = catalog.getResource(resource.getId(), ResourceInfo.class);
                     editResource.setAdvertised(true);
                     catalog.save(editResource);
                 }

@@ -179,7 +179,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
             @Override
             public void commit() throws TaskException {
                 if (createResource) {
-                    ResourceInfo editResource = catalog.getResource(layer.getId(), ResourceInfo.class);
+                    ResourceInfo editResource = catalog.getResource(resource.getId(), ResourceInfo.class);
                     editResource.setAdvertised(true);
                     catalog.save(editResource);
                 }
