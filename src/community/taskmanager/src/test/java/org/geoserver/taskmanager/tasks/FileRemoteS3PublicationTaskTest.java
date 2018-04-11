@@ -56,7 +56,7 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     private static String REMOTE_COVERAGE_ALIAS = "test";
     private static String REMOTE_COVERAGE_FILE_LOCATION = "test/be_b_c.geotiff.tiff";
     private static String REMOTE_COVERAGE_URL = REMOTE_COVERAGE_ALIAS + "://" + REMOTE_COVERAGE_FILE_LOCATION;
-    private static String REMOTE_COVERAGE_OTHER_URL = "dovminio:test/be_b_c.geotiff.tiff";
+    private static String REMOTE_COVERAGE_OTHER_URL = "dovminio://test/be_b_c.geotiff.tiff";
     private static String REMOTE_COVERAGE_TYPE = "S3GeoTiff";
     
     private static final String ATT_LAYER = "layer";
@@ -205,7 +205,9 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
         
         assertTrue(restManager.getReader().existsCoveragestore(
                 REMOTE_COVERAGE.getPrefix(), REMOTE_COVERAGE.getLocalPart()));
-        assertEquals(REMOTE_COVERAGE_OTHER_URL, restManager.getReader().getCoverageStore("wcs", "DEM").getURL());
+        assertEquals(REMOTE_COVERAGE_OTHER_URL, 
+                restManager.getReader().getCoverageStore(REMOTE_COVERAGE.getPrefix(), 
+                        REMOTE_COVERAGE.getLocalPart()).getURL());
         assertTrue(restManager.getReader().existsCoverage(
                 REMOTE_COVERAGE.getPrefix(), REMOTE_COVERAGE.getLocalPart(), 
                 REMOTE_COVERAGE.getLocalPart()));
