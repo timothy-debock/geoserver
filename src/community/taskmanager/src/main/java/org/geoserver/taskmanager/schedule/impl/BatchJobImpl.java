@@ -130,6 +130,8 @@ public class BatchJobImpl implements Job {
                 if (rollback) {
                     while (!resultStack.isEmpty()) {
                         Run runPop = beans.getDao().reload(runStack.pop());
+                        runPop.setStatus(Run.Status.ROLLING_BACK);
+                        runPop = beans.getDao().save(runPop);
                         try {                    
                             resultStack.pop().rollback();
                             runPop.setStatus(Run.Status.ROLLED_BACK);

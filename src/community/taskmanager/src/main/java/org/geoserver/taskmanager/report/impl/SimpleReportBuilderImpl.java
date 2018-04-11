@@ -47,6 +47,7 @@ public class SimpleReportBuilderImpl implements ReportBuilder {
         case /* shouldn't happen */ READY_TO_COMMIT:
         case /* shouldn't happen */ RUNNING : 
         case /* shouldn't happen */ COMMITTING :
+        case /* shouldn't happen */ ROLLING_BACK :
             reportTitle.append("has failed");
             type = Type.FAILED;
             break;

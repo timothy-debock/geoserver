@@ -220,7 +220,8 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 .createAlias("batchRun", "batchRun")
                 .createAlias("batchRun.batch", "batch")           
                 .add(Restrictions.eq("batch.id", batch.getId()))
-                .add(Restrictions.in("status", new Run.Status[] {Run.Status.RUNNING, Run.Status.READY_TO_COMMIT, Run.Status.COMMITTING}))
+                .add(Restrictions.in("status", new Run.Status[] {Run.Status.RUNNING, 
+                        Run.Status.READY_TO_COMMIT, Run.Status.COMMITTING}))
                 .setProjection(Projections.groupProperty("batchRun"))
                 .list());
     }
