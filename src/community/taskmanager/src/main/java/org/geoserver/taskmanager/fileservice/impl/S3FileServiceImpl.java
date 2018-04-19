@@ -9,17 +9,11 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CopyPartRequest;
-import com.amazonaws.services.s3.model.CopyPartResult;
-import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.taskmanager.fileservice.FileService;
 import org.geotools.util.logging.Logging;
@@ -28,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -53,16 +49,19 @@ public class S3FileServiceImpl implements FileService {
 
     private String password;
 
+    private String rootFolder;
+
     public static String S3_NAME_PREFIX = "s3-";
 
     public S3FileServiceImpl() {
     }
 
-    public S3FileServiceImpl(String endpoint, String user, String password, String alias) {
+    public S3FileServiceImpl(String endpoint, String user, String password, String alias, String rootFolder) {
         this.endpoint = endpoint;
         this.user = user;
         this.password = password;
         this.alias = alias;
+        this.rootFolder = rootFolder;
     }
 
     public String getEndpoint() {
@@ -97,6 +96,15 @@ public class S3FileServiceImpl implements FileService {
         this.alias = alias;
     }
 
+    public void setRootFolder(String rootFolder) {
+        this.rootFolder = rootFolder;
+    }
+
+    @Override
+    public String getRootFolder() {
+        return rootFolder;
+    }
+
     @Override
     public String getName() {
         return S3_NAME_PREFIX + alias;
@@ -113,7 +121,7 @@ public class S3FileServiceImpl implements FileService {
             throw new IOException("Name of a file can not be null.");
         }
         try {
-            return getS3Client().doesObjectExist(getBucketName(filePath), getFileName(filePath));
+            return getS3Client().doesObjectExist(rootFolder, filePath);
         } catch (AmazonClientException e) {
             throw new IOException(e);
         }
@@ -135,8 +143,8 @@ public class S3FileServiceImpl implements FileService {
         }
         File scratchFile = File.createTempFile("prefix", String.valueOf(System.currentTimeMillis()));
         try {
-            if (!getS3Client().doesBucketExist(getBucketName(filePath))) {
-                getS3Client().createBucket(getBucketName(filePath));
+            if (!getS3Client().doesBucketExist(rootFolder)) {
+                getS3Client().createBucket(rootFolder);
             }
 
             FileUtils.copyInputStreamToFile(content, scratchFile);
@@ -145,8 +153,8 @@ public class S3FileServiceImpl implements FileService {
             metadata.setContentEncoding(ENCODING);
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(
-                    getBucketName(filePath),
-                    getFileName(filePath),
+                    rootFolder,
+                    filePath,
                     scratchFile);
 
             putObjectRequest.withMetadata(metadata);
@@ -159,7 +167,7 @@ public class S3FileServiceImpl implements FileService {
                 scratchFile.delete();
             }
         }
-        return alias + "://" + filePath.toString();
+        return filePath;
     }
 
     @Override
@@ -169,7 +177,7 @@ public class S3FileServiceImpl implements FileService {
         }
         if (checkFileExists(filePath)) {
             try {
-                getS3Client().deleteObject(getBucketName(filePath), getFileName(filePath));
+                getS3Client().deleteObject(rootFolder, filePath);
             } catch (AmazonClientException e) {
                 throw new IOException(e);
             }
@@ -184,7 +192,7 @@ public class S3FileServiceImpl implements FileService {
         if (filePath == null) {
             throw new IOException("Name of a file can not be null.");
         }
-        GetObjectRequest objectRequest = new GetObjectRequest(getBucketName(filePath), getFileName(filePath));
+        GetObjectRequest objectRequest = new GetObjectRequest(rootFolder, filePath);
         try {
             return getS3Client().getObject(objectRequest).getObjectContent();
         } catch (AmazonClientException e) {
@@ -194,81 +202,36 @@ public class S3FileServiceImpl implements FileService {
 
     @Override
     public List<String> listSubfolders() throws IOException {
-        try {
-            List<Bucket> buckets = getS3Client().listBuckets();
-            ArrayList<String> paths = new ArrayList<>();
-            for (Bucket bucket : buckets) {
-                paths.add(bucket.getName());
-            }
-            return paths;
-        } catch (AmazonClientException e) {
-            throw new IOException(e);
+        if (rootFolder == null) {
+            throw new IOException("No rootFolder is not configured in this file service.");
         }
+        Set<String> paths = new HashSet<>();
+        ObjectListing listing = getS3Client().listObjects(rootFolder);
+        for (S3ObjectSummary summary : listing.getObjectSummaries()) {
+            String fullPath = summary.getKey();
+            int countSeparators = fullPath.length() - fullPath.replace("/", "").length();
+            int fromIndex = 0;
+            for (int i = 0; i < countSeparators; i++) {
+                int indexOfSeparator = fullPath.indexOf("/", fromIndex);
+                fromIndex = indexOfSeparator + 1;
+                paths.add(fullPath.substring(0, indexOfSeparator));
+            }
+        }
+        return new ArrayList<>(paths);
     }
 
 
+    /**
+     * @deprecated rename is not supported anymore.
+     * @param filePathSource
+     * @param filePathTarget
+     * @throws IOException
+     */
+    @Deprecated()
     public void rename(String filePathSource, String filePathTarget) throws IOException {
-        copy(filePathSource, filePathTarget);
-        delete(filePathSource);
+        throw new IOException("This method is deprecated");
     }
 
-    private void copy(String filePathSource, String filePathTarget) throws IOException {
-        AmazonS3 s3Client = getS3Client();
-
-        // Create lists to hold copy responses
-        List<CopyPartResult> copyResponses = new ArrayList<>();
-
-        // Step 2: Initialize
-        InitiateMultipartUploadRequest initiateRequest =
-                new InitiateMultipartUploadRequest(  getBucketName(filePathTarget),getFileName(filePathTarget));
-
-        InitiateMultipartUploadResult initResult = s3Client.initiateMultipartUpload(initiateRequest);
-
-        try {
-
-            // Get object size.
-            GetObjectMetadataRequest metadataRequest =
-                    new GetObjectMetadataRequest(getBucketName(filePathSource), getFileName(filePathSource));
-
-            ObjectMetadata metadataResult = s3Client.getObjectMetadata(metadataRequest);
-            long objectSize = metadataResult.getContentLength(); // in bytes
-
-            // Step 4. Copy parts.
-            long partSize = 5 * 1024 * 1024; // 5 MB
-            long bytePos = 0;
-
-            //String uploadId = initResult.getUploadId();
-
-            for (int i = 1; bytePos < objectSize; i++)
-            {
-                // Step 5. Save copy response.
-                long lastByte = bytePos + partSize - 1 >= objectSize ? objectSize - 1 : bytePos + partSize - 1;
-                CopyPartRequest copyRequest = new CopyPartRequest()
-                                .withDestinationBucketName(getBucketName(filePathTarget))
-                                .withDestinationKey(getFileName(filePathTarget))
-                                .withSourceBucketName(getBucketName(filePathSource))
-                                .withSourceKey(getFileName(filePathSource))
-                                .withUploadId(initResult.getUploadId())
-                                .withFirstByte(bytePos)
-                                .withLastByte(lastByte)
-                                .withPartNumber(i);
-
-                copyResponses.add(s3Client.copyPart(copyRequest));
-                bytePos += partSize;
-            }
-            // Step 7. Complete copy operation.
-            CompleteMultipartUploadRequest completeRequest = new
-                    CompleteMultipartUploadRequest(
-                    getBucketName(filePathTarget),
-                    getFileName(filePathTarget),
-                    initResult.getUploadId(),
-                    GetETags(copyResponses));
-            s3Client.completeMultipartUpload(completeRequest);
-        } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
-            throw new IOException(e);
-        }
-    }
 
     private AmazonS3 getS3Client() {
         if (endpoint == null) {
@@ -279,6 +242,9 @@ public class S3FileServiceImpl implements FileService {
         }
         if (password == null) {
             throw new IllegalArgumentException("The password is required, add a property: alias.s3.password");
+        }
+        if (rootFolder == null) {
+            throw new IllegalArgumentException("The rootfolder is required, add a property: alias.s3.rootfolder");
         }
 
         AmazonS3 s3;
@@ -297,30 +263,5 @@ public class S3FileServiceImpl implements FileService {
         return s3;
     }
 
-    private static String getBucketName(String filePath) {
-        int lastSlashPosition = filePath.lastIndexOf('/');
-        if (lastSlashPosition > 0) {
-            return filePath.substring(0, lastSlashPosition);
-        }
-        return "";
-    }
-    
-    private static String getFileName(String filePath) {
-        int lastSlashPosition = filePath.lastIndexOf('/');
-        if (lastSlashPosition >= 0) {
-            return filePath.substring(lastSlashPosition + 1);
-        }
-        return "";
-    }
-
-
-    private List<PartETag> GetETags(List<CopyPartResult> responses) {
-        List<PartETag> etags = new ArrayList<>();
-        for (CopyPartResult response : responses)
-        {
-            etags.add(new PartETag(response.getPartNumber(), response.getETag()));
-        }
-        return etags;
-    }
 
 }

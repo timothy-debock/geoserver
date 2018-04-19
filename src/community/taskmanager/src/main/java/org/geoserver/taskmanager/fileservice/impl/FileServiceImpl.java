@@ -13,6 +13,7 @@ import org.springframework.web.context.ServletContextAware;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,7 +23,8 @@ import java.util.List;
 import javax.servlet.ServletContext;
 
 /**
- * Local file storage.
+ * Local file storage. All actions are relative to the rootFolder. If the data directory is configured the root
+ * folder is placed in the data directory.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
@@ -111,11 +113,17 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         }
         File file = new File(rootFolder.toUri());
         file.mkdirs();
+        ArrayList<String> paths = listFolders(file.toURI(), file);
+        return paths;
+    }
+
+    private ArrayList<String> listFolders(URI rootfolder, File file) {
         String[] folders = file.list(FileFilterUtils.directoryFileFilter());
         ArrayList<String> paths = new ArrayList<>();
-        if (folders != null) {  
+        if (folders != null) {
           for (String folder : folders) {
-              paths.add(folder);
+              paths.add(Paths.get(rootfolder).relativize(Paths.get(file.toString(), folder)).toString());
+              paths.addAll(listFolders(rootfolder, new File(Paths.get(file.toString(), folder).toUri())));
           }
         }
         return paths;
@@ -138,6 +146,7 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         }
     }
 
+    @Override
     public String getRootFolder() {
         return rootFolder.toString();
     }
