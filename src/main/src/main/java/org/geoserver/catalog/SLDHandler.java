@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.io.IOUtils;
@@ -67,7 +68,7 @@ public class SLDHandler extends StyleHandler {
 
     public static final String MIMETYPE_10 = "application/vnd.ogc.sld+xml";
     public static final String MIMETYPE_11 = "application/vnd.ogc.se+xml";
-    
+
     static final Map<StyleType, String> TEMPLATES = new HashMap<StyleType, String>();
     static {
         try {
@@ -353,5 +354,16 @@ public class SLDHandler extends StyleHandler {
         }
 
         return new Object[]{new Version(version), reader};
+    }
+    
+    @Override
+    public String insertImageCode(String imageFileName) {        
+        return new StringBuffer("<ExternalGraphic>\\n")
+                .append("<OnlineResource xlink:type=\"simple\" xlink:href=\"")
+                .append(imageFileName).append("\" />\\n")
+                .append("<Format>")
+                .append(IMAGE_TYPES.getContentType(imageFileName))
+                .append("</Format>\\n")
+                .append("</ExternalGraphic>\\n").toString();
     }
 }
