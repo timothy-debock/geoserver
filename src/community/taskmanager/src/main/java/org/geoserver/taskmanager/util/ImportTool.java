@@ -95,6 +95,7 @@ public class ImportTool {
                                     ", validation error: " + error.toString());
                         }
                     } else {    
+                        config.setValidated(true);
                         try {
                             bjService.saveAndSchedule(config);
                         } catch (Exception e) {

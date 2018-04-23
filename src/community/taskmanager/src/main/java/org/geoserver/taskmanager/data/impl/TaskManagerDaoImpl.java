@@ -317,7 +317,9 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                 batch.getBatchRuns().clear();
             }
             //disable cloned batches
-            batch.setEnabled(false);
+            if (!clone.isTemplate()) {
+                batch.setEnabled(false);
+            }
         }
         return clone;
     }
