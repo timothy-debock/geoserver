@@ -6,10 +6,8 @@ package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.geoserver.taskmanager.fileservice.FileService;
 import org.geoserver.taskmanager.fileservice.impl.S3FileServiceImpl;
@@ -66,23 +64,17 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
             throw new TaskException("S3 Service for alias " + targetURI.getScheme()  + "not found." );
         }
         
-        int lastSlashPosition = path(targetURI).lastIndexOf('/');
-        String targetBucket = "";
-        if (lastSlashPosition >= 0) {
-            targetBucket = path(targetURI).substring(0, lastSlashPosition);
-        }
-        
-        final URI tempURI;
+        /*final URI tempURI;
         try {
             tempURI = new URI(targetURI.getScheme() + "://" + targetBucket + "/" + 
                     "_temp_" + UUID.randomUUID().toString().replace('-', '_'));
         } catch (URISyntaxException e) {
             throw new TaskException(e);
         } 
-        ctx.getBatchContext().put(targetURI, tempURI);
+        ctx.getBatchContext().put(targetURI, tempURI);*/
         
         try {
-            targetService.create(path(tempURI), sourceService.read(path(sourceURI)));
+            targetService.create(path(/*tempURI*/ targetURI), sourceService.read(path(sourceURI)));
         } catch (IOException e) {
             throw new TaskException(e);
         }
@@ -91,21 +83,21 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
 
             @Override
             public void commit() throws TaskException {
-                try {
+                /*try {
                     targetService.rename(path(tempURI), path(targetURI));
                 } catch (IOException e) {
                     throw new TaskException(e);
                 }
-                ctx.getBatchContext().delete(targetURI);
+                ctx.getBatchContext().delete(targetURI);*/
             }
 
             @Override
             public void rollback() throws TaskException {
-                try {
+                /*try {
                     targetService.delete(path(tempURI));
                 } catch (IOException e) {
                     throw new TaskException(e);
-                }
+                }*/
             }
             
         };

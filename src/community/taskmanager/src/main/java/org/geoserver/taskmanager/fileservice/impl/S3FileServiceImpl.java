@@ -16,8 +16,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.taskmanager.fileservice.FileService;
-import org.geotools.util.logging.Logging;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * S3 remote file storage.
@@ -33,9 +30,6 @@ import java.util.logging.Logger;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public class S3FileServiceImpl implements FileService {
-
-
-    private static final Logger LOGGER = Logging.getLogger(S3FileServiceImpl.class);
 
     private static final long serialVersionUID = -5960841858385823283L;
 
@@ -219,19 +213,6 @@ public class S3FileServiceImpl implements FileService {
         }
         return new ArrayList<>(paths);
     }
-
-
-    /**
-     * @deprecated rename is not supported anymore.
-     * @param filePathSource
-     * @param filePathTarget
-     * @throws IOException
-     */
-    @Deprecated()
-    public void rename(String filePathSource, String filePathTarget) throws IOException {
-        throw new IOException("This method is deprecated");
-    }
-
 
     private AmazonS3 getS3Client() {
         if (endpoint == null) {
