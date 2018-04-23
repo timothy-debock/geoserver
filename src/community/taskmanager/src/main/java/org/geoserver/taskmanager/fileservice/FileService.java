@@ -13,7 +13,7 @@ import java.util.List;
 
 
 /**
- * Persist and read files.
+ * Persist and read files. All actions on this service are relative to the configured rootFolder.
  * 
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  *
@@ -28,8 +28,12 @@ public interface FileService extends Serializable, Named {
         String getDescription();
 
     /**
-     * List existing sub folders in this file service.
-     * 
+     * List existing all nested folders in this file service.
+     * e.g.
+     *  /foo/
+     *  /foo/bar/
+     *  /other/
+     *
      * @return list of existing sub folders
      * @throws IOException
      */
@@ -71,4 +75,10 @@ public interface FileService extends Serializable, Named {
      * @throws IOException
      */
     InputStream read(String filePath) throws IOException;
+
+    /**
+     * Returns the rootFolder. All actions on the service are relative to the rootFolder.
+     * @return the rootFolder.
+     */
+    String getRootFolder();
 }

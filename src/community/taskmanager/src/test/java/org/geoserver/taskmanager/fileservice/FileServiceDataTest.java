@@ -4,6 +4,10 @@
  */
 package org.geoserver.taskmanager.fileservice;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
@@ -17,6 +21,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -37,12 +42,12 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
     @Test
     public void testFileRegistry() {
-        Assert.assertEquals(3, fileServiceRegistry.names().size());
+        Assert.assertEquals(4, fileServiceRegistry.names().size());
         
         FileService fs = fileServiceRegistry.get("s3-test");
         Assert.assertNotNull(fs);
         Assert.assertTrue(fs instanceof S3FileServiceImpl);
-        Assert.assertEquals("http://dov-minio-s3-on-1.vm.cumuli.be:9000",
+        Assert.assertEquals("http://127.0.0.1:9000",
                 ((S3FileServiceImpl) fs).getEndpoint());
 
         fs = fileServiceRegistry.get("Temporary Directory");
@@ -75,9 +80,6 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
 
     }
 
-    //****************************************************************************************************************//
-    //*** S3 Related tests *******************************************************************************************//
-    //****************************************************************************************************************//
     @Test
     public void testFileServiceCreateSubFolders() throws IOException {
         FileServiceImpl service = new FileServiceImpl();
@@ -100,36 +102,35 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         Assert.assertEquals(1, folders.size());
     }
 
-    /**
-     * This test assumes access to aws compatible service.
-     *
-     * @throws IOException
-     */
     @Test
-    public void testFileServiceS3() throws IOException {
-        S3FileServiceImpl service = getS3FileService();
+    public void testListSubFolders() throws IOException {
+        FileServiceImpl service = new FileServiceImpl();
+        service.setRootFolder(FileUtils.getTempDirectoryPath() + "/folder-" + System.currentTimeMillis() + "/");
 
-        String filename = +System.currentTimeMillis() + "-test.txt";
-        String filenamePath = "test/" + filename;
+        InputStream content = IOUtils.toInputStream("test the file service", "UTF-8");
 
-        Assert.assertFalse(service.checkFileExists(filenamePath));
+        service.create("foo/a.txt", content);
+        service.create("foo/bar/b.txt", content);
+        service.create("foo/bar/foobar/barfoo/c.txt", content);
+        service.create("hello/d.txt", content);
+        service.create("e.txt", content);
+        service.create("f.txt", content);
 
-        String content = "test the file service";
-        String fileUri = service.create(filenamePath, IOUtils.toInputStream(content, "UTF-8"));
-        Assert.assertEquals("alias://test/" + filename, fileUri);
+        List<String> folders = service.listSubfolders();
 
 
-        boolean fileExists = service.checkFileExists(filenamePath);
-        Assert.assertTrue(fileExists);
+        Assert.assertEquals(5, folders.size());
+        Assert.assertTrue(folders.contains("foo"));
+        Assert.assertTrue(folders.contains(Paths.get("foo","bar").toString()));
+        Assert.assertTrue(folders.contains(Paths.get("foo","bar","foobar").toString()));
+        Assert.assertTrue(folders.contains(Paths.get("foo","bar","foobar","barfoo").toString()));
+        Assert.assertTrue(folders.contains("hello"));
 
-        String actualContent = IOUtils.toString(service.read(filenamePath));
-        Assert.assertEquals(content, actualContent);
-
-        service.delete(filenamePath);
-
-        Assert.assertFalse(service.checkFileExists(filenamePath));
     }
 
+    //****************************************************************************************************************//
+    //*** S3 Related tests *******************************************************************************************//
+    //****************************************************************************************************************//
 
     /**
      * This test assumes access to aws compatible service.
@@ -141,49 +142,70 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         S3FileServiceImpl service = getS3FileService();
 
         String filename = System.currentTimeMillis() + "-test.txt";
-        String filenamePath = "newbucket/" + filename;
+        String filenamePath = "new-bucket/New_Folder/" + filename;
 
         Assert.assertFalse(service.checkFileExists(filenamePath));
+        String content = "test the file service";
 
-        String location = service.create(filenamePath, IOUtils.toInputStream("test the file service", "UTF-8"));
-        Assert.assertEquals("alias://newbucket/" + filename, location);
+        //create
+        String location = service.create(filenamePath, IOUtils.toInputStream(content, "UTF-8"));
+        Assert.assertEquals("new-bucket/New_Folder/" + filename, location);
+
+        //exists
+        boolean fileExists = service.checkFileExists(filenamePath);
+        Assert.assertTrue(fileExists);
+
+        //read
+        String actualContent = IOUtils.toString(service.read(filenamePath));
+        Assert.assertEquals(content, actualContent);
+
+        //is create in the root folder?
+        Assert.assertTrue(getS3Client().doesObjectExist(service.getRootFolder(), location));
+
+        //delete action
         service.delete(filenamePath);
+        Assert.assertFalse(service.checkFileExists(filenamePath));
+
     }
+
 
     @Test
-    public void testFileServiceS3RenameFile() throws IOException {
+    public void testListSubFoldersS3() throws IOException {
+        FileService service = getS3FileService();
+        String rootFolder = "tmp" + System.currentTimeMillis();
+        ((S3FileServiceImpl) service).setRootFolder(rootFolder);
 
-        S3FileServiceImpl service = getS3FileService();
+        InputStream content = IOUtils.toInputStream("test the file service", "UTF-8");
 
-        String filenameTarget = System.currentTimeMillis() + "-test-target.txt";
-        String filenamePathTarget = "newbucket/" + filenameTarget;
+        service.create("foo/a.txt", content);
+        service.create("foo/bar/b.txt", content);
+        service.create("foo/bar/foobar/barfoo/c.txt", content);
+        service.create("hello/d.txt", content);
 
-        String filenameOriginal = System.currentTimeMillis() + "-test-original.txt";
-        String filenamePathOriginal = "newbucket/" + filenameOriginal;
 
-        Assert.assertFalse(service.checkFileExists(filenamePathOriginal));
+        List<String> folders = service.listSubfolders();
 
-        service.create(filenamePathOriginal, IOUtils.toInputStream("test the file service", "UTF-8"));
-        Assert.assertTrue(service.checkFileExists(filenamePathOriginal));
+        Assert.assertEquals(5, folders.size());
+        Assert.assertTrue(folders.contains("foo"));
+        Assert.assertTrue(folders.contains("foo/bar"));
+        Assert.assertTrue(folders.contains("foo/bar/foobar/barfoo"));
+        Assert.assertTrue(folders.contains("foo/bar/foobar"));
+        Assert.assertTrue(folders.contains("hello"));
 
-        service.rename(filenamePathOriginal, filenamePathTarget);
+        service.delete(rootFolder);
 
-        Assert.assertFalse(service.checkFileExists(filenamePathOriginal));
-        Assert.assertTrue(service.checkFileExists(filenamePathTarget));
-
-        service.delete(filenamePathTarget);
     }
-
     /**
      * Add the properties to your S3 service here.
      * @return
      */
     private S3FileServiceImpl getS3FileService() {
         S3FileServiceImpl s3FileService = new S3FileServiceImpl(
-                "your-s3-service-uri",
-                "your-s3-user",
-                "your-s3-password",
-                "alias"
+                "http://127.0.0.1:9000",
+                "B4CZTLJUNB5RFS5TQX40",
+                "mNi5+c6gX+dtk6FeeocU9o2YjJiovP8mNFHWDeKO",
+                "alias",
+                "root-folder"
         );
         List<String> folders = null;
         try {
@@ -197,6 +219,23 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
     }
 
 
+    private AmazonS3 getS3Client() {
+        AmazonS3 s3;
+        //custom endpoint
+
+        S3FileServiceImpl s3FileService = getS3FileService();
+        s3 = new AmazonS3Client(new BasicAWSCredentials(s3FileService.getUser(), s3FileService.getPassword()));
+
+        final S3ClientOptions clientOptions = S3ClientOptions.builder().setPathStyleAccess(true).build();
+        s3.setS3ClientOptions(clientOptions);
+        String endpoint = s3FileService.getEndpoint();
+        if (!endpoint.endsWith("/")) {
+            endpoint = endpoint + "/";
+        }
+        s3.setEndpoint(endpoint);
+
+        return s3;
+    }
 
 
 }

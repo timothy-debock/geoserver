@@ -53,7 +53,9 @@ public class LookupFileServiceImpl extends LookupServiceImpl<FileService> {
         S3FileServiceImpl fileService = new S3FileServiceImpl(
                 properties.getProperty(prefix + ".s3.endpoint"),
                 properties.getProperty(prefix + ".s3.user"),
-                properties.getProperty(prefix + ".s3.password"), prefix);
+                properties.getProperty(prefix + ".s3.password"),
+                prefix,
+                properties.getProperty(prefix + ".s3.rootfolder"));
         fileServices.add(fileService);
 
         setNamed(fileServices);
