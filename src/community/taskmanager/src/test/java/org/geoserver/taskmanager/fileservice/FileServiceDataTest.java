@@ -44,12 +44,22 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
     public void testFileRegistry() {
         Assert.assertEquals(4, fileServiceRegistry.names().size());
         
-        FileService fs = fileServiceRegistry.get("s3-test");
+        FileService fs = fileServiceRegistry.get("s3-test-source");
         Assert.assertNotNull(fs);
         Assert.assertTrue(fs instanceof S3FileServiceImpl);
         Assert.assertEquals("http://127.0.0.1:9000",
                 ((S3FileServiceImpl) fs).getEndpoint());
+        Assert.assertEquals("source",
+                ((S3FileServiceImpl) fs).getRootFolder());
 
+        fs = fileServiceRegistry.get("s3-test-target");
+        Assert.assertNotNull(fs);
+        Assert.assertTrue(fs instanceof S3FileServiceImpl);
+        Assert.assertEquals("http://127.0.0.1:9000",
+                ((S3FileServiceImpl) fs).getEndpoint());
+        Assert.assertEquals("target",
+                ((S3FileServiceImpl) fs).getRootFolder());
+        
         fs = fileServiceRegistry.get("Temporary Directory");
         Assert.assertNotNull(fs);
         Assert.assertTrue(fs instanceof FileServiceImpl);

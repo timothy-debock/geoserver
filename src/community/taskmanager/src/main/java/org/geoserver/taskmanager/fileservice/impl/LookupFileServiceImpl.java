@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -44,18 +45,19 @@ public class LookupFileServiceImpl extends LookupServiceImpl<FileService> {
     public void initializeS3GeotiffFileServices() {
         Properties prop = readProperties();
         prop.stringPropertyNames().stream()
-                .filter(key -> key.endsWith(".s3.user"))
-                .forEach(key -> addS3FileService(prop, key.replace(".s3.user", "")));
+                .filter(key -> key.endsWith(".s3.rootfolder"))
+                .forEach(key -> Arrays.stream(prop.getProperty(key).split(","))
+                    .forEach(rootfolder -> 
+                        addS3FileService(prop, key.replace(".s3.rootfolder", ""), rootfolder)));
     }
 
-    private void addS3FileService(Properties properties, String prefix) {
+    private void addS3FileService(Properties properties, String prefix, String rootfolder) {
         ArrayList<FileService> fileServices = new ArrayList<>();
         S3FileServiceImpl fileService = new S3FileServiceImpl(
                 properties.getProperty(prefix + ".s3.endpoint"),
                 properties.getProperty(prefix + ".s3.user"),
                 properties.getProperty(prefix + ".s3.password"),
-                prefix,
-                properties.getProperty(prefix + ".s3.rootfolder"));
+                prefix, rootfolder);
         fileServices.add(fileService);
 
         setNamed(fileServices);

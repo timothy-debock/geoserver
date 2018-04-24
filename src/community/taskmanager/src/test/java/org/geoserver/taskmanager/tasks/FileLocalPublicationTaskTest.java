@@ -35,6 +35,7 @@ import org.quartz.TriggerBuilder;
 import org.quartz.Trigger.TriggerState;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
@@ -44,7 +45,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     //configure these constants
     private static final String FILE_NAME = TestData.class.getResource("world.tiff").getFile().toString();
     private static final String REMOTE_FILE_LOCATION = "test/salinity.tif";
-    private static final String REMOTE_FILE_URI = "test://" + REMOTE_FILE_LOCATION;
+    private static final String REMOTE_FILE_URI = "test://source/" + REMOTE_FILE_LOCATION;
     private static final String WORKSPACE = "gs";
     private static final String COVERAGE_NAME = "world";
     private static final String LAYER_NAME = WORKSPACE + ":" + COVERAGE_NAME;
@@ -147,16 +148,17 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     }
     
     @Test
-    public void testS3SuccessAndCleanup() throws SchedulerException {
+    public void testS3SuccessAndCleanup() throws SchedulerException, IOException {
+        FileService fileService = null;
         try {
-            FileService fileService = fileServices.get("s3-test");
-            Assume.assumeNotNull(fileService);
-            Assume.assumeTrue("File exists on s3 service",
-                    fileService.checkFileExists(REMOTE_FILE_LOCATION));
+            fileService = fileServices.get("s3-test-source");
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
             Assume.assumeTrue("S3 service is configured and available", false);
         }
+        Assume.assumeNotNull(fileService);
+        Assume.assumeTrue("File exists on s3 service",
+                fileService.checkFileExists(REMOTE_FILE_LOCATION));
 
         dataUtil.setConfigurationAttribute(config, ATT_FILE, REMOTE_FILE_URI);
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);

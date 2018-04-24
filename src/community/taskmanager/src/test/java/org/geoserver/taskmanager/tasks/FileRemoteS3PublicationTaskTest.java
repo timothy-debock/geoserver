@@ -54,9 +54,11 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     //configure these constants
     private static QName REMOTE_COVERAGE = new QName("gs", "mylayer", "gs");
     private static String REMOTE_COVERAGE_ALIAS = "test";
-    private static String REMOTE_COVERAGE_FILE_LOCATION = "test/be_b_c.geotiff.tiff";
-    private static String REMOTE_COVERAGE_URL = REMOTE_COVERAGE_ALIAS + "://" + REMOTE_COVERAGE_FILE_LOCATION;
-    private static String REMOTE_COVERAGE_OTHER_URL = "dovminio://test/be_b_c.geotiff.tiff";
+    private static String REMOTE_COVERAGE_BUCKET = "source";
+    private static String REMOTE_COVERAGE_FILE_LOCATION = "test/salinity.tif";
+    private static String REMOTE_COVERAGE_URL = REMOTE_COVERAGE_ALIAS + "://" + REMOTE_COVERAGE_BUCKET + "/"
+                                                + REMOTE_COVERAGE_FILE_LOCATION;
+    private static String REMOTE_COVERAGE_OTHER_URL = "test://target/salinity.tif";
     private static String REMOTE_COVERAGE_TYPE = "S3GeoTiff";
     
     private static final String ATT_LAYER = "layer";
@@ -93,16 +95,17 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
     
     @Override
     public boolean setupDataDirectory() throws Exception {
+        FileService fileService = null;
         try {
-            FileService fileService = fileServices.get(S3FileServiceImpl.S3_NAME_PREFIX + 
-                    REMOTE_COVERAGE_ALIAS);
-            Assume.assumeNotNull(fileService);
-            Assume.assumeTrue("File exists on s3 service",
-                    fileService.checkFileExists(REMOTE_COVERAGE_FILE_LOCATION));
+            fileService = fileServices.get(S3FileServiceImpl.name(REMOTE_COVERAGE_ALIAS, 
+                    REMOTE_COVERAGE_BUCKET));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             Assume.assumeTrue("S3 service is configured and available", false);
         }
+        Assume.assumeNotNull(fileService);
+        Assume.assumeTrue("File exists on s3 service",
+                fileService.checkFileExists(REMOTE_COVERAGE_FILE_LOCATION));
         
         DATA_DIRECTORY.addWcs11Coverages();
         Map<String, String> params = new HashMap<String, String>();

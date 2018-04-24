@@ -53,15 +53,13 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
         final URI sourceURI = (URI) ctx.getParameterValues().get(PARAM_SOURCE);
         final URI targetURI = (URI) ctx.getParameterValues().get(PARAM_TARGET);
         
-        S3FileServiceImpl sourceService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
-                + sourceURI.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl sourceService = fileServiceRegistry.get(servicename(sourceURI), S3FileServiceImpl.class);
         if (sourceService == null) {
-            throw new TaskException("S3 Service for alias " + sourceURI.getScheme()  + "not found." );
+            throw new TaskException("S3 Service with name " + servicename(sourceURI)  + "not found." );
         }
-        S3FileServiceImpl targetService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
-                + targetURI.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl targetService = fileServiceRegistry.get(servicename(targetURI), S3FileServiceImpl.class);
         if (targetService == null) {
-            throw new TaskException("S3 Service for alias " + targetURI.getScheme()  + "not found." );
+            throw new TaskException("S3 Service with name " + servicename(targetURI) +" found." );
         }
         
         /*final URI tempURI;
@@ -107,10 +105,9 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
     public void cleanup(TaskContext ctx) throws TaskException {
         URI targetURI = (URI) ctx.getParameterValues().get(PARAM_TARGET);
         
-        S3FileServiceImpl targetService = fileServiceRegistry.get(S3FileServiceImpl.S3_NAME_PREFIX
-                + targetURI.getScheme(), S3FileServiceImpl.class);
+        S3FileServiceImpl targetService = fileServiceRegistry.get(servicename(targetURI), S3FileServiceImpl.class);
         if (targetService == null) {
-            throw new TaskException("S3 Service for alias " + targetURI.getScheme()  + "not found." );
+            throw new TaskException("S3 Service with name " + servicename(targetURI) +" found." );
         }
         
         try {
@@ -122,10 +119,34 @@ public class CopyS3FileTaskTypeImpl implements TaskType {
     
     private static String path(URI uri) {
         String path = uri.getSchemeSpecificPart();
+        //throw away leading slashes
         while (path.startsWith("/")) {
             path = path.substring(1);
         }
-        return path;
+        int i = path.indexOf("/");
+        if (i < 0) {
+            return "";
+        } else {
+            return path.substring(i + 1);
+        }
+    }
+    
+    private static String bucket(URI uri) {
+        String path = uri.getSchemeSpecificPart();
+        //throw away leading slashes
+        while (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        int i = path.indexOf("/");
+        if (i >= 0) {
+            return path.substring(0, i);
+        } else {
+            return path;
+        }
+    }
+    
+    private static String servicename(URI uri) {
+        return S3FileServiceImpl.name(uri.getScheme(), bucket(uri));
     }
 
 }

@@ -45,7 +45,11 @@ public class S3FileServiceImpl implements FileService {
 
     private String rootFolder;
 
-    public static String S3_NAME_PREFIX = "s3-";
+    private static String S3_NAME_PREFIX = "s3-";
+    
+    public static String name(String prefix, String bucket) {
+        return S3_NAME_PREFIX + prefix + "-" + bucket;
+    }
 
     public S3FileServiceImpl() {
     }
@@ -101,12 +105,12 @@ public class S3FileServiceImpl implements FileService {
 
     @Override
     public String getName() {
-        return S3_NAME_PREFIX + alias;
+        return name(alias, rootFolder);
     }
 
     @Override
     public String getDescription() {
-        return "S3 Service: " + alias;
+        return "S3 Service: " + alias + "/" + rootFolder;
     }
 
     @Override

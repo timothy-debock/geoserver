@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -103,6 +104,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         final StoreType storeType = store instanceof CoverageStoreInfo ? 
                 StoreType.COVERAGESTORES : StoreType.DATASTORES;
         final String ws = store.getWorkspace().getName();
+        
+        //final String tempName = "_temp_" + UUID.randomUUID().toString().replace('-', '_');
         
         final GeoServerRESTManager restManager;
         try {
