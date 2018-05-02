@@ -89,13 +89,13 @@ public class CopyS3FileTaskTest extends AbstractTaskManagerTest {
         FileService fileService = null;
         try {
             fileService = fileServices.get(S3FileServiceImpl.name(SOURCE_ALIAS, SOURCE_BUCKET));
+            Assume.assumeNotNull(fileService);
+            Assume.assumeTrue("File exists on s3 service",
+                    fileService.checkFileExists(SOURCE_FILE));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             Assume.assumeTrue("S3 service is configured and available", false);
         }
-        Assume.assumeNotNull(fileService);
-        Assume.assumeTrue("File exists on s3 service",
-                fileService.checkFileExists(SOURCE_FILE));
         
         config = fac.createConfiguration();  
         config.setName("my_config");

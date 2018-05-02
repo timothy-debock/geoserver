@@ -99,13 +99,13 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
         try {
             fileService = fileServices.get(S3FileServiceImpl.name(REMOTE_COVERAGE_ALIAS, 
                     REMOTE_COVERAGE_BUCKET));
+            Assume.assumeNotNull(fileService);
+            Assume.assumeTrue("File exists on s3 service",
+                    fileService.checkFileExists(REMOTE_COVERAGE_FILE_LOCATION));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             Assume.assumeTrue("S3 service is configured and available", false);
         }
-        Assume.assumeNotNull(fileService);
-        Assume.assumeTrue("File exists on s3 service",
-                fileService.checkFileExists(REMOTE_COVERAGE_FILE_LOCATION));
         
         DATA_DIRECTORY.addWcs11Coverages();
         Map<String, String> params = new HashMap<String, String>();
