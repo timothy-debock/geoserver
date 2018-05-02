@@ -47,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DbLocalPublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
-    private static final String DB_NAME = "mypostgresdb";
+    //private static final String DB_NAME = "mypostgresdb";
+    private static final String DB_NAME = "myjndidb";
     private static final String WORKSPACE = "gs";
     private static final String TABLE_NAME = "vw_grondwaterlichamen";
     private static final String LAYER_NAME = WORKSPACE + ":grondwaterlichamen";

@@ -31,7 +31,18 @@
         <property name="schema" value="gw_beleid" />
         <property name="username" value="postgres" />
         <property name="password" value="postgres" />
-    </bean>
+    </bean>     
+    <!-- for pub test, jndi -->
+    <bean class="org.geoserver.taskmanager.external.impl.PostgisJndiDbSourceImpl">
+        <property name="name" value="myjndidb" />
+        <property name="jndiName" value="myjndi" />
+        <property name="schema" value="gw_beleid" />
+        <property name="targetJndiNames">
+            <map>
+                <entry key="mygs" value="mytargetjndi" />
+            </map>
+        </property>        
+    </bean> 
 
     <!-- postgis databases for testing task on you local machine-->
 

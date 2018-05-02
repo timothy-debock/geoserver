@@ -63,6 +63,8 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     //configure these constants
     private static final String DB_NAME = "mypostgresdb";
+    //to test with jndi, you need a jndi 'mytargetjndidb' configured in your target geoserver
+    //private static final String DB_NAME = "myjndidb";    
     private static final String TABLE_NAME = "vw_grondwaterlichamen";
     private static final String STYLE = "grass";
     
