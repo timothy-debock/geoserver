@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
-import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.external.FileService;
 import org.geoserver.taskmanager.report.ReportBuilder;
 import org.geoserver.taskmanager.report.ReportService;
 import org.geoserver.taskmanager.schedule.BatchJobService;

@@ -2,12 +2,12 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.fileservice.impl;
+package org.geoserver.taskmanager.external.impl;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.geoserver.platform.GeoServerResourceLoader;
-import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.external.FileService;
 import org.springframework.web.context.ServletContextAware;
 
 import java.io.File;

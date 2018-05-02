@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.fileservice.impl;
+package org.geoserver.taskmanager.external.impl;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -15,7 +15,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
-import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.external.FileService;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

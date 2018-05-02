@@ -2,13 +2,14 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.external;
+package org.geoserver.taskmanager.external.impl;
 
 
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.geoserver.taskmanager.external.Dialect;
 import org.geoserver.taskmanager.util.SqlUtil;
 
 /**

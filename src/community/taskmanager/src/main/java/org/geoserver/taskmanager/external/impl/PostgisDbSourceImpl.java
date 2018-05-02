@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.external;
+package org.geoserver.taskmanager.external.impl;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -10,6 +10,10 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.geoserver.taskmanager.external.DbSource;
+import org.geoserver.taskmanager.external.DbTable;
+import org.geoserver.taskmanager.external.Dialect;
+import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.util.NamedImpl;
 import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -115,7 +119,7 @@ public class PostgisDbSourceImpl extends NamedImpl implements DbSource {
     }
 
     @Override
-    public GSAbstractStoreEncoder getStoreEncoder(String name) {
+    public GSAbstractStoreEncoder getStoreEncoder(String name, ExternalGS extGs) {
         GSPostGISDatastoreEncoder encoder = new GSPostGISDatastoreEncoder(name);
         encoder.setHost(host);
         encoder.setPort(port);

@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.fileservice;
+package org.geoserver.taskmanager.external;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -11,9 +11,9 @@ import com.amazonaws.services.s3.S3ClientOptions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
-
-import org.geoserver.taskmanager.fileservice.impl.FileServiceImpl;
-import org.geoserver.taskmanager.fileservice.impl.S3FileServiceImpl;
+import org.geoserver.taskmanager.external.FileService;
+import org.geoserver.taskmanager.external.impl.FileServiceImpl;
+import org.geoserver.taskmanager.external.impl.S3FileServiceImpl;
 import org.geoserver.taskmanager.util.LookupService;
 import org.junit.Assert;
 import org.junit.Assume;

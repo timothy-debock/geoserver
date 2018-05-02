@@ -2,9 +2,9 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.fileservice.impl;
+package org.geoserver.taskmanager.external.impl;
 
-import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.external.FileService;
 import org.geoserver.taskmanager.util.LookupServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

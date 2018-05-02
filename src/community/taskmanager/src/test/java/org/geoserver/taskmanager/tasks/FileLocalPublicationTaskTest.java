@@ -19,7 +19,7 @@ import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.Task;
 import org.geoserver.taskmanager.data.TaskManagerDao;
 import org.geoserver.taskmanager.data.TaskManagerFactory;
-import org.geoserver.taskmanager.fileservice.FileService;
+import org.geoserver.taskmanager.external.FileService;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;

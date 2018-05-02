@@ -7,7 +7,7 @@
        xmlns:context="http://www.springframework.org/schema/context">
        
     <!-- Default File Service -->
-    <bean id="defaultFileService" class="org.geoserver.taskmanager.fileservice.impl.FileServiceImpl">
+    <bean id="defaultFileService" class="org.geoserver.taskmanager.external.impl.FileServiceImpl">
         <property name="name" value="Data Directory"/>
         <!-- root folder is configured below -->
     </bean>
@@ -21,7 +21,7 @@
   </bean> -->
 
   <!-- TODO: configure your databases -->
-  <!-- <bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl"> 
+  <!-- <bean class="org.geoserver.taskmanager.external.impl.PostgisDbSourceImpl"> 
   		<property name="name" value="testsourcedb"/> 
 		<property name="host" value="hostname" /> 
 		<property name="db" value="dbname" /> 
@@ -30,7 +30,7 @@
 	</bean> -->
 
   <!-- TODO: configure your geoservers -->
-  <!-- <bean class="org.geoserver.taskmanager.external.ExternalGSImpl"> 
+  <!-- <bean class="org.geoserver.taskmanager.external.impl.ExternalGSImpl"> 
   		<property name="name" value="mygs"/> 
     	<property name="url" value="http://localhost:9090/geoserver" /> 
     	<property name="username" value="admin" />

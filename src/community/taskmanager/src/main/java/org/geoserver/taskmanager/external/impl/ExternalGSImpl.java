@@ -2,8 +2,9 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.external;
+package org.geoserver.taskmanager.external.impl;
 
+import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.util.NamedImpl;
 
 /**

@@ -10,13 +10,13 @@
     <context:component-scan base-package="org.geoserver.taskmanager.fileservice"/>
 
     <!--H2 setup -->
-    <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.H2DbSourceImpl">
         <property name="name" value="testsourcedb"/>
         <property name="path" value="mem"/>
         <property name="db" value="testsourcedb"/>
         <property name="createDBSqlResource" value="classpath:h2/dbsource/create-source.sql"/>
     </bean>
-    <bean class="org.geoserver.taskmanager.external.H2DbSourceImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.H2DbSourceImpl">
         <property name="name" value="testtargetdb"/>
         <property name="path" value="mem"/>
         <property name="db" value="testtargetdb"/>
@@ -24,7 +24,7 @@
         <property name="createDataSqlResource" value=""/>
     </bean>
     <!-- for pub test, postgres -->
-    <bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.PostgisDbSourceImpl">
         <property name="name" value="mypostgresdb" />
         <property name="host" value="localhost" />
         <property name="db" value="mydb" />
@@ -35,7 +35,7 @@
 
     <!-- postgis databases for testing task on you local machine-->
 
-   <!-- <bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
+   <!-- <bean class="org.geoserver.taskmanager.external.impl.PostgisDbSourceImpl">
 		<property name="name" value="testsourcedb" />
 		<property name="host" value="localhost" />
 		<property name="db" value="testsourcedb" />
@@ -43,7 +43,7 @@
 		<property name="password" value="postgres" />
 	</bean>
 
-    <bean class="org.geoserver.taskmanager.external.PostgisDbSourceImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.PostgisDbSourceImpl">
         <property name="name" value="testtargetdb" />
         <property name="host" value="localhost" />
         <property name="db" value="testtargetdb" />
@@ -52,7 +52,7 @@
     </bean>-->
 
     <!-- external geoserver for testing -->
-    <bean class="org.geoserver.taskmanager.external.ExternalGSImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.ExternalGSImpl">
         <property name="name" value="mygs"/>
         <property name="url" value="http://localhost:9090/geoserver"/>
         <property name="username" value="admin"/>
@@ -60,7 +60,7 @@
     </bean>
 
     <!--File Services-->
-    <bean class="org.geoserver.taskmanager.fileservice.impl.FileServiceImpl">
+    <bean class="org.geoserver.taskmanager.external.impl.FileServiceImpl">
         <property name="rootFolder" value="/tmp"/>
         <property name="name" value="Temporary Directory"/>
     </bean>

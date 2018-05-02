@@ -2,9 +2,14 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.taskmanager.external;
+package org.geoserver.taskmanager.external.impl;
 
 import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
+
+import org.geoserver.taskmanager.external.DbSource;
+import org.geoserver.taskmanager.external.DbTable;
+import org.geoserver.taskmanager.external.Dialect;
+import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.util.NamedImpl;
 import org.h2.tools.RunScript;
 import org.springframework.core.io.Resource;
@@ -79,7 +84,7 @@ public class H2DbSourceImpl extends NamedImpl implements DbSource {
     }
 
     @Override
-    public GSAbstractStoreEncoder getStoreEncoder(String name) {
+    public GSAbstractStoreEncoder getStoreEncoder(String name, ExternalGS extGs) {
         throw new UnsupportedOperationException("Generic datasource cannot be used as a store.");
     }
 

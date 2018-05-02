@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.config.GeoServer;
+import org.geoserver.taskmanager.external.impl.DbTableImpl;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.util.LookupService;
 import org.geotools.feature.NameImpl;

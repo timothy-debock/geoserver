@@ -9,8 +9,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geoserver.taskmanager.fileservice.FileService;
-import org.geoserver.taskmanager.fileservice.impl.S3FileServiceImpl;
+import org.geoserver.taskmanager.external.FileService;
+import org.geoserver.taskmanager.external.impl.S3FileServiceImpl;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;

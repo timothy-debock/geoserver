@@ -11,6 +11,7 @@ import org.geoserver.taskmanager.util.Named;
 import javax.sql.DataSource;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.Map;
 
 /**
@@ -25,17 +26,19 @@ public interface DbSource extends Named {
      * Get a data source for this database.
      * 
      * @return the data source.
+     * @throws SQLException 
      */
-    DataSource getDataSource();
+    DataSource getDataSource() throws SQLException;
     
     /**
      * Get a geoserver store encoder from this source.
      * 
      * @param name name for the source
+     * @param extGs TODO
      * 
      * @return the geoserver store encoder
      */
-    GSAbstractStoreEncoder getStoreEncoder(String name);
+    GSAbstractStoreEncoder getStoreEncoder(String name, ExternalGS extGs);
 
     /**
      * Generate parameters for GeoServer datastore
@@ -59,6 +62,15 @@ public interface DbSource extends Named {
      * @return 
      */
     GSAbstractStoreEncoder postProcess(GSAbstractStoreEncoder encoder, DbTable table);
+
+    /**
+     * The dialect specific actions for taskmanager.
+     *
+     * @return
+     */
+    Dialect getDialect();
+    
+
     
     /*
      * these methods could serve an alternative table copy implementation
@@ -69,13 +81,4 @@ public interface DbSource extends Named {
 
     OutputStream script() throws IOException;
      */
-
-
-
-    /**
-     * The dialect specific actions for taskmanager.
-     *
-     * @return
-     */
-    Dialect getDialect();
 }

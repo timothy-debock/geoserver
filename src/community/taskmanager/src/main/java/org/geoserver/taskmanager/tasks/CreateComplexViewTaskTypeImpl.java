@@ -12,7 +12,7 @@ import javax.annotation.PostConstruct;
 import org.geoserver.taskmanager.data.Attribute;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
-import org.geoserver.taskmanager.external.DbTableImpl;
+import org.geoserver.taskmanager.external.impl.DbTableImpl;
 import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.ParameterType;
