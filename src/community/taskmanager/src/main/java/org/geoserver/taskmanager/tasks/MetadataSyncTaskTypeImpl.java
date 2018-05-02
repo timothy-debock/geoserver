@@ -28,6 +28,7 @@ import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geotools.referencing.CRS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -96,57 +97,7 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
         }
         
         // sync resource
-        final GSResourceEncoder re;
-        if (resource instanceof CoverageInfo) {
-            CoverageInfo coverage = (CoverageInfo) resource;
-            final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
-            for (String format : coverage.getSupportedFormats()) {
-                coverageEncoder.addSupportedFormats(format);
-            }
-            for (String srs : coverage.getRequestSRS()) {
-                coverageEncoder.setRequestSRS(srs); // wrong: should be add
-            }
-            for (String srs : coverage.getResponseSRS()) {
-                coverageEncoder.setResponseSRS(srs); // wrong: should be add
-            }
-            re = coverageEncoder;
-        } else {
-            re = new GSFeatureTypeEncoder();
-        }
-        re.setName(resource.getName());
-        re.setTitle(resource.getTitle());
-        re.setAbstract(resource.getAbstract());
-        re.setDescription(resource.getAbstract());
-        re.setSRS(resource.getSRS());
-        for (KeywordInfo ki : resource.getKeywords()) {
-            re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
-        }
-        for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
-            re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(), mdli.getContent());
-        }
-        for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
-            if (entry.getValue() != null) {
-                re.setMetadataString(entry.getKey(), entry.getValue().toString());
-            }
-        }
-        re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE
-                : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
-        re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
-                resource.getLatLonBoundingBox().getMinY(),
-                resource.getLatLonBoundingBox().getMaxX(),
-                resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
-
-        // dimensions, must happen after setName or strange things happen (gs-man bug)
-        if (resource instanceof CoverageInfo) {
-            CoverageInfo coverage = (CoverageInfo) resource;
-            for (CoverageDimensionInfo di : coverage.getDimensions()) {
-                ((GSCoverageEncoder) re).addCoverageDimensionInfo(di.getName(), di.getDescription(),
-                        Double.toString(di.getRange().getMinimum()),
-                        Double.toString(di.getRange().getMaximum()), di.getUnit(),
-                        di.getDimensionType() == null ? null : di.getDimensionType().identifier());
-            }
-        }
-
+        GSResourceEncoder re = syncMetadata(resource);
         if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
             throw new TaskException(
                     "Failed to configure resource " + ws + ":" + resource.getName());
@@ -191,5 +142,63 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
     @Override
     public String getName() {
         return NAME;
+    }
+    
+    protected static GSResourceEncoder syncMetadata(ResourceInfo resource) {
+        final GSResourceEncoder re;
+        if (resource instanceof CoverageInfo) {
+            CoverageInfo coverage = (CoverageInfo) resource;
+            final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
+            for (String format : coverage.getSupportedFormats()) {
+                coverageEncoder.addSupportedFormats(format);
+            }
+            for (String srs : coverage.getRequestSRS()) {
+                coverageEncoder.setRequestSRS(srs); // wrong: should be add
+            }
+            for (String srs : coverage.getResponseSRS()) {
+                coverageEncoder.setResponseSRS(srs); // wrong: should be add
+            }
+            re = coverageEncoder;
+        } else {
+            re = new GSFeatureTypeEncoder();
+            if (resource.getNativeCRS() != null) {
+                re.setNativeCRS(CRS.toSRS(resource.getNativeCRS()));
+            }
+        }
+        re.setName(resource.getName());
+        re.setTitle(resource.getTitle());
+        re.setAbstract(resource.getAbstract());
+        re.setDescription(resource.getAbstract());
+        re.setSRS(resource.getSRS());
+        for (KeywordInfo ki : resource.getKeywords()) {
+            re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
+        }
+        for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
+            re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(), mdli.getContent());
+        }
+        for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
+            if (entry.getValue() != null) {
+                re.setMetadataString(entry.getKey(), entry.getValue().toString());
+            }
+        }
+        re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE
+                : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
+        re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
+                resource.getLatLonBoundingBox().getMinY(),
+                resource.getLatLonBoundingBox().getMaxX(),
+                resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
+
+        // dimensions, must happen after setName or strange things happen (gs-man bug)
+        if (resource instanceof CoverageInfo) {
+            CoverageInfo coverage = (CoverageInfo) resource;
+            for (CoverageDimensionInfo di : coverage.getDimensions()) {
+                ((GSCoverageEncoder) re).addCoverageDimensionInfo(di.getName(), di.getDescription(),
+                        Double.toString(di.getRange().getMinimum()),
+                        Double.toString(di.getRange().getMaximum()), di.getUnit(),
+                        di.getDimensionType() == null ? null : di.getDimensionType().identifier());
+            }
+        }
+        
+        return re;
     }
 }

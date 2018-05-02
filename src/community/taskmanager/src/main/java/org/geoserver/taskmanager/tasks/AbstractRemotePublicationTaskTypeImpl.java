@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,12 +24,9 @@ import javax.annotation.PostConstruct;
 
 import org.apache.wicket.util.io.IOUtils;
 import org.geoserver.catalog.Catalog;
-import org.geoserver.catalog.CoverageDimensionInfo;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
-import org.geoserver.catalog.KeywordInfo;
 import org.geoserver.catalog.LayerInfo;
-import org.geoserver.catalog.MetadataLinkInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
@@ -46,7 +42,6 @@ import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
 import org.geoserver.taskmanager.schedule.TaskRunnable;
 import org.geoserver.taskmanager.schedule.TaskType;
-import org.geotools.referencing.CRS;
 import org.geotools.styling.AbstractStyleVisitor;
 import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.Style;
@@ -59,7 +54,6 @@ import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.Purge;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.StoreType;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
-import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
 import it.geosolutions.geoserver.rest.encoder.coverage.GSCoverageEncoder;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
 
@@ -177,76 +171,15 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 }
                 
                 // create resource (and layer)
-                final GSResourceEncoder re;
-                if (resource instanceof CoverageInfo) {
+                final GSResourceEncoder re = MetadataSyncTaskTypeImpl.syncMetadata(resource);
+                if (re instanceof GSCoverageEncoder) {
+                    GSCoverageEncoder coverageEncoder = (GSCoverageEncoder) re;
                     CoverageInfo coverage = (CoverageInfo) resource;
-                    final GSCoverageEncoder coverageEncoder = new GSCoverageEncoder();
                     coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
-                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());
-                    for (String format : coverage.getSupportedFormats()) {
-                        coverageEncoder.addSupportedFormats(format);
-                    }
-                    for (String srs : coverage.getRequestSRS()) {
-                        coverageEncoder.setRequestSRS(srs); // wrong: should be add
-                    }
-                    for (String srs : coverage.getResponseSRS()) {
-                        coverageEncoder.setResponseSRS(srs); // wrong: should be add
-                    }
-                    re = coverageEncoder;
+                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());                    
                 } else {
-                    GSFeatureTypeEncoder fte = new GSFeatureTypeEncoder();
+                    GSFeatureTypeEncoder fte = (GSFeatureTypeEncoder) re;
                     fte.setNativeName(resource.getNativeName());
-                    if (resource.getNativeCRS() != null) {
-                        fte.setNativeCRS(CRS.toSRS(resource.getNativeCRS()));
-                    }
-                    re = fte;
-                }
-
-                // sync metadata
-                re.setName(resource.getName());
-                re.setTitle(resource.getTitle());
-                re.setAbstract(resource.getAbstract());
-                re.setDescription(resource.getAbstract());
-                re.setSRS(resource.getSRS());
-                for (KeywordInfo ki : resource.getKeywords()) {
-                    re.addKeyword(ki.getValue(), ki.getLanguage(), ki.getVocabulary());
-                }
-                for (MetadataLinkInfo mdli : resource.getMetadataLinks()) {
-                    re.addMetadataLinkInfo(mdli.getType(), mdli.getMetadataType(),
-                            mdli.getContent());
-                }
-                for (Map.Entry<String, Serializable> entry : resource.getMetadata().entrySet()) {
-                    if (entry.getValue() != null) {
-                        re.setMetadataString(entry.getKey(), entry.getValue().toString());
-                    }
-                }
-                re.setProjectionPolicy(resource.getProjectionPolicy() == null
-                        ? ProjectionPolicy.NONE
-                        : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
-                if (resource.getLatLonBoundingBox() != null) {
-                    re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
-                            resource.getLatLonBoundingBox().getMinY(),
-                            resource.getLatLonBoundingBox().getMaxX(),
-                            resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
-                }
-                if (resource.getNativeBoundingBox() != null) {
-                    re.setNativeBoundingBox(resource.getNativeBoundingBox().getMinX(),
-                            resource.getNativeBoundingBox().getMinY(),
-                            resource.getNativeBoundingBox().getMaxX(),
-                            resource.getNativeBoundingBox().getMaxY(), resource.getSRS());
-                }
-                
-                //dimensions, must happen after setName or strange things happen (gs-man bug)
-                if (resource instanceof CoverageInfo) {
-                    CoverageInfo coverage = (CoverageInfo) resource;                    
-                    for (CoverageDimensionInfo di : coverage.getDimensions()) {
-                        ((GSCoverageEncoder) re).addCoverageDimensionInfo(di.getName(),
-                                di.getDescription(), 
-                                Double.toString(di.getRange().getMinimum()), 
-                                Double.toString(di.getRange().getMaximum()), 
-                                di.getUnit(), 
-                                di.getDimensionType() == null ? null : di.getDimensionType().identifier());
-                    }
                 }
                 
                 postProcess(re, ctx, new TaskRunnable() {
