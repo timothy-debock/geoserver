@@ -228,4 +228,12 @@ public class TaskManagerTaskUtilTest extends AbstractTaskManagerTest {
         
         // (cleanup itself is suffiently tested in other tests0
     }
+    
+    @Test
+    public void testGetDependantRawValues() {
+        List<String> rawValues = taskUtil.getDependentRawValues(
+                new DummyAction(), config.getAttributes().get(ATT_DUMMY), config);
+        assertEquals(1, rawValues.size());
+        assertEquals("false", rawValues.get(0));
+    }
 }

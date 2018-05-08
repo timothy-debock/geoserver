@@ -4,6 +4,7 @@
  */
 package org.geoserver.taskmanager.external;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -43,6 +44,9 @@ public class ExtTypes {
     
     @Autowired
     private LookupService<ExternalGS> extGeoservers;
+
+    @Autowired
+    private LookupService<FileService> fileServices;
     
     @Autowired
     private GeoServer geoServer;
@@ -96,13 +100,18 @@ public class ExtTypes {
 
         @Override
         public boolean validate(String value, List<String> dependsOnRawValues) {
-            // since the table may not yet exist (could be result of other task
-            // do not validate its existence.
+            if (dependsOnRawValues.size() < 1) {
+                throw new IllegalArgumentException("tableName parameter must be dependent on database.");
+            }
+            // since the table may not yet exist, do not validate its existence.
             return true;
         }
 
         @Override
         public Object parse(String value, List<String> dependsOnRawValues) {
+            if (dependsOnRawValues.size() < 1) {
+                throw new IllegalArgumentException("tableName parameter must be dependent on database.");
+            }
             return new DbTableImpl(dbSources.get(dependsOnRawValues.get(0)), value);
         }
 
@@ -145,7 +154,7 @@ public class ExtTypes {
         
     };
     
-    public final ParameterType layerName = new ParameterType() {
+    public final ParameterType name = new ParameterType() {
         
         @Override
         public List<String> getDomain(List<String> dependsOnRawValues) {
@@ -173,11 +182,62 @@ public class ExtTypes {
             return true; 
         }
 
-        @Override
-        public List<String> getActions() {
-            return Collections.singletonList("LayerEdit");
-        }
-
     };
+    
+    public final ParameterType fileService = new ParameterType() {
+        @Override
+        public List<String> getDomain(List<String> dependsOnRawValues) {
+            return new ArrayList<String>(fileServices.names());
+        }
+    
+        @Override
+        public FileService parse(String value, List<String> dependsOnRawValues) {
+            return fileServices.get(value);
+        }
+    
+    };
+    
+    public final ParameterType file(boolean mustExist, boolean canUpload) {
+        return new ParameterType() {
+            @Override
+            public List<String> getDomain(List<String> dependsOnRawValues) {
+                return null;
+            }
+        
+            @Override
+            public FileReference parse(String value, List<String> dependsOnRawValues) {
+                if (dependsOnRawValues.size() < 1) {
+                    throw new IllegalArgumentException("file parameter must be dependent on file service.");
+                }
+                FileService fileService = fileServices.get(dependsOnRawValues.get(0));
+                FileReference ref = fileService.getVersioned(value);
+                if (mustExist) {
+                    try {
+                        if (!fileService.checkFileExists(ref.getLatestVersion())) {
+                            return null;
+                        }
+                    } catch (IOException e) {
+                        return null;
+                    }
+                }
+                return ref;
+            }
+            
+            @Override
+            public boolean validate(String value, List<String> dependsOnRawValues) {
+                if (dependsOnRawValues.size() < 1) {
+                    throw new IllegalArgumentException("file parameter must be dependent on file service.");
+                }
+                // since the file may not yet exist at configuration
+                // do not validate its existence
+                return true;
+            }
+
+            @Override
+            public List<String> getActions() {
+                return canUpload ? Collections.singletonList("FileUpload") : Collections.emptyList();
+            }
+        };
+    }
 }
 

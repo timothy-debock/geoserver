@@ -653,8 +653,13 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                                     public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                                         IModel<String> valueModel =
                                                 new PropertyModel<>(itemModel, AttributesModel.VALUE.getName());
-                                        if (actionModel.getObject().accept(valueModel.getObject())) {
-                                            actionModel.getObject().execute(ConfigurationPage.this, target, valueModel);
+                                        List<String> dependentValues =
+                                                TaskManagerBeans.get().getTaskUtil().getDependentRawValues(
+                                                        actionModel.getObject(), itemModel.getObject(),
+                                                        configurationModel.getObject());
+                                        if (actionModel.getObject().accept(valueModel.getObject(), dependentValues)) {
+                                            actionModel.getObject().execute(ConfigurationPage.this, target, 
+                                                    valueModel, dependentValues);
                                             target.add(tablePanel);
                                         } else {
                                             error(new ParamResourceModel("invalidValue", getPage()).getString());

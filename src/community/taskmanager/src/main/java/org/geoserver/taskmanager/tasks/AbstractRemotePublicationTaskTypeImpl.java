@@ -12,9 +12,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -30,6 +33,7 @@ import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
+import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.platform.resource.Files;
 import org.geoserver.platform.resource.Resource;
@@ -52,6 +56,7 @@ import org.springframework.stereotype.Component;
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.Purge;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.StoreType;
+import it.geosolutions.geoserver.rest.encoder.GSGenericStoreEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
 import it.geosolutions.geoserver.rest.encoder.coverage.GSCoverageEncoder;
@@ -97,9 +102,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         final StoreType storeType = store instanceof CoverageStoreInfo ? 
                 StoreType.COVERAGESTORES : StoreType.DATASTORES;
         final String ws = store.getWorkspace().getName();
-        
-        //final String tempName = "_temp_" + UUID.randomUUID().toString().replace('-', '_');
-        
+                
         final GeoServerRESTManager restManager;
         try {
             restManager = extGS.getRESTManager();
@@ -111,189 +114,220 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             throw new TaskException("Failed to connect to geoserver " + extGS.getUrl());
         }
                  
-        final boolean createLayer = !restManager.getReader().existsLayer(ws, layer.getName(), true);
-        final boolean createResource;
         final boolean createStore;
-        final boolean createWorkspace;
-        final boolean createStyle;
+        final List<String> createWorkspaces = new ArrayList<String>();    
+        final List<StyleInfo> createStyles = new ArrayList<StyleInfo>();
+        
+        if (!restManager.getReader().existsWorkspace(ws)) {
+            createWorkspaces.add(ws);
+        }
+        Set<StyleInfo> styles = new HashSet<StyleInfo>(layer.getStyles());
+        styles.add(layer.getDefaultStyle());
+        for (StyleInfo si : styles) {
+            if (si != null) {
+                String wsStyle = wsName(si.getWorkspace());
+                if (!restManager.getReader().existsStyle(wsStyle, si.getName())) {
+                    createStyles.add(si);
+                    if (wsStyle != null && !restManager.getReader().existsWorkspace(wsStyle)) {
+                        createWorkspaces.add(wsStyle);
+                    }
+                }
+            }
+        }
 
         final String storeName = getStoreName(store, ctx);
-        
-        if (createLayer) { 
-            //layer doesn't exist yet, publish                  
-            createWorkspace = !restManager.getReader().existsWorkspace(ws);
-            String wsStyle = layer.getDefaultStyle() == null
-                    || layer.getDefaultStyle().getWorkspace() == null ? null : 
-                layer.getDefaultStyle().getWorkspace().getName();
-            createStyle = layer.getDefaultStyle() != null
-                    && !restManager.getReader().existsStyle(wsStyle, layer.getDefaultStyle().getName());
-            createStore = !(storeType == StoreType.DATASTORES ?
-                    restManager.getReader().existsDatastore(ws, storeName) :
-                    restManager.getReader().existsCoveragestore(ws, storeName));
-            createResource = !(storeType == StoreType.DATASTORES ?
-                    restManager.getReader().existsFeatureType(ws, storeName, resource.getName()) :
-                    restManager.getReader().existsCoverage(ws, storeName, resource.getName()));
+        createStore = neverReuseStore() || 
+                !(storeType == StoreType.DATASTORES
+                ? restManager.getReader().existsDatastore(ws, storeName)
+                : restManager.getReader().existsCoveragestore(ws, storeName));
+        final String tempName = "_temp_" + UUID.randomUUID().toString().replace('-', '_');
+        final String actualStoreName = neverReuseStore() && createStore ? tempName : storeName;
 
-            try {
-                
-                if (!createResource) {
-                    //we are in the awkward situation where the resource exists, but not the layer
-                    //the only solution is to delete the rogue resource, otherwise we cannot create the layer
-                    if (!restManager.getPublisher().removeResource(ws, storeType, storeName, resource.getName())) {
-                        throw new TaskException("Failed to delete resource " + ws + ":" + resource.getName());
-                    }
-                }
-                
-                if (createWorkspace) { //workspace doesn't exist yet, publish
-                    LOGGER.log(Level.INFO, "Workspace doesn't exist: " + ws + " on " + extGS.getName() +
-                            ", creating.");
-                    try {
-                        if (!restManager.getPublisher().createWorkspace(ws, 
-                                new URI(catalog.getNamespaceByPrefix(ws).getURI()))) {
-                            throw new TaskException("Failed to create workspace " + ws);
-                        }
-                    } catch (URISyntaxException e) {
-                        throw new TaskException("Failed to create workspace " + ws, e);
-                    }
-                }
-                
-                if (createStore) {
-                    try {
-                        if (!createStore(extGS, restManager, store, ctx)) {
-                            throw new TaskException("Failed to create store " + ws + ":" + storeName);
-                        }
-                    } catch (IOException e) {
-                        throw new TaskException("Failed to create store " + ws + ":" + storeName, e);
-                    } 
-                } else {
-                    LOGGER.log(Level.INFO, "Store exists: " + storeName + " on " + extGS.getName() +
-                            ", skipping creation.");
-                }
-                
-                // create resource (and layer)
-                final GSResourceEncoder re = MetadataSyncTaskTypeImpl.syncMetadata(resource);
-                if (re instanceof GSCoverageEncoder) {
-                    GSCoverageEncoder coverageEncoder = (GSCoverageEncoder) re;
-                    CoverageInfo coverage = (CoverageInfo) resource;
-                    coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
-                    coverageEncoder.setNativeFormat(coverage.getNativeFormat());                    
-                } else {
-                    GSFeatureTypeEncoder fte = (GSFeatureTypeEncoder) re;
-                    fte.setNativeName(resource.getNativeName());
-                }
-                
-                postProcess(re, ctx, new TaskRunnable() {
-                    @Override
-                    public void run() throws TaskException {
-                        if (!restManager.getPublisher().configureResource(ws, storeType, storeName, re)) {
-                            throw new TaskException(
-                                    "Failed to configure resource " + ws + ":" + resource.getName());
-                        }
-                    }
-                });
 
-                // resource might have already been created together with store
-                if (createStore && (storeType == StoreType.DATASTORES
-                        ? restManager.getReader().existsFeatureType(ws, storeName, storeName)
-                        : restManager.getReader().existsCoverage(ws, storeName, storeName))) {
-                    if (!restManager.getPublisher().configureResource(ws, storeType, storeName, storeName, re)) {
-                        throw new TaskException("Failed to configure resource " + ws + ":" + resource.getName());
+        try {
+
+            for (String newWs : createWorkspaces) { // workspace doesn't exist yet, publish
+                LOGGER.log(Level.INFO, "Workspace doesn't exist: " + newWs + " on "
+                        + extGS.getName() + ", creating.");
+                try {
+                    if (!restManager.getPublisher().createWorkspace(newWs,
+                            new URI(catalog.getNamespaceByPrefix(newWs).getURI()))) {
+                        throw new TaskException("Failed to create workspace " + newWs);
                     }
-                } else {
-                    if (!restManager.getPublisher().createResource(ws, storeType, storeName, re)) {
-                        throw new TaskException(
-                                "Failed to create resource " + ws + ":" + resource.getName());
-                    }
+                } catch (URISyntaxException e) {
+                    throw new TaskException("Failed to create workspace " + newWs, e);
                 }
-                
-                if (createStyle) { //style doesn't exist yet, publish
-                    LOGGER.log(Level.INFO, "Style doesn't exist: " + layer.getDefaultStyle().getName() + 
-                            " on " + extGS.getName() +
-                            ", creating.");
-                    if (!restManager.getStyleManager().publishStyleZippedInWorkspace(wsStyle,
-                            createStyleZipFile(layer.getDefaultStyle()),
-                            layer.getDefaultStyle().getName())) {
-                        throw new TaskException("Failed to create style " + 
-                            layer.getDefaultStyle().getName());
-                    }
-                }
-                
-                // config layer                
-                final GSLayerEncoder layerEncoder = new GSLayerEncoder();
-                if (layer.getDefaultStyle() != null) {
-                    layerEncoder.setDefaultStyle(wsStyle, layer.getDefaultStyle().getName());
-                }                
-                if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
-                    throw new TaskException(
-                            "Failed to configure layer " + ws + ":" + resource.getName());
-                }
-                
-            } catch (TaskException e) {
-                //clean-up if necessary 
-                restManager.getPublisher().removeLayer(ws, layer.getName());
-                if (createStore) {
-                    restManager.getPublisher().removeStore(ws, storeName, storeType, true, Purge.ALL);
-                }
-                if (createStyle) {
-                    restManager.getPublisher().removeStyle(layer.getDefaultStyle().getName(), true);
-                }
-                if (createWorkspace) {
-                    restManager.getPublisher().removeWorkspace(ws, false);
-                }
-                throw e;
             }
-        } else {
-            createWorkspace = false;
-            createStore = false;
-            createResource = false;
-            createStyle = false;
-            LOGGER.log(Level.INFO, "Layer exists: " + layer.getName() + " on " + extGS.getName() +
-                    ", skipping publication.");
+
+            if (createStore) {
+                try {
+                    if (!createStore(extGS, restManager, store, ctx, actualStoreName)) {
+                        throw new TaskException("Failed to create store " + ws + ":" + actualStoreName);
+                    }
+                } catch (IOException e) {
+                    throw new TaskException("Failed to create store " + ws + ":" + actualStoreName, e);
+                }
+            } else {
+                LOGGER.log(Level.INFO, "Store exists: " + storeName + " on " + extGS.getName()
+                        + ", skipping creation.");
+            }
+
+            // create resource (and layer)      
+            
+            final GSResourceEncoder re = MetadataSyncTaskTypeImpl.syncMetadata(resource, tempName);
+            
+            postProcess(re, ctx, new TaskRunnable<GSResourceEncoder>() {
+                @Override
+                public void run(GSResourceEncoder re) throws TaskException {
+                    if (!restManager.getPublisher().configureResource(ws, storeType, 
+                            storeName, resource.getName(), re)) {
+                        throw new TaskException(
+                                "Failed to configure resource " + ws + ":" + re.getName());
+                    }
+                }
+            });
+            
+            // -- resource might have already been created together with store
+            if (createStore && (storeType == StoreType.DATASTORES
+                    ? restManager.getReader().existsFeatureType(ws, actualStoreName, actualStoreName)
+                    : restManager.getReader().existsCoverage(ws, actualStoreName, actualStoreName))) {
+                if (!restManager.getPublisher().configureResource(ws, storeType, actualStoreName,
+                        actualStoreName, re)) {
+                    throw new TaskException(
+                            "Failed to configure resource " + ws + ":" + re.getName());
+                }
+            } else {
+                if (!restManager.getPublisher().createResource(ws, storeType, actualStoreName, re)) {
+                    throw new TaskException(
+                            "Failed to create resource " + ws + ":" + re.getName());
+                }
+            }
+
+            for (StyleInfo si : createStyles) { // style doesn't exist yet, publish
+                LOGGER.log(Level.INFO, "Style doesn't exist: " + si.getName() + " on "
+                        + extGS.getName() + ", creating.");
+                if (!restManager.getStyleManager().publishStyleZippedInWorkspace(
+                        wsName(layer.getDefaultStyle().getWorkspace()), createStyleZipFile(si),
+                        si.getName())) {
+                    throw new TaskException("Failed to create style " + si.getName());
+                }
+            }
+
+            // config layer
+            final GSLayerEncoder layerEncoder = new GSLayerEncoder();            
+            if (layer.getDefaultStyle() != null) {
+                layerEncoder.setDefaultStyle(wsName(layer.getDefaultStyle().getWorkspace()),
+                        layer.getDefaultStyle().getName());
+                for (StyleInfo si : layer.getStyles()) {
+                    layerEncoder.addStyle(
+                            si.getWorkspace() != null ? si.getWorkspace() + ":" + si.getName()
+                                    : si.getName());
+                }
+            }
+            if (!restManager.getPublisher().configureLayer(ws, tempName, layerEncoder)) {
+                throw new TaskException(
+                        "Failed to configure layer " + ws + ":" + resource.getName());
+            }
+
+        } catch (TaskException e) {
+            // clean-up if necessary
+            restManager.getPublisher().removeResource(ws, storeType, storeName, tempName);
+            if (createStore) {
+                restManager.getPublisher().removeStore(ws, actualStoreName, storeType, true, Purge.ALL);
+            }
+            for (StyleInfo style : createStyles) {
+                restManager.getPublisher().removeStyleInWorkspace(wsName(style.getWorkspace()),
+                        style.getName(), true);
+            }
+            for (String createdWs : createWorkspaces) {
+                restManager.getPublisher().removeWorkspace(createdWs, true);
+            }
+            throw e;
         }
         
         return new TaskResult() {
 
             @Override
             public void commit() throws TaskException {
-                //advertise the layer
-                GSLayerEncoder layerEncoder = new GSLayerEncoder();
+                //remove old resource if exists
+                if (storeType == StoreType.DATASTORES ? 
+                        restManager.getReader().existsFeatureType(ws, storeName, resource.getName())
+                        : restManager.getReader().existsCoverage(ws, storeName, resource.getName())) {
+                    if (!restManager.getPublisher().removeLayer(ws, resource.getName())
+                        || !restManager.getPublisher().removeResource(ws, storeType, storeName, resource.getName())) {
+                        throw new TaskException(
+                                "Failed to remove old layer " + ws + ":" + resource.getName());
+                    }
+                }
+                
+                if (!actualStoreName.equals(storeName)) {
+                    //remove old store if exists
+                    if (storeType == StoreType.DATASTORES
+                            ? restManager.getReader().existsDatastore(ws, storeName)
+                            : restManager.getReader().existsCoveragestore(ws, storeName)) {
+                        if (!restManager.getPublisher().removeStore(ws, storeName, storeType, true,
+                            Purge.ALL)) {
+                            throw new TaskException(
+                                    "Failed to remove old store " + ws + ":" + storeName);
+                        };
+                    }
+                    
+                    // set proper name store
+                    if (!restManager.getStoreManager().update(ws, actualStoreName, 
+                            new GSGenericStoreEncoder(storeType, null, null, storeName, null, null))) {
+                        throw new TaskException(
+                                "Failed to rename store " + ws + ":" + actualStoreName  + 
+                                " to " + storeName);
+                    }
+                }
+                
+                // set proper name resource
+                final GSResourceEncoder re = resource instanceof CoverageInfo ? 
+                        new GSCoverageEncoder(false) : new GSFeatureTypeEncoder(false);
+                re.setName(resource.getName());
+                if (!restManager.getPublisher().configureResource(ws, storeType, storeName,
+                        tempName, re)) {
+                    throw new TaskException(
+                            "Failed to rename resource " + ws + ":" + tempName  + " to " + storeName);
+                }
+                
+                // advertise the layer
+                final GSLayerEncoder layerEncoder = new GSLayerEncoder(false);
                 layerEncoder.setAdvertised(true);
-                if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
-                    throw new TaskException("Failed to advertise layer " + ws + ":" + resource.getName());
+                if (!restManager.getPublisher().configureLayer(ws, resource.getName(), layerEncoder)) {
+                    throw new TaskException("Failed to advertise layer " + ws + ":" + layer.getName());
                 }
             }
 
             @Override
             public void rollback() throws TaskException {
-                if (createLayer) {                    
-                    if (createResource) {
-                        if (!(storeType == StoreType.COVERAGESTORES ?
-                                restManager.getPublisher().unpublishCoverage(ws, storeName, resource.getName()) :
-                                restManager.getPublisher().unpublishFeatureType(ws, storeName, resource.getName()))) {
-                            throw new TaskException("Failed to remove layer/resource " + ws + ":" + resource.getName());
-                        } 
-                    } else {
-                        if (!restManager.getPublisher().removeLayer(ws, layer.getName())) {
-                            throw new TaskException("Failed to remove layer " + ws + ":" + resource.getName());
-                        }
-                    }
-                    if (createStore) {
-                        if (!restManager.getPublisher().removeStore(ws, storeName, storeType, true, Purge.ALL)) {
-                            throw new TaskException("Failed to remove store " + ws + ":" + storeName);
-                        }
-                    }
-                    if (createStyle) {
-                        if (!restManager.getPublisher().removeStyle(layer.getDefaultStyle().getName(), true)) {
-                            throw new TaskException("Failed to remove style " + layer.getDefaultStyle().getName());
-                        }
-                    }
-                    if (createWorkspace) {
-                        if (!restManager.getPublisher().removeWorkspace(ws, true)) {
-                            throw new TaskException("Failed to remove workspace " + ws);
-                        }
+
+                if (!restManager.getPublisher().removeLayer(ws, tempName)
+                   || !restManager.getPublisher().removeResource(ws, storeType, actualStoreName, tempName)) {
+                    throw new TaskException(
+                            "Failed to remove layer " + ws + ":" + tempName);
+                }
+
+                if (createStore) {
+                    if (!restManager.getPublisher().removeStore(ws, actualStoreName, storeType, true,
+                            Purge.ALL)) {
+                        throw new TaskException("Failed to remove store " + ws + ":" + actualStoreName);
                     }
                 }
                 
+                for (StyleInfo style : createStyles) {
+                    if (!restManager.getPublisher().removeStyleInWorkspace(
+                            wsName(style.getWorkspace()), style.getName(), true)) {
+                        throw new TaskException(
+                                "Failed to remove style " + layer.getDefaultStyle().getName());
+                    }
+                }
+                for (String createdWs : createWorkspaces) {
+                    if (!restManager.getPublisher().removeWorkspace(createdWs, true)) {
+                        throw new TaskException("Failed to remove workspace " + ws);
+                    }
+                }
+
             }
             
         };
@@ -351,6 +385,10 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         } 
     }
     
+    private static String wsName(WorkspaceInfo ws) {
+        return ws == null ? null : ws.getName();
+    }
+    
     private Resource uriToResource(URI uri) throws MalformedURLException {
         if(uri.getScheme()!=null && !uri.getScheme().equals("file")) {
             return null;
@@ -379,18 +417,14 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
             throw new TaskException(e);
         }
         if (restManager.getReader().existsLayer(ws, layer.getName(), true)) {
-            if (!(storeType == StoreType.COVERAGESTORES ?
-                    restManager.getPublisher().unpublishCoverage(ws, storeName, resource.getName()) :
-                    restManager.getPublisher().unpublishFeatureType(ws, storeName, resource.getName()))) {
-                throw new TaskException("Failed to remove layer/resource " + ws + ":" + resource.getName());
+            if (!restManager.getPublisher().removeLayer(ws, resource.getName())
+                || !restManager.getPublisher().removeResource(ws, storeType, storeName, resource.getName())) {
+                throw new TaskException("Failed to remove layer " + ws + ":" + resource.getName());
             } 
             if (!restManager.getPublisher().removeStore(ws, storeName, storeType, false, Purge.ALL)) {
-                if (mustCleanUpStore()) {
+                if (neverReuseStore()) {
                     throw new TaskException("Failed to remove store " + ws + ":" + storeName);
-                } else {
-                    LOGGER.log(Level.INFO, "Failed to clean-up datastore " + storeName + 
-                            ", possibly used by other layers.");
-                }
+                } //else store is still in use
             }
             //will not clean-up style and ws
             //because we don't know if they were created by this task.
@@ -398,13 +432,14 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     }
 
     protected abstract boolean createStore(ExternalGS extGS, GeoServerRESTManager restManager,
-            StoreInfo store, TaskContext ctx) throws IOException, TaskException;
+            StoreInfo store, TaskContext ctx, String name) throws IOException, TaskException;
     
-    protected abstract boolean mustCleanUpStore();
+    protected abstract boolean neverReuseStore();
     
     protected String getStoreName(StoreInfo store, TaskContext ctx) throws TaskException {
         return store.getName();
     }
     
-    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable update) throws TaskException {}
+    protected void postProcess(GSResourceEncoder re, TaskContext ctx, 
+            TaskRunnable<GSResourceEncoder> update) throws TaskException {}
 }

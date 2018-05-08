@@ -43,14 +43,17 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     private final static Logger LOGGER = Logger.getLogger("FileLocalPublicationTaskTest");
 
     //configure these constants
-    private static final String FILE_NAME = TestData.class.getResource("world.tiff").getFile().toString();
-    private static final String REMOTE_FILE_LOCATION = "test/salinity.tif";
-    private static final String REMOTE_FILE_URI = "test://source/" + REMOTE_FILE_LOCATION;
+    private static final String FILE_LOCATION = "test/world.tiff";
+    private static final String FILE_SERVICE = "Data Directory";
     private static final String WORKSPACE = "gs";
     private static final String COVERAGE_NAME = "world";
     private static final String LAYER_NAME = WORKSPACE + ":" + COVERAGE_NAME;
     
+    private static final String REMOTE_FILE_LOCATION = "test/salinity.tif";
+    private static final String REMOTE_FILE_SERVICE = "s3-test-source";
+    
     //attributes
+    private static final String ATT_FILE_SERVICE = "fileService";
     private static final String ATT_FILE = "file";
     private static final String ATT_LAYER = "layer";
     private static final String ATT_FAIL = "fail";
@@ -90,7 +93,14 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     }
     
     @Before
-    public void setupBatch() {
+    public void setupBatch() throws IOException {
+        //copy file if not exists
+        FileService fileService = fileServices.get(FILE_SERVICE);
+        if (!fileService.checkFileExists(FILE_LOCATION)) {
+            fileService.create(FILE_LOCATION, TestData.class.getResource("world.tiff").openStream());
+        }
+        
+        //create configuration
         config = fac.createConfiguration();  
         config.setName("my_config");
         config.setWorkspace("some_ws");
@@ -98,6 +108,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
         Task task1 = fac.createTask();
         task1.setName("task1");
         task1.setType(FileLocalPublicationTaskTypeImpl.NAME);
+        dataUtil.setTaskParameterToAttribute(task1, FileLocalPublicationTaskTypeImpl.PARAM_FILE_SERVICE, ATT_FILE_SERVICE);
         dataUtil.setTaskParameterToAttribute(task1, FileLocalPublicationTaskTypeImpl.PARAM_FILE, ATT_FILE);
         dataUtil.setTaskParameterToAttribute(task1, FileLocalPublicationTaskTypeImpl.PARAM_LAYER, ATT_LAYER);
         dataUtil.addTaskToConfiguration(config, task1);
@@ -121,7 +132,8 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     
     @Test
     public void testSuccessAndCleanup() throws SchedulerException {
-        dataUtil.setConfigurationAttribute(config, ATT_FILE, FILE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE_SERVICE, FILE_SERVICE);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE, FILE_LOCATION);
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);
         config = dao.save(config);
         
@@ -137,7 +149,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
         CoverageStoreInfo csi = catalog.getStoreByName(WORKSPACE, COVERAGE_NAME, CoverageStoreInfo.class);
         assertNotNull(csi);
-        assertEquals("file:" + FILE_NAME, csi.getURL());
+        assertEquals(fileServices.get(FILE_SERVICE).getURI(FILE_LOCATION).toString(), csi.getURL());
         assertNotNull(catalog.getResourceByName(LAYER_NAME, CoverageInfo.class));
         
         taskUtil.cleanup(config);
@@ -151,7 +163,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
     public void testS3SuccessAndCleanup() throws SchedulerException, IOException {
         FileService fileService = null;
         try {
-            fileService = fileServices.get("s3-test-source");
+            fileService = fileServices.get(REMOTE_FILE_SERVICE);
             Assume.assumeNotNull(fileService);
             Assume.assumeTrue("File exists on s3 service",
                     fileService.checkFileExists(REMOTE_FILE_LOCATION));
@@ -160,7 +172,8 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
             Assume.assumeTrue("S3 service is configured and available", false);
         }
 
-        dataUtil.setConfigurationAttribute(config, ATT_FILE, REMOTE_FILE_URI);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE_SERVICE, REMOTE_FILE_SERVICE);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE, REMOTE_FILE_LOCATION);
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);
         config = dao.save(config);
         
@@ -176,7 +189,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
         assertNotNull(catalog.getLayerByName(LAYER_NAME));
         CoverageStoreInfo csi = catalog.getStoreByName(WORKSPACE, COVERAGE_NAME, CoverageStoreInfo.class);
         assertNotNull(csi);
-        assertEquals(REMOTE_FILE_URI, csi.getURL());
+        assertEquals(fileService.getURI(REMOTE_FILE_LOCATION).toString(), csi.getURL());
         assertNotNull(catalog.getResourceByName(LAYER_NAME, CoverageInfo.class));
         
         taskUtil.cleanup(config);
@@ -194,7 +207,8 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
         dataUtil.setTaskParameterToAttribute(task2, TestTaskTypeImpl.PARAM_FAIL, ATT_FAIL);
         dataUtil.addTaskToConfiguration(config, task2);  
 
-        dataUtil.setConfigurationAttribute(config, ATT_FILE, FILE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE_SERVICE, FILE_SERVICE);
+        dataUtil.setConfigurationAttribute(config, ATT_FILE, FILE_LOCATION);
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_FAIL, Boolean.TRUE.toString());
         config = dao.save(config);

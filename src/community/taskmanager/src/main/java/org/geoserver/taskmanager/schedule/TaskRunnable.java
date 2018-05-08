@@ -4,6 +4,6 @@
  */
 package org.geoserver.taskmanager.schedule;
 
-public interface TaskRunnable {
-    void run() throws TaskException;
+public interface TaskRunnable<T> {
+    void run(T arg) throws TaskException;
 }

@@ -25,10 +25,11 @@ import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.Wrapper;
 import org.geoserver.catalog.impl.CatalogFactoryImpl;
+import org.geoserver.platform.resource.Resources;
 import org.geoserver.taskmanager.external.ExtTypes;
+import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
-import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
@@ -43,10 +44,12 @@ import org.springframework.stereotype.Component;
 public class FileLocalPublicationTaskTypeImpl implements TaskType {
     
     public static final String NAME = "LocalFilePublication";
-    
+        
     public static final String PARAM_LAYER = "layer";
     
     public static final String PARAM_FILE = "file";
+
+    public static final String PARAM_FILE_SERVICE = "fileService";
     
     protected final Map<String, ParameterInfo> paramInfo = new LinkedHashMap<String, ParameterInfo>();
 
@@ -63,8 +66,11 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
 
     @PostConstruct
     public void initParamInfo() {
-        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.UPLOADABLE_URI, true));
-        paramInfo.put(PARAM_LAYER, new ParameterInfo(PARAM_LAYER, extTypes.layerName, true));
+        ParameterInfo fileService = new ParameterInfo(PARAM_FILE_SERVICE, extTypes.fileService, true);
+        paramInfo.put(PARAM_FILE_SERVICE, fileService);
+        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, extTypes.file(true, true), true)
+                .dependsOn(fileService));
+        paramInfo.put(PARAM_LAYER, new ParameterInfo(PARAM_LAYER, extTypes.name, true));
     }
 
     @Override
@@ -80,12 +86,13 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
         final NamespaceInfo ns = catalog.getNamespaceByURI(layerName.getNamespaceURI());
         final WorkspaceInfo ws = catalog.getWorkspaceByName(ns.getName());
         
-        final URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
-                new BatchContext.Dependency() {
+        FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
+                        new BatchContext.Dependency() {
             @Override
             public void revert() throws TaskException {
                  StoreInfo store = catalog.getStoreByName(ws, layerName.getLocalPart(), StoreInfo.class);
-                 URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
+                 FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
+                 final URI uri = fileRef.getService().getURI(fileRef.getLatestVersion());
                  if (store instanceof CoverageStoreInfo) {
                      ((CoverageStoreInfo) store).setURL(uri.toString());
                  } else {
@@ -97,7 +104,8 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                  }
                  catalog.save(store);
             }
-        });   
+        });
+        final URI uri = fileRef.getService().getURI(fileRef.getLatestVersion());
         
         final boolean createLayer = catalog.getLayerByName(layerName) == null;
         final boolean createStore;
@@ -130,8 +138,16 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                 if (isShapeFile) {
                     store.getConnectionParameters().put("url", url);
                 } else {
-                    ((CoverageStoreInfo) store).setType(url == null ? determineFormatFromSpecialScheme(uri.getScheme())
-                            : GridFormatFinder.findFormat(url).getName());
+                    if (url == null) {
+                        ((CoverageStoreInfo) store).setType(determineFormatFromScheme(uri.getScheme()));
+                    } else {
+                        if (url.getProtocol().equalsIgnoreCase("file")) {
+                            ((CoverageStoreInfo) store).setType(GridFormatFinder.findFormat(
+                                    Resources.fromURL(uri.toString()).toString()).getName());
+                        } else {
+                            ((CoverageStoreInfo) store).setType(GridFormatFinder.findFormat(url).getName());
+                        }
+                    }
                     ((CoverageStoreInfo) store).setURL(uri.toString());
                 }
                 store.setEnabled(true);
@@ -217,17 +233,19 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
         catalog.remove(store);
     }
     
-    private static String determineFormatFromSpecialScheme(String scheme) {
-        //currently only S3GeoTiff supports schemes other than File and HTTP
-        return "S3GeoTiff";
-    }
-    
     private static <T> T unwrap(T o, Class<T> clazz) {
         if (o instanceof Wrapper) {
             return ((Wrapper) o).unwrap(clazz);
         } else {
             return o;
         }
+    }
+    
+    private static String determineFormatFromScheme(String scheme) {
+        //this method is called when the URI could not be converted to a URL,
+        //usually meaning that it has a unusual scheme (protocol)
+        //currently only the S3GeoTiff format extension in geotools supports schemes other than FILE and HTTP
+        return "S3GeoTiff";
     }
 
 }

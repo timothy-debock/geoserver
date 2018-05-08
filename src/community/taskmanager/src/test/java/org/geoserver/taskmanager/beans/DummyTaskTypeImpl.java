@@ -77,6 +77,10 @@ public class DummyTaskTypeImpl implements TaskType {
                         return null;
                     }
                 }
+
+                public List<String> getActions() {
+                    return Lists.newArrayList("actionDummy");
+                }
         
         }, true).dependsOn(PARAM_INFO.get(PARAM1)));
     }

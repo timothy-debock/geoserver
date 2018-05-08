@@ -98,35 +98,6 @@ public interface ParameterType {
         }
 
     };
-    
-    /**
-     * UPLOADABLE_URI type
-     */
-    public ParameterType UPLOADABLE_URI = new ParameterType() {
-        
-        @Override
-        public List<String> getDomain(List<String> dependsOnRawValues) {
-            return null;
-        }
-
-        @Override
-        public java.net.URI parse(String value, List<String> dependsOnRawValues) {
-            try {
-                if (!value.contains(":")) {
-                    value = "file:" + value;
-                }
-                return new java.net.URI(value);
-            } catch (URISyntaxException e) {
-                return null;
-            }
-        }
-        
-        @Override
-        public List<String> getActions() {
-            return Collections.singletonList("FileUpload");
-        }
-
-    };
 
     /**
      * SQL Type

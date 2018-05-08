@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.geoserver.catalog.LayerInfo;
 import org.geoserver.data.test.MockData;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
@@ -67,6 +68,7 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     //private static final String DB_NAME = "myjndidb";    
     private static final String TABLE_NAME = "vw_grondwaterlichamen";
     private static final String STYLE = "grass";
+    private static final String SECOND_STYLE = "second_grass";
     
     private static QName MY_TYPE = new QName(DB_NAME, TABLE_NAME, DB_NAME);
     
@@ -106,6 +108,7 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     @Override
     public boolean setupDataDirectory() throws Exception {
         DATA_DIRECTORY.addStyle(STYLE, getClass().getResource(STYLE + ".sld"));
+        DATA_DIRECTORY.addStyle(SECOND_STYLE, getClass().getResource(SECOND_STYLE + ".sld"));
         try (InputStream is = getClass().getResource("grass_fill.png").openStream()) {
             try (OutputStream os = new FileOutputStream(
                     new File(DATA_DIRECTORY.getDataDirectoryRoot(), "styles/grass_fill.png"))) {
@@ -114,7 +117,7 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
         }
         Map<String, Serializable> params = new HashMap<String, Serializable>();
         params.putAll(dbSources.get(DB_NAME).getParameters());
-        params.put(MockData.KEY_STYLE, STYLE);        
+        params.put(MockData.KEY_STYLE, STYLE);
         DATA_DIRECTORY.addCustomType(MY_TYPE, params);
         return true;
     }
@@ -165,6 +168,11 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     
     @Test
     public void testSuccessAndCleanup() throws SchedulerException, SQLException, MalformedURLException {
+        //set additional style
+        LayerInfo li = geoServer.getCatalog().getLayerByName(MY_TYPE.getLocalPart());
+        li.getStyles().add(geoServer.getCatalog().getStyleByName(SECOND_STYLE));
+        geoServer.getCatalog().save(li);
+        
         dataUtil.setConfigurationAttribute(config, ATT_DB_NAME, DB_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, TABLE_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
@@ -184,17 +192,19 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
         assertTrue(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
         assertTrue(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
         
-        //test style
+        //test styles
         RESTLayer layer = restManager.getReader().getLayer(DB_NAME, TABLE_NAME);
         assertEquals(STYLE, layer.getDefaultStyle());
+        assertEquals(SECOND_STYLE, layer.getStyles().get(0).getName());
         RESTStyle style = restManager.getReader().getStyle(STYLE);
         assertEquals(STYLE + ".sld", style.getFileName());
+        RESTStyle second_style = restManager.getReader().getStyle(SECOND_STYLE);
+        assertEquals(SECOND_STYLE + ".sld", second_style.getFileName());        
         
         assertTrue(taskUtil.cleanup(config));      
-        
-        assertFalse(restManager.getReader().existsDatastore(DB_NAME, DB_NAME));
-        assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
+
         assertFalse(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
+        assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
     }
     
     @Test

@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.web.action;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
@@ -18,9 +19,9 @@ import org.geoserver.taskmanager.web.ConfigurationPage;
  */
 public interface Action extends Named, Serializable {
     
-    void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel);
+    void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel, List<String> dependentValues);
 
-    default boolean accept(String value) {
+    default boolean accept(String value, List<String> dependentValues) {
         return true;
     }
 

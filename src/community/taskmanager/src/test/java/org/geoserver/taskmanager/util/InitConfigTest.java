@@ -122,7 +122,7 @@ public class InitConfigTest extends AbstractTaskManagerTest {
         assertTrue(taskUtil.validate(initConfig).isEmpty());
         
         assertEquals(1, taskUtil.getActionsForAttribute(attDummy2, config).size());
-        assertEquals(0, taskUtil.getActionsForAttribute(attDummy2, initConfig).size());
+        assertEquals(1, taskUtil.getActionsForAttribute(attDummy2, initConfig).size());
 
         assertEquals(2, taskUtil.getTypesForAttribute(attDummy2, config).size());
         assertEquals(1, taskUtil.getTypesForAttribute(attDummy2, initConfig).size());

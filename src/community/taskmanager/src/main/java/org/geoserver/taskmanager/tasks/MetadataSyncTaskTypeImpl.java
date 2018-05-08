@@ -145,6 +145,10 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
     }
     
     protected static GSResourceEncoder syncMetadata(ResourceInfo resource) {
+        return syncMetadata(resource, resource.getName());
+    }
+    
+    protected static GSResourceEncoder syncMetadata(ResourceInfo resource, String name) {
         final GSResourceEncoder re;
         if (resource instanceof CoverageInfo) {
             CoverageInfo coverage = (CoverageInfo) resource;
@@ -158,14 +162,17 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
             for (String srs : coverage.getResponseSRS()) {
                 coverageEncoder.setResponseSRS(srs); // wrong: should be add
             }
+            coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
+            coverageEncoder.setNativeFormat(coverage.getNativeFormat());
             re = coverageEncoder;
         } else {
             re = new GSFeatureTypeEncoder();
             if (resource.getNativeCRS() != null) {
                 re.setNativeCRS(CRS.toSRS(resource.getNativeCRS()));
             }
+            re.setNativeName(resource.getNativeName());
         }
-        re.setName(resource.getName());
+        re.setName(name);
         re.setTitle(resource.getTitle());
         re.setAbstract(resource.getAbstract());
         re.setDescription(resource.getAbstract());
@@ -183,10 +190,12 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
         }
         re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE
                 : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
-        re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
+        if (resource.getLatLonBoundingBox() != null) {
+            re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
                 resource.getLatLonBoundingBox().getMinY(),
                 resource.getLatLonBoundingBox().getMaxX(),
                 resource.getLatLonBoundingBox().getMaxY(), resource.getSRS());
+        }
 
         // dimensions, must happen after setName or strange things happen (gs-man bug)
         if (resource instanceof CoverageInfo) {

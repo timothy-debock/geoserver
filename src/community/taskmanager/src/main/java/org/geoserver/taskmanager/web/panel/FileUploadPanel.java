@@ -24,7 +24,6 @@ import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class FileUploadPanel extends Panel {
      */
     private FileUploadField fileUploadField;
 
-    private DropDownChoice<String> fileServiceChoice;
+    private DropDownChoice<FileService> fileServiceChoice;
 
     private DropDownChoice<String> folderChoice;
 
@@ -60,9 +59,10 @@ public class FileUploadPanel extends Panel {
      *
      * @param id          Component name
      * @param fileNameModel the model that will contain the name of the file.
+     * @param fileService 
      */
 
-    public FileUploadPanel(String id, IModel<String> fileNameModel) {
+    public FileUploadPanel(String id, IModel<String> fileNameModel, FileService fileService) {
 
         super(id);
         this.fileNameModel = fileNameModel;
@@ -71,26 +71,25 @@ public class FileUploadPanel extends Panel {
         add(feedbackPanel = new FeedbackPanel("feedback"));
         feedbackPanel.setOutputMarkupId(true);
 
-
         fileServiceChoice =
-                new DropDownChoice<String>("fileServiceSelection", new Model<String>(),
-                        new ArrayList<>(TaskManagerBeans.get().getFileServices().names()),
-                        new IChoiceRenderer<String>() {
+                new DropDownChoice<FileService>("fileServiceSelection", new Model<FileService>(),
+                        new ArrayList<FileService>(TaskManagerBeans.get().getFileServices().all()),
+                        new IChoiceRenderer<FileService>() {
                             private static final long serialVersionUID = -1102965730550597918L;
 
                             @Override
-                            public Object getDisplayValue(String object) {
-                                return TaskManagerBeans.get().getFileServices().get(object).getDescription();
+                            public Object getDisplayValue(FileService object) {
+                                return object.getDescription();
                             }
 
                             @Override
-                            public String getIdValue(String object, int index) {
-                                return object;
+                            public String getIdValue(FileService object, int index) {
+                                return object.getName();
                             }
 
                             @Override
-                            public String getObject(String id, IModel<? extends List<? extends String>> choices) {
-                                return id;
+                            public FileService getObject(String id, IModel<? extends List<? extends FileService>> choices) {
+                                return TaskManagerBeans.get().getFileServices().get(id);
                             }                   
                     
                 }) {
@@ -119,22 +118,8 @@ public class FileUploadPanel extends Panel {
 
             @Override
             protected void onUpdate(AjaxRequestTarget target) {
-                String serviceName = fileServiceChoice.getModel().getObject();
-                List<String> availableFolders = new ArrayList<String>();
-                if (serviceName != null) {
-                    try {
-                        List<String> paths =
-                                TaskManagerBeans.get().getFileServices().get(serviceName).listSubfolders();
-                        for (String path : paths) {
-                            availableFolders.add(path);
-                        }
-                    } catch (IOException e) {
-                        FileUploadPanel.this.error("Could not get folders for service:" + e.getMessage());
-                    }
-                }
-                folderChoice.setChoices(availableFolders);
+                updateFolders();
                 target.add(folderChoice);
-                addFolderButton.setVisible(serviceName != null);
                 target.add(addFolderButton);
             }
         });
@@ -152,6 +137,25 @@ public class FileUploadPanel extends Panel {
                 return hasBeenSubmitted();
             }
         });
+
+        if (fileService != null) {
+            fileServiceChoice.setDefaultModelObject(fileService)
+            .setEnabled(false);
+            updateFolders();
+        }
+    }
+
+    protected void updateFolders() {
+        FileService service = fileServiceChoice.getModel().getObject();
+        List<String> availableFolders = new ArrayList<String>();
+        if (service != null) {
+            List<String> paths = service.listSubfolders();
+            for (String path : paths) {
+                availableFolders.add(path);
+            }
+        }
+        folderChoice.setChoices(availableFolders);
+        addFolderButton.setVisible(service != null);
     }
 
     protected boolean hasBeenSubmitted() {
@@ -169,16 +173,15 @@ public class FileUploadPanel extends Panel {
         final List<FileUpload> uploads = fileUploadField.getFileUploads();
         if (uploads != null) {
             for (FileUpload upload : uploads) {
-                FileService fileService =
-                        TaskManagerBeans.get().getFileServices().get(fileServiceChoice.getModelObject());
+                FileService fileService = fileServiceChoice.getModelObject();
                 try {
                     String filePath = folderChoice.getModelObject() + "/" + upload.getClientFileName();
                     if (fileService.checkFileExists(filePath)) {
                         fileService.delete(filePath);
                     }
-                    String path = fileService.create(filePath, upload.getInputStream());
+                    fileService.create(filePath, upload.getInputStream());
 
-                    fileNameModel.setObject(path);
+                    fileNameModel.setObject(filePath);
                 } catch (Exception e) {
                     throw new IllegalStateException("Unable to write file", e);
                 }

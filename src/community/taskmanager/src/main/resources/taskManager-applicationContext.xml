@@ -8,7 +8,8 @@
        
     <!-- Default File Service -->
     <bean id="defaultFileService" class="org.geoserver.taskmanager.external.impl.FileServiceImpl">
-        <property name="name" value="Data Directory"/>
+    	<property name="name" value="data-directory"/>
+        <property name="description" value="Data Directory"/>
         <!-- root folder is configured below -->
     </bean>
 

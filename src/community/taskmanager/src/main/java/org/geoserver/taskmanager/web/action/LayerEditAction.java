@@ -4,6 +4,8 @@
  */
 package org.geoserver.taskmanager.web.action;
 
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.geoserver.taskmanager.web.ConfigurationPage;
@@ -29,7 +31,8 @@ public class LayerEditAction implements Action {
     }
 
     @Override
-    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel) {
+    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, 
+            IModel<String> valueModel, List<String> dependentValues) {
         String[] prefixname = valueModel.getObject().split(":", 2);
         onPage.setResponsePage(
                 new ResourceConfigurationPage(prefixname.length > 1 ? prefixname[0] : null,
@@ -38,7 +41,7 @@ public class LayerEditAction implements Action {
     }
 
     @Override
-    public boolean accept(String value) {
+    public boolean accept(String value, List<String> dependentValues) {
         if (value == null || "".equals(value)) {
             return false;
         } else {

@@ -4,6 +4,7 @@
  */
 package org.geoserver.taskmanager.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,11 @@ public class LookupServiceImpl<T extends Named> implements LookupService<T> {
     @Override
     public Set<String> names() {
         return map.keySet();
+    }
+    
+    @Override
+    public Collection<T> all() {
+        return map.values();
     }
 
     @Override

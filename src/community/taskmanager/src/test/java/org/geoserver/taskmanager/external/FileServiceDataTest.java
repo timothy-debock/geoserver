@@ -60,7 +60,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         Assert.assertEquals("target",
                 ((S3FileServiceImpl) fs).getRootFolder());
         
-        fs = fileServiceRegistry.get("Temporary Directory");
+        fs = fileServiceRegistry.get("temp-directory");
         Assert.assertNotNull(fs);
         Assert.assertTrue(fs instanceof FileServiceImpl);
         Assert.assertEquals("/tmp", ((FileServiceImpl) fs).getRootFolder());
@@ -158,8 +158,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         String content = "test the file service";
 
         //create
-        String location = service.create(filenamePath, IOUtils.toInputStream(content, "UTF-8"));
-        Assert.assertEquals("new-bucket/New_Folder/" + filename, location);
+        service.create(filenamePath, IOUtils.toInputStream(content, "UTF-8"));
 
         //exists
         boolean fileExists = service.checkFileExists(filenamePath);
@@ -170,7 +169,7 @@ public class FileServiceDataTest extends AbstractTaskManagerTest {
         Assert.assertEquals(content, actualContent);
 
         //is create in the root folder?
-        Assert.assertTrue(getS3Client().doesObjectExist(service.getRootFolder(), location));
+        Assert.assertTrue(getS3Client().doesObjectExist(service.getRootFolder(), filenamePath));
 
         //delete action
         service.delete(filenamePath);

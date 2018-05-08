@@ -15,15 +15,25 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.FileUtils;
+import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.external.FileService;
+import org.geotools.util.logging.Logging;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * S3 remote file storage.
@@ -33,6 +43,8 @@ import java.util.Set;
 public class S3FileServiceImpl implements FileService {
 
     private static final long serialVersionUID = -5960841858385823283L;
+    
+    private static final Logger LOGGER = Logging.getLogger(S3FileServiceImpl.class);
 
     private static String ENCODING = "aws-chunked";
 
@@ -117,7 +129,7 @@ public class S3FileServiceImpl implements FileService {
     @Override
     public boolean checkFileExists(String filePath) throws IOException {
         if (filePath == null) {
-            throw new IOException("Name of a file can not be null.");
+            throw new IllegalArgumentException("Name of a file can not be null.");
         }
         try {
             return getS3Client().doesObjectExist(rootFolder, filePath);
@@ -128,17 +140,17 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public String create(String filePath, InputStream content) throws IOException {
+    public void create(String filePath, InputStream content) throws IOException {
         //Check parameters
         if (content == null) {
-            throw new IOException("Content of a file can not be null.");
+            throw new IllegalArgumentException("Content of a file can not be null.");
         }
         if (filePath == null) {
-            throw new IOException("Name of a file can not be null.");
+            throw new IllegalArgumentException("Name of a file can not be null.");
         }
 
         if (checkFileExists(filePath)) {
-            throw new IOException("The file already exists");
+            throw new IllegalArgumentException("The file already exists");
         }
         File scratchFile = File.createTempFile("prefix", String.valueOf(System.currentTimeMillis()));
         try {
@@ -166,13 +178,12 @@ public class S3FileServiceImpl implements FileService {
                 scratchFile.delete();
             }
         }
-        return filePath;
     }
 
     @Override
     public boolean delete(String filePath) throws IOException {
         if (filePath == null) {
-            throw new IOException("Name of a file can not be null.");
+            throw new IllegalArgumentException("Name of a file can not be null.");
         }
         if (checkFileExists(filePath)) {
             try {
@@ -189,7 +200,7 @@ public class S3FileServiceImpl implements FileService {
     @Override
     public InputStream read(String filePath) throws IOException {
         if (filePath == null) {
-            throw new IOException("Name of a file can not be null.");
+            throw new IllegalArgumentException("Name of a file can not be null.");
         }
         GetObjectRequest objectRequest = new GetObjectRequest(rootFolder, filePath);
         try {
@@ -200,10 +211,7 @@ public class S3FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<String> listSubfolders() throws IOException {
-        if (rootFolder == null) {
-            throw new IOException("No rootFolder is not configured in this file service.");
-        }
+    public List<String> listSubfolders() {
         Set<String> paths = new HashSet<>();
         ObjectListing listing = getS3Client().listObjects(rootFolder);
         for (S3ObjectSummary summary : listing.getObjectSummaries()) {
@@ -219,6 +227,43 @@ public class S3FileServiceImpl implements FileService {
         return new ArrayList<>(paths);
     }
 
+    @Override
+    public FileReference getVersioned(String filePath) {
+        int index = filePath.indexOf(PLACEHOLDER_VERSION);
+        if (index < 0) {
+            return new FileReferenceImpl(this, filePath, filePath);
+        }
+        
+        SortedSet<Integer> set = new TreeSet<Integer>();
+        Pattern pattern = Pattern.compile(Pattern.quote(filePath)
+                .replace(FileService.PLACEHOLDER_VERSION, "\\E(.*)\\Q"));       
+                        
+        ObjectListing listing = getS3Client().listObjects(rootFolder, filePath.substring(0, index));
+        for (S3ObjectSummary summary : listing.getObjectSummaries()) {
+            Matcher matcher = pattern.matcher(summary.getKey());
+            if (matcher.matches()) {
+                try {
+                    set.add(Integer.parseInt(matcher.group(1)));
+                } catch (NumberFormatException e) {
+                    LOGGER.log(Level.WARNING, "could not parse version in versioned file " + summary.getKey(), e);
+                }
+            }
+        }
+        int last = set.isEmpty() ? 0 : set.last();
+        return new FileReferenceImpl(this, filePath.replace(FileService.PLACEHOLDER_VERSION, last + ""),
+                filePath.replace(FileService.PLACEHOLDER_VERSION, (last + 1) + ""));
+        
+    }
+
+    @Override
+    public URI getURI(String filePath) {
+        try {
+            return new URI(alias + "://" + rootFolder + "/" + filePath);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private AmazonS3 getS3Client() {
         if (endpoint == null) {
             throw new IllegalArgumentException("The endpoint is required, add a property: alias.s3.endpoint");
@@ -230,7 +275,7 @@ public class S3FileServiceImpl implements FileService {
             throw new IllegalArgumentException("The password is required, add a property: alias.s3.password");
         }
         if (rootFolder == null) {
-            throw new IllegalArgumentException("The rootfolder is required, add a property: alias.s3.rootfolder");
+            throw new IllegalStateException("The rootfolder is required, add a property: alias.s3.rootfolder");
         }
 
         AmazonS3 s3;

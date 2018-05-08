@@ -6,19 +6,29 @@ package org.geoserver.taskmanager.external.impl;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.geoserver.platform.GeoServerResourceLoader;
+import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.external.FileService;
+import org.geotools.util.logging.Logging;
 import org.springframework.web.context.ServletContextAware;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
@@ -29,14 +39,18 @@ import javax.servlet.ServletContext;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public class FileServiceImpl implements FileService, ServletContextAware {
-
+        
     private static final long serialVersionUID = -1948411877746516243L;
+    
+    private static final Logger LOGGER = Logging.getLogger(FileServiceImpl.class);
     
     private Path dataDirectory;
     
     private Path rootFolder;
     
     private String name;
+    
+    private String description;
     
     public void setName(String name) {
         this.name = name;
@@ -49,7 +63,11 @@ public class FileServiceImpl implements FileService, ServletContextAware {
 
     @Override
     public String getDescription() {
-        return "Local File System: " + name;
+        return "Local File System: " + (description == null ? description : name);
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setRootFolder(String rootFolder) {
@@ -57,36 +75,36 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public boolean checkFileExists(String filePath) throws IOException {
+    public String getRootFolder() {
+        return rootFolder.toString();
+    }
+
+    @Override
+    public boolean checkFileExists(String filePath) {
         return Files.exists(getAbsolutePath(filePath));
     }
 
     @Override
-    public String create(String filePath, InputStream content) throws IOException {
+    public void create(String filePath, InputStream content) throws IOException {
         //Check parameters
         if (content == null) {
-            throw new IOException("Content of a file can not be null.");
+            throw new IllegalArgumentException("Content of a file can not be null.");
         }
         if (filePath == null) {
-            throw new IOException("Name of a file can not be null.");
+            throw new IllegalArgumentException("Name of a file can not be null.");
         }
         if (checkFileExists(filePath)) {
-            throw new IOException("The file already exists");
+            throw new IllegalArgumentException("The file already exists");
         }
 
         File targetFile = new File(getAbsolutePath(filePath).toUri());
         FileUtils.copyInputStreamToFile(content, targetFile);
-        if (dataDirectory == null) {
-            return getAbsolutePath(filePath).toString();
-        } else {
-            return dataDirectory.relativize(getAbsolutePath(filePath)).toString();
-        }
     }
 
     @Override
-    public boolean delete(String filePath) throws IOException {
+    public boolean delete(String filePath) {
         if (filePath == null) {
-            throw new IOException("Name of a filePath can not be null.");
+            throw new IllegalArgumentException("Name of a filePath can not be null.");
         }
         if (checkFileExists(filePath)) {
             File file = new File(getAbsolutePath(filePath).toUri());
@@ -107,10 +125,7 @@ public class FileServiceImpl implements FileService, ServletContextAware {
     }
 
     @Override
-    public List<String> listSubfolders() throws IOException {
-        if (rootFolder == null) {
-            throw new IOException("No rootFolder is not configured in this file service.");
-        }
+    public List<String> listSubfolders() {
         File file = new File(rootFolder.toUri());
         file.mkdirs();
         ArrayList<String> paths = listFolders(file.toURI(), file);
@@ -129,9 +144,53 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         return paths;
     }
 
-    private Path getAbsolutePath(String file) throws IOException {
+    @Override
+    public FileReference getVersioned(String filePath) {
+        if (filePath.indexOf(FileService.PLACEHOLDER_VERSION) < 0) {
+            return new FileReferenceImpl(this, filePath, filePath);
+        }
+        
+        Path parent = getAbsolutePath(filePath).getParent();
+        String[] fileNames = parent.toFile().list(
+                new WildcardFileFilter(filePath.replace(FileService.PLACEHOLDER_VERSION, "*")));
+        
+        SortedSet<Integer> set = new TreeSet<Integer>();
+        Pattern pattern = Pattern.compile(Pattern.quote(filePath)
+                .replace(FileService.PLACEHOLDER_VERSION, "\\E(.*)\\Q"));       
+        for (String fileName : fileNames) {
+            Matcher matcher = pattern.matcher(fileName);
+            if (matcher.matches()) {
+                try {
+                    set.add(Integer.parseInt(matcher.group(1)));
+                } catch (NumberFormatException e) {
+                    LOGGER.log(Level.WARNING, "could not parse version in versioned file " + fileName, e);
+                }
+            } else {
+                LOGGER.log(Level.WARNING, "this shouldn't happen: couldn't find version in versioned file " + fileName);
+            }
+        }
+        int last = set.isEmpty() ? 0 : set.last();
+        return new FileReferenceImpl(this,
+                filePath.replace(FileService.PLACEHOLDER_VERSION, last + ""),
+                filePath.replace(FileService.PLACEHOLDER_VERSION, (last + 1) + ""));
+    }
+
+    @Override
+    public URI getURI(String filePath) {
+        if (dataDirectory == null) {
+            return getAbsolutePath(filePath).toUri();
+        } else {
+            try {
+                return new URI("file:" + dataDirectory.relativize(getAbsolutePath(filePath)));
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    private Path getAbsolutePath(String file) {
         if (rootFolder == null) {
-            throw new IOException("No rootFolder is not configured in this file service.");
+            throw new IllegalStateException("No rootFolder is not configured in this file service.");
         }
         return rootFolder.resolve(Paths.get(file));
     }
@@ -144,11 +203,6 @@ public class FileServiceImpl implements FileService, ServletContextAware {
         } else {
             throw new IllegalStateException("Unable to determine data directory");
         }
-    }
-
-    @Override
-    public String getRootFolder() {
-        return rootFolder.toString();
     }
 
 }

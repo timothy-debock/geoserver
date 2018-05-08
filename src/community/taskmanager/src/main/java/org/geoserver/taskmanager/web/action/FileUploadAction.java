@@ -4,13 +4,18 @@
  */
 package org.geoserver.taskmanager.web.action;
 
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
+import org.geoserver.taskmanager.external.FileService;
+import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.web.ConfigurationPage;
 import org.geoserver.taskmanager.web.panel.FileUploadPanel;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,14 +30,23 @@ public class FileUploadAction implements Action {
 
     private final static String NAME = "FileUpload";
 
-    FileUploadPanel panel;
+    @Autowired
+    private LookupService<FileService> fileServices;
+    
     @Override
     public String getName() {
         return NAME;
     }
 
     @Override
-    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel) {
+    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, 
+            IModel<String> valueModel, List<String> dependentValues) {
+        FileService fileService;
+        if (dependentValues.size() > 0) {
+            fileService = fileServices.get(dependentValues.get(0));
+        } else {
+            fileService = null;
+        }
         GeoServerDialog dialog = onPage.getDialog();
 
         dialog.setTitle(new ParamResourceModel("FileUploadPanel.dialogTitle", onPage.getPage()));
@@ -41,10 +55,12 @@ public class FileUploadAction implements Action {
         dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
 
             private static final long serialVersionUID = 7410393012930249966L;
+            
+            private FileUploadPanel panel;
 
             @Override
             protected org.apache.wicket.Component getContents(String id) {
-                panel = new FileUploadPanel(id, valueModel);
+                panel = new FileUploadPanel(id, valueModel, fileService);
                 return panel;
             }
 
@@ -61,8 +77,17 @@ public class FileUploadAction implements Action {
             }
         });
 
-
-
+    }
+    
+    @Override
+    public boolean accept(String value, List<String> dependentValues) {
+        FileService fileService;
+        if (dependentValues.size() > 0 && dependentValues.get(0) != null) {
+            fileService = fileServices.get(dependentValues.get(0));
+        } else {
+            fileService = null;
+        }
+        return fileService != null;
     }
 
 }

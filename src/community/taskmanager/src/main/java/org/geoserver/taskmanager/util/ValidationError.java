@@ -11,7 +11,7 @@ package org.geoserver.taskmanager.util;
  */
 public class ValidationError {
     
-    public enum ValidationErrorType {MISSING, INVALID_PARAM, INVALID_VALUE}
+    public enum ValidationErrorType {MISSING, INVALID_PARAM, INVALID_VALUE, MISSING_DEPENDENCY}
     
     private ValidationErrorType type;
     
@@ -53,6 +53,9 @@ public class ValidationError {
         case INVALID_VALUE:
             return paramValue + " is not a valid parameter value for parameter " + paramName
                     + " in task type " + taskType;
+        case MISSING_DEPENDENCY:
+            return paramName + " is missing but required as dependency for "
+                + paramValue + " in task type " + taskType;
         default:
             return "validationError";
         }

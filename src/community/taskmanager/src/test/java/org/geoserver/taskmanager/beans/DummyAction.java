@@ -4,6 +4,8 @@
  */
 package org.geoserver.taskmanager.beans;
 
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
@@ -21,7 +23,7 @@ public class DummyAction implements Action {
     }
 
     @Override
-    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel) {
+    public void execute(ConfigurationPage onPage, AjaxRequestTarget target, IModel<String> valueModel, List<String> dependentValues) {
 
     }
 }

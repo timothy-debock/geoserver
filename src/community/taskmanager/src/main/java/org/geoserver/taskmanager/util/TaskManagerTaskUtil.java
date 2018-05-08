@@ -489,18 +489,25 @@ public class TaskManagerTaskUtil {
                             parameter.getKey(), null, taskType.getName()));
                     continue;
                 }
-                ParameterType pt = info.getType();
-                List<String> dependsOnValues = new ArrayList<String>();
-                for (ParameterInfo dependsOn : info.getDependsOn()) {
-                    dependsOnValues.add(rawParameters.get(dependsOn.getName()));
+                if (parameter.getValue() != null && !"".equals(parameter.getValue())) {
+                    ParameterType pt = info.getType();
+                    List<String> dependsOnValues = new ArrayList<String>();
+                    for (ParameterInfo dependsOn : info.getDependsOn()) {
+                        String value = rawParameters.get(dependsOn.getName());
+                        if (value == null) {
+                            validationErrors.add(new ValidationError(ValidationErrorType.MISSING_DEPENDENCY, 
+                                    dependsOn.getName(), parameter.getKey(), taskType.getName()));
+                            continue;
+                        }
+                        dependsOnValues.add(value);
+                    }
+                    if (!pt.validate(parameter.getValue(), dependsOnValues)) {
+                        validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
+                                parameter.getKey(), parameter.getValue(), taskType.getName()));
+                        continue;
+                    }
                 }
-                if (!pt.validate(parameter.getValue(), dependsOnValues)) {
-                    validationErrors.add(new ValidationError(ValidationErrorType.INVALID_VALUE, 
-                            parameter.getKey(), parameter.getValue(), taskType.getName()));
-                    continue;
-                }
-            }
-            
+            }            
         }
         
         return validationErrors;
@@ -528,5 +535,33 @@ public class TaskManagerTaskUtil {
         return new ArrayList<Action>(result);
     }
     
+
+    /**
+     * Get dependent values for an attribute with respect to a particular action
+     * 
+     * @param action
+     * @param attribute
+     * @param config
+     * @return
+     */
+    public List<String> getDependentRawValues(Action action, Attribute attribute, Configuration config) {
+        List<String> values = new ArrayList<String>();
+        for (Parameter parameter : dataUtil.getAssociatedParameters(attribute, config)) {
+            TaskType taskType = taskTypes.get(parameter.getTask().getType());
+            ParameterInfo info = taskType.getParameterInfo().get(parameter.getName());
+            
+            if (info.getType().getActions().contains(action.getName())) {
+                for (ParameterInfo dependsOn : info.getDependsOn()) {
+                    values.add(getRawParameterValue(parameter.getTask().getParameters().get(dependsOn.getName())));
+                }
+                return values;
+
+                // Note that we simply pick the first match. if for some reason the user has associated an attribute
+                // with parameters that have the same action but different dependent values,
+                // the result is undefined.
+            } 
+        }
+        return values;        
+    }
 
 }

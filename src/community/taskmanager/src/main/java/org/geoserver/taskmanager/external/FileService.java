@@ -9,6 +9,7 @@ import org.geoserver.taskmanager.util.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
 
 
@@ -16,16 +17,19 @@ import java.util.List;
  * Persist and read files. All actions on this service are relative to the configured rootFolder.
  * 
  * @author Timothy De Bock - timothy.debock.github@gmail.com
+ * @author Niels Charlier
  *
  */
 public interface FileService extends Serializable, Named {
+    
+    String PLACEHOLDER_VERSION = "###";
     
     /**
      * User-friendly description of this file service. 
      * 
      * @return description
      */
-        String getDescription();
+    String getDescription();
 
     /**
      * List existing all nested folders in this file service.
@@ -37,7 +41,7 @@ public interface FileService extends Serializable, Named {
      * @return list of existing sub folders
      * @throws IOException
      */
-    List<String> listSubfolders() throws IOException;
+    List<String> listSubfolders();
 
     /**
      * Create a file in the file service
@@ -47,7 +51,7 @@ public interface FileService extends Serializable, Named {
      * @return a location string that can be used to configure a Geoserver store
      * @throws IOException
      */
-    String create(String filePath, InputStream content) throws IOException;
+    void create(String filePath, InputStream content) throws IOException;
 
     /**
      * Check if this file exists.
@@ -57,6 +61,14 @@ public interface FileService extends Serializable, Named {
      * @throws IOException
      */
     boolean checkFileExists(String filePath) throws IOException;
+    
+    /**
+     * Get current and next version of a versioned file
+     * 
+     * @param filePath the original file path
+     * @return the versioned file info
+     */
+    FileReference getVersioned(String filePath);
 
     /**
      * Delete this file.
@@ -81,4 +93,12 @@ public interface FileService extends Serializable, Named {
      * @return the rootFolder.
      */
     String getRootFolder();
+    
+    /**
+     * Returns the URI for the path
+     * 
+     * @param filePath the file path 
+     * @return the URI
+     */
+    URI getURI(String filePath);
 }

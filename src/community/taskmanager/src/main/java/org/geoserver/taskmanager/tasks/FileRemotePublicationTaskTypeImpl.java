@@ -17,9 +17,9 @@ import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.platform.resource.Resources;
 import org.geoserver.taskmanager.external.ExternalGS;
+import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
-import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.springframework.stereotype.Component;
@@ -27,8 +27,7 @@ import org.springframework.stereotype.Component;
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.StoreType;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.UploadMethod;
-import it.geosolutions.geoserver.rest.encoder.GSAbstractStoreEncoder;
-import it.geosolutions.geoserver.rest.encoder.utils.NestedElementEncoder;
+import it.geosolutions.geoserver.rest.encoder.GSGenericStoreEncoder;
 
 @Component
 public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTaskTypeImpl {
@@ -37,29 +36,38 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
 
     public static final String PARAM_FILE = "file";
 
+    public static final String PARAM_FILE_SERVICE = "fileService";
+
     @PostConstruct
     public void initParamInfo() {
         super.initParamInfo();
-        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, ParameterType.URI, false));
+        ParameterInfo fileService = new ParameterInfo(PARAM_FILE_SERVICE, extTypes.fileService, false);
+        paramInfo.put(PARAM_FILE_SERVICE, fileService);
+        paramInfo.put(PARAM_FILE, new ParameterInfo(PARAM_FILE, extTypes.file(true, false), false)
+                .dependsOn(fileService));
     }
     
     @Override
     protected boolean createStore(ExternalGS extGS, GeoServerRESTManager restManager,
-            StoreInfo store, TaskContext ctx) throws IOException, TaskException {        
+            StoreInfo store, TaskContext ctx, String name) throws IOException, TaskException {               
         final StoreType storeType = store instanceof CoverageStoreInfo ? StoreType.COVERAGESTORES
                 : StoreType.DATASTORES;
         
         boolean upload = false;
-        URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
-                new BatchContext.Dependency() {
-                    @Override
-                    public void revert() throws TaskException {
-                        URI uri = (URI) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
-                        restManager.getStoreManager().update(store.getWorkspace().getName(), 
-                                new GSStoreEncoder(storeType, store.getWorkspace().getName(), store.getType(), 
-                                    store.getName(), uri.toString()));
-                    }
-                });
+
+        FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
+            new BatchContext.Dependency() {
+                @Override
+                public void revert() throws TaskException {
+                    FileReference fileRef = (FileReference) ctx.getBatchContext().get(
+                            ctx.getParameterValues().get(PARAM_FILE));
+                    URI uri = fileRef.getService().getURI(fileRef.getLatestVersion());
+                    restManager.getStoreManager().update(store.getWorkspace().getName(), 
+                            new GSGenericStoreEncoder(storeType, store.getWorkspace().getName(), store.getType(), 
+                                store.getName(), uri.toString(), true));
+                }
+            });
+        URI uri = fileRef == null ? null : fileRef.getService().getURI(fileRef.getLatestVersion());
         if (uri == null) {
             try {
                 uri = new URI(getLocation(store));
@@ -72,12 +80,12 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
         if (upload) {
             final File file = Resources.fromURL(uri.toString()).file();
             return restManager.getPublisher().createStore(store.getWorkspace().getName(), storeType,
-                    store.getName(), UploadMethod.FILE, store.getType().toLowerCase(),
+                    name, UploadMethod.FILE, store.getType().toLowerCase(),
                     Files.probeContentType(file.toPath()), file.toURI(), null);
         } else {
             return restManager.getStoreManager().create(store.getWorkspace().getName(), 
-               new GSStoreEncoder(storeType, store.getWorkspace().getName(), store.getType(), 
-                   store.getName(), uri.toString()));
+               new GSGenericStoreEncoder(storeType, store.getWorkspace().getName(), store.getType(), 
+                   name, uri.toString(), true));
         }
     }
     
@@ -90,33 +98,9 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
             return ((DataStoreInfo) storeInfo).getConnectionParameters().get("url").toString();
         }
     }
-    
-    private static class GSStoreEncoder extends GSAbstractStoreEncoder {        
-        private String type;
-   
-        protected GSStoreEncoder(StoreType storeType, String workspace, String type, String storeName, String url) {
-            super(storeType, storeName);
-            set("workspace", workspace);
-            set("name", storeName);
-            set("enabled", "true");
-            set("type", this.type = type);
-            if (storeType == StoreType.COVERAGESTORES) {
-                set("url", url);
-            } else {
-                NestedElementEncoder connectionParameters = new NestedElementEncoder("connectionParameters");
-                connectionParameters.set("url", url.toString());
-                addContent(connectionParameters.getRoot());
-            }
-        }
-
-        @Override
-        protected String getValidType() {
-            return type;
-        }
-    }
 
     @Override
-    protected boolean mustCleanUpStore() {
+    protected boolean neverReuseStore() {
         return true;
     }
 

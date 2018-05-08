@@ -50,13 +50,13 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
 
     @Override
     protected boolean createStore(ExternalGS extGS, GeoServerRESTManager restManager,
-            StoreInfo store, TaskContext ctx) throws IOException, TaskException {
+            StoreInfo store, TaskContext ctx, String name) throws IOException, TaskException {
         try {
             final DbSource db = (DbSource) ctx.getParameterValues().get(PARAM_DB_NAME);
             final DbTable table = (DbTable) ctx.getParameterValues().get(PARAM_TABLE_NAME);
             final ExternalGS gs = (ExternalGS) ctx.getParameterValues().get(PARAM_EXT_GS);
             return restManager.getStoreManager().create(store.getWorkspace().getName(),
-                    db.postProcess(db.getStoreEncoder(getStoreName(store, ctx), gs), table));
+                    db.postProcess(db.getStoreEncoder(name, gs), table));
         } catch (UnsupportedOperationException e) {
             throw new TaskException("Failed to create store " + store.getWorkspace().getName() + ":"
                     + store.getName(), e);
@@ -72,20 +72,21 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
     }
 
     @Override
-    protected boolean mustCleanUpStore() {
+    protected boolean neverReuseStore() {
         return false;
     }
 
     @Override
-    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable update) throws TaskException {
+    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable<GSResourceEncoder> update) throws TaskException {
         final DbTable table =  (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME),
                 new BatchContext.Dependency() {
             @Override
             public void revert() throws TaskException {
                  DbTable table = (DbTable) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_TABLE_NAME));
-                 ((GSFeatureTypeEncoder) re).setNativeName(SqlUtil.notQualified(table.getTableName()));
-                 update.run();
-            }                    
+                 GSFeatureTypeEncoder re = new GSFeatureTypeEncoder(false);
+                 re.setNativeName(SqlUtil.notQualified(table.getTableName()));
+                 update.run(re);
+            }
         });
         if (table != null) {
             ((GSFeatureTypeEncoder) re).setNativeName(SqlUtil.notQualified(table.getTableName()));
