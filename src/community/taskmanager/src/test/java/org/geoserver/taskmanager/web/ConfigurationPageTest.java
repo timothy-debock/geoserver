@@ -343,7 +343,7 @@ public class ConfigurationPageTest extends AbstractBatchesPanelTest<Configuratio
         assertFeedback("topFeedback", "You cannot execute this action with this value.");
         
         formTester.select("attributesPanel:listContainer:items:10:itemProperties:1:component:dropdown", 
-                0);
+                1);
         formTester.submit("attributesPanel:listContainer:items:10:itemProperties:2:component:listview:0:panel:button");
         tester.assertNoErrorMessage();
         

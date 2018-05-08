@@ -170,7 +170,8 @@ public abstract class AbstractBatchesPanelTest<T extends Page> extends AbstractW
         
         assertFalse(containsBatch(getBatchesFromTable(table), dummy1));
         assertTrue(containsBatch(getBatchesFromTable(table), dummy2));
-        
+
+        dao.delete(dummy2);
     }
     
     protected List<Batch> getBatchesFromTable(GeoServerTablePanel<Batch> table) {

@@ -61,6 +61,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @Override
     public <T extends Identifiable> T reload(T object) {
         return (T) getSession().createCriteria(object.getClass())
+                .setLockMode(LockMode.PESSIMISTIC_READ)
                 .add(Restrictions.idEq(object.getId()))
                 .uniqueResult();
     }

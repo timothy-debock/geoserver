@@ -81,6 +81,9 @@
 			<prop key="org.quartz.dataSource.qDataSource.URL">jdbc:postgresql://localhost:5432/testsourcedb?currentSchema=taskmanager</prop>
 			<prop key="org.quartz.dataSource.qDataSource.user">postgres</prop>
 			<prop key="org.quartz.dataSource.qDataSource.password">postgres</prop> -->
+			
+			<!-- TODO: configure maximum number of threads if necessary -->
+			<!--  <prop key="org.quartz.threadPool.threadCount">10</prop>  -->
 		</props>
 	</constructor-arg>
   </bean>

@@ -215,7 +215,9 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     }
         
     @Override
+    @Transactional(transactionManager = "tmTransactionManager")
     public void interrupt(BatchRun batchRun) {
+        batchRun = dao.reload(batchRun);
         if (!batchRun.getStatus().isClosed())  {
             if (batchRun.getSchedulerReference() != null) {
                 try {

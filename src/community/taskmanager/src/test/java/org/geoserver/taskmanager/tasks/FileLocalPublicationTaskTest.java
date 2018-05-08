@@ -44,7 +44,7 @@ public class FileLocalPublicationTaskTest extends AbstractTaskManagerTest {
 
     //configure these constants
     private static final String FILE_LOCATION = "test/world.tiff";
-    private static final String FILE_SERVICE = "Data Directory";
+    private static final String FILE_SERVICE = "data-directory";
     private static final String WORKSPACE = "gs";
     private static final String COVERAGE_NAME = "world";
     private static final String LAYER_NAME = WORKSPACE + ":" + COVERAGE_NAME;
