@@ -58,9 +58,11 @@ public class CopyFileTaskTypeImpl implements TaskType {
         final FileReference source = (FileReference) 
                 ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_SOURCE_PATH));
         final FileReference target = (FileReference) ctx.getParameterValues().get(PARAM_TARGET_PATH);
-                
-        
+           
         try {
+            if (target.getLatestVersion().equals(target.getNextVersion())) {
+                target.getService().delete(target.getNextVersion());
+            }
             target.getService().create(target.getNextVersion(), 
                     source.getService().read(source.getLatestVersion()));
         } catch (IOException e) {
@@ -72,7 +74,9 @@ public class CopyFileTaskTypeImpl implements TaskType {
             @Override
             public void commit() throws TaskException {
                 try {
-                    target.getService().delete(target.getLatestVersion());
+                    if (!target.getLatestVersion().equals(target.getNextVersion())) {
+                        target.getService().delete(target.getLatestVersion());
+                    }
                 } catch (IOException e) {
                     throw new TaskException(e);
                 }
@@ -81,7 +85,9 @@ public class CopyFileTaskTypeImpl implements TaskType {
             @Override
             public void rollback() throws TaskException {
                 try {
-                    target.getService().delete(target.getNextVersion());
+                    if (!target.getLatestVersion().equals(target.getNextVersion())) {
+                        target.getService().delete(target.getNextVersion());
+                    }
                 } catch (IOException e) {
                     throw new TaskException(e);
                 }
