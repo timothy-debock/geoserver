@@ -50,7 +50,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
     @Autowired
     private Scheduler scheduler;
     
-    private boolean init;
+    private boolean init = true;
 
     @Transactional("tmTransactionManager")
     protected void schedule(Batch batch) throws SchedulerException {
