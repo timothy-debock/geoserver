@@ -11,10 +11,7 @@ import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.TaskManagerDao;
-import org.geoserver.taskmanager.data.TaskManagerFactory;
 import org.geoserver.taskmanager.schedule.BatchJobService;
-import org.geoserver.taskmanager.schedule.TaskType;
-import org.geoserver.taskmanager.util.LookupService;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geotools.util.logging.Logging;
 import org.quartz.CronScheduleBuilder;
@@ -39,25 +36,21 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Niels Charlier
  *
  */
-@Service
+@Service("batchJobService")
 public class BatchJobServiceImpl implements BatchJobService, ApplicationListener<ContextRefreshedEvent>  {
     
     private static final Logger LOGGER = Logging.getLogger(BatchJobServiceImpl.class);
     
     @Autowired 
-    TaskManagerDao dao;
+    private TaskManagerDao dao;
 
     @Autowired 
-    TaskManagerDataUtil dataUtil;
+    private TaskManagerDataUtil dataUtil;
     
     @Autowired
-    Scheduler scheduler;
-
-    @Autowired
-    LookupService<TaskType> taskTypes;
+    private Scheduler scheduler;
     
-    @Autowired
-    TaskManagerFactory factory;
+    private boolean init;
 
     @Transactional("tmTransactionManager")
     protected void schedule(Batch batch) throws SchedulerException {
@@ -184,9 +177,21 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
             }
         }
     }
-    
+        
+    public boolean isInit() {
+        return init;
+    }
+
+    public void setInit(boolean init) {
+        this.init = init;
+    }
+
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        reloadFromData();        
+        if (init) {
+            reloadFromData();
+        } else {
+            LOGGER.info("Skipping initialization as specified in configuration.");
+        }
         try {
             scheduler.start();
         } catch (SchedulerException e) {
