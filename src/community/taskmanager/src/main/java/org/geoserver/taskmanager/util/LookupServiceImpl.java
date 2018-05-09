@@ -6,13 +6,13 @@ package org.geoserver.taskmanager.util;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.NavigableMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 public class LookupServiceImpl<T extends Named> implements LookupService<T> {
     
-    private Map<String, T> map = new TreeMap<String, T>();
+    private NavigableMap<String, T> map = new TreeMap<String, T>();
 
     @Override
     public T get(String name) {
@@ -26,8 +26,8 @@ public class LookupServiceImpl<T extends Named> implements LookupService<T> {
     }
 
     @Override
-    public Set<String> names() {
-        return map.keySet();
+    public SortedSet<String> names() {
+        return map.navigableKeySet();
     }
     
     @Override

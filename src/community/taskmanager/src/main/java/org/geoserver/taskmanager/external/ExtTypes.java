@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,7 +68,7 @@ public class ExtTypes {
     
     public final ParameterType tableName = new ParameterType() {
         private Set<String> getTables(String databaseName) {
-            Set<String> tables = new TreeSet<String>();
+            SortedSet<String> tables = new TreeSet<String>();
             tables.add(""); // custom value is possible here
             if (databaseName != null) {
                 DbSource ds = dbSources.get(databaseName);
@@ -135,11 +136,11 @@ public class ExtTypes {
 
         @Override
         public List<String> getDomain(List<String> dependsOnRawValues) {
-            List<String> layers = new ArrayList<>();
+            SortedSet<String> layers = new TreeSet<>();
             for (LayerInfo layer : geoServer.getCatalog().getLayers()) {
                 layers.add(layer.prefixedName());
             }
-            return layers;
+            return new ArrayList<String>(layers);
         }
 
         @Override

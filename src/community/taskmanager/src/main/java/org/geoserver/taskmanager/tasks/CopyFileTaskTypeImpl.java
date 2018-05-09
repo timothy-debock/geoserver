@@ -5,7 +5,6 @@
 package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -14,7 +13,6 @@ import javax.annotation.PostConstruct;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
-import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
