@@ -6,11 +6,15 @@ package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.annotation.PostConstruct;
 
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.FileReference;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
+import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskResult;
@@ -30,6 +34,8 @@ public class CopyFileTaskTypeImpl implements TaskType {
     public static final String PARAM_SOURCE_PATH = "sourcePath";
 
     public static final String PARAM_TARGET_PATH = "targetPath";
+    
+    protected final Map<String, ParameterInfo> paramInfo = new LinkedHashMap<String, ParameterInfo>();
 
     @Autowired
     protected ExtTypes extTypes;
@@ -38,18 +44,21 @@ public class CopyFileTaskTypeImpl implements TaskType {
     public String getName() {
         return NAME;
     }
+    
+    @PostConstruct
+    public void initParamInfo() {
+        ParameterInfo sourceService = new ParameterInfo(PARAM_SOURCE_SERVICE, extTypes.fileService, true);    
+        paramInfo.put(PARAM_SOURCE_SERVICE, sourceService);    
+        paramInfo.put(PARAM_SOURCE_PATH, new ParameterInfo(PARAM_SOURCE_PATH, extTypes.file(false, true), true)
+                .dependsOn(sourceService));
+        ParameterInfo targetService = new ParameterInfo(PARAM_TARGET_SERVICE, extTypes.fileService, true);    
+        paramInfo.put(PARAM_TARGET_SERVICE, targetService);
+        paramInfo.put(PARAM_TARGET_PATH, new ParameterInfo(PARAM_TARGET_PATH, extTypes.file(false, false), true)
+                .dependsOn(targetService));
+    }
 
     @Override
     public Map<String, ParameterInfo> getParameterInfo() {
-        Map<String, ParameterInfo> paramInfo = new HashMap<String, ParameterInfo>();
-        ParameterInfo sourceService = new ParameterInfo(PARAM_SOURCE_SERVICE, extTypes.fileService, true);
-        ParameterInfo targetService = new ParameterInfo(PARAM_TARGET_SERVICE, extTypes.fileService, true);        
-        paramInfo.put(PARAM_SOURCE_SERVICE, sourceService);    
-        paramInfo.put(PARAM_TARGET_SERVICE, targetService);
-        paramInfo.put(PARAM_SOURCE_PATH, new ParameterInfo(PARAM_SOURCE_PATH, extTypes.file(false, true), true)
-                .dependsOn(sourceService));
-        paramInfo.put(PARAM_TARGET_PATH, new ParameterInfo(PARAM_TARGET_PATH, extTypes.file(false, false), true)
-                .dependsOn(targetService));
         return paramInfo;
     }
 
