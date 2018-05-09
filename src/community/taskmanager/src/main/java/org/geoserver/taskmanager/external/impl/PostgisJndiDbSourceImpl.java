@@ -76,6 +76,10 @@ public class PostgisJndiDbSourceImpl extends NamedImpl implements DbSource  {
             throw new SQLException(e);
         }
         
+        if (ds == null) {
+            throw new SQLException(jndiName + " not found in JNDI context.");
+        }
+        
         return ds;            
     }
 

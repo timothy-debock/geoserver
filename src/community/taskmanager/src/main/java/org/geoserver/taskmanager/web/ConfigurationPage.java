@@ -637,28 +637,29 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                         return ddp;
                     }
                 } else if (property.equals(AttributesModel.ACTIONS)) {
-                    List<Action> actions = TaskManagerBeans.get().getTaskUtil()
-                            .getActionsForAttribute(itemModel.getObject(), configurationModel.getObject());
+                    List<String> actions = TaskManagerBeans.get().getTaskUtil()
+                           .getActionsForAttribute(itemModel.getObject(), configurationModel.getObject());
                     if (!actions.isEmpty()) {
-                        return new PanelListPanel<Action>(id, actions) {
+                        return new PanelListPanel<String>(id, actions) {
                             private static final long serialVersionUID = -4770841274788269473L;
 
                             @Override
-                            protected Panel populateItem(String id, IModel<Action> actionModel) {
+                            protected Panel populateItem(String id, IModel<String> actionModel) {
                                 return new ButtonPanel(id, new StringResourceModel(
-                                        "Actions." + actionModel.getObject().getName())) {
+                                        "Actions." + actionModel.getObject())) {
                                     private static final long serialVersionUID = -2791644626218648013L;
 
                                     @Override
                                     public void onSubmit(AjaxRequestTarget target, Form<?> form) {
+                                        Action action = TaskManagerBeans.get().getActions().get(actionModel.getObject());
                                         IModel<String> valueModel =
                                                 new PropertyModel<>(itemModel, AttributesModel.VALUE.getName());
                                         List<String> dependentValues =
                                                 TaskManagerBeans.get().getTaskUtil().getDependentRawValues(
-                                                        actionModel.getObject(), itemModel.getObject(),
+                                                        action.getName(), itemModel.getObject(),
                                                         configurationModel.getObject());
-                                        if (actionModel.getObject().accept(valueModel.getObject(), dependentValues)) {
-                                            actionModel.getObject().execute(ConfigurationPage.this, target, 
+                                        if (action.accept(valueModel.getObject(), dependentValues)) {
+                                            action.execute(ConfigurationPage.this, target, 
                                                     valueModel, dependentValues);
                                             target.add(tablePanel);
                                         } else {

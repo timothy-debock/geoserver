@@ -20,7 +20,6 @@ import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 //@Ignore

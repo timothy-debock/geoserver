@@ -30,7 +30,6 @@ import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskType;
 import org.geoserver.taskmanager.util.ValidationError.ValidationErrorType;
-import org.geoserver.taskmanager.web.action.Action;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -49,9 +48,6 @@ public class TaskManagerTaskUtil {
     
     @Autowired
     private LookupService<TaskType> taskTypes;
-
-    @Autowired
-    private LookupService<Action> actions;
     
     @Autowired
     private TaskManagerFactory fac;
@@ -520,19 +516,19 @@ public class TaskManagerTaskUtil {
      * @param string 
      * @return the task
      */
-    public List<Action> getActionsForAttribute(Attribute attribute, Configuration config) {
+    public List<String> getActionsForAttribute(Attribute attribute, Configuration config) {
         List<Parameter> params = dataUtil.getAssociatedParameters(attribute, config);
         
-        Set<Action> result = new HashSet<Action>();
+        Set<String> result = new HashSet<String>();
         for (Parameter param : params) {
             TaskType taskType = taskTypes.get(param.getTask().getType());
             ParameterInfo info = taskType.getParameterInfo().get(param.getName());
             for (String actionName : info.getType().getActions()) {
-                result.add(actions.get(actionName));
+                result.add(actionName);
             }
         }
         
-        return new ArrayList<Action>(result);
+        return new ArrayList<String>(result);
     }
     
 
@@ -544,13 +540,13 @@ public class TaskManagerTaskUtil {
      * @param config
      * @return
      */
-    public List<String> getDependentRawValues(Action action, Attribute attribute, Configuration config) {
+    public List<String> getDependentRawValues(String action, Attribute attribute, Configuration config) {
         List<String> values = new ArrayList<String>();
         for (Parameter parameter : dataUtil.getAssociatedParameters(attribute, config)) {
             TaskType taskType = taskTypes.get(parameter.getTask().getType());
             ParameterInfo info = taskType.getParameterInfo().get(parameter.getName());
             
-            if (info.getType().getActions().contains(action.getName())) {
+            if (info.getType().getActions().contains(action)) {
                 for (ParameterInfo dependsOn : info.getDependsOn()) {
                     values.add(getRawParameterValue(parameter.getTask().getParameters().get(dependsOn.getName())));
                 }

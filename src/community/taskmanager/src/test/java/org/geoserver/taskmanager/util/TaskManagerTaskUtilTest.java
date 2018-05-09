@@ -30,7 +30,6 @@ import org.geoserver.taskmanager.schedule.ParameterType;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.util.ValidationError.ValidationErrorType;
-import org.geoserver.taskmanager.web.action.Action;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,10 +141,10 @@ public class TaskManagerTaskUtilTest extends AbstractTaskManagerTest {
     
     @Test
     public void testGetActionsForAttribute() {
-        List<Action> actions = taskUtil.getActionsForAttribute(
+        List<String> actions = taskUtil.getActionsForAttribute(
                 config.getAttributes().get(ATT_FAIL), config);
         assertEquals(1, actions.size());
-        assertTrue(actions.get(0) instanceof DummyAction);
+        assertEquals(DummyAction.NAME, actions.get(0));
     }
     
     @Test
@@ -226,13 +225,13 @@ public class TaskManagerTaskUtilTest extends AbstractTaskManagerTest {
         config.getTasks().remove("task2");
         assertFalse(taskUtil.canCleanup(config));
         
-        // (cleanup itself is suffiently tested in other tests0
+        // (cleanup itself is suffiently tested in other tests
     }
     
     @Test
     public void testGetDependantRawValues() {
         List<String> rawValues = taskUtil.getDependentRawValues(
-                new DummyAction(), config.getAttributes().get(ATT_DUMMY), config);
+                DummyAction.NAME, config.getAttributes().get(ATT_DUMMY), config);
         assertEquals(1, rawValues.size());
         assertEquals("false", rawValues.get(0));
     }

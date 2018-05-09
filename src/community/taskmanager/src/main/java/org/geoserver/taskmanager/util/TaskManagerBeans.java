@@ -13,6 +13,7 @@ import org.geoserver.taskmanager.report.ReportBuilder;
 import org.geoserver.taskmanager.report.ReportService;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.schedule.TaskType;
+import org.geoserver.taskmanager.web.action.Action;
 import org.geoserver.web.GeoServerApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,12 @@ public class TaskManagerBeans {
     
     @Autowired
     private LookupService<FileService> fileServices;
+    
     @Autowired
     private LookupService<TaskType> taskTypes;
+    
+    @Autowired
+    private LookupService<Action> actions;
 
     @Autowired
     private TaskManagerFactory fac;
@@ -98,6 +103,10 @@ public class TaskManagerBeans {
         
     public static TaskManagerBeans get() {
         return GeoServerApplication.get().getApplicationContext().getBean(TaskManagerBeans.class);
+    }
+
+    public LookupService<Action> getActions() {
+        return actions;
     }
 
 }

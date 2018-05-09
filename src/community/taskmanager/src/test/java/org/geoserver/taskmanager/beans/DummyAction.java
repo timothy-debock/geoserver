@@ -15,11 +15,13 @@ import org.geoserver.taskmanager.web.action.Action;
 @Component 
 public class DummyAction implements Action {
 
+    public static final String NAME = "actionDummy";
+    
     private static final long serialVersionUID = 2055260073253741911L;
 
     @Override
     public String getName() {
-        return "actionDummy";
+        return NAME;
     }
 
     @Override

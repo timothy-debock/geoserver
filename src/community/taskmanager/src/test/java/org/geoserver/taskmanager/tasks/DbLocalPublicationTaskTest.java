@@ -95,8 +95,9 @@ public class DbLocalPublicationTaskTest extends AbstractTaskManagerTest {
     
     @Before
     public void setupBatch() {
-        try (Connection conn = dbSources.get(DB_NAME).getDataSource().getConnection()) {
-            try (ResultSet res = conn.getMetaData().getTables(null, null, TABLE_NAME, null)) {
+        DbSource source = dbSources.get(DB_NAME);
+        try (Connection conn = source.getDataSource().getConnection()) {
+            try (ResultSet res = conn.getMetaData().getTables(null, source.getSchema(), TABLE_NAME, null)) {
                 Assume.assumeTrue(res.next());
             }
         } catch (SQLException e) {
