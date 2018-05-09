@@ -617,7 +617,8 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                     } else {
                         final DropDownPanel ddp = new DropDownPanel(id,
                                 (IModel<String>) property.getModel(itemModel),
-                                new PropertyModel<List<String>>(domains, itemModel.getObject().getName()));
+                                new PropertyModel<List<String>>(domains, itemModel.getObject().getName()),
+                                configurationModel.getObject().isTemplate());
 
                         ddp.getDropDownChoice().add(new AjaxFormSubmitBehavior("change") {
 
