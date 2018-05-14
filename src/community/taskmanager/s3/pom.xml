@@ -32,6 +32,20 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.11.36</version>
         </dependency>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>org.geoserver</groupId>
+            <artifactId>gs-main</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.geoserver.community</groupId>
+            <artifactId>gs-taskmanager-core</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
         <!--S3 support for tests-->
         <dependency>
             <groupId>org.geotools</groupId>
@@ -40,23 +54,6 @@
             <version>${gt.version}</version>
         </dependency>
     </dependencies>
-
-      <build>
-        <resources>
-            <resource>
-            <directory>${basedir}/src/main/java</directory>
-              <includes>
-                <include>**/*.html</include>
-              </includes>
-            </resource>
-            <resource>
-              <directory>${basedir}/src/main/resources</directory>
-              <includes>
-                 <include>**/*</include>
-              </includes>
-            </resource>
-        </resources>
-    </build>
         
 </project>
 
