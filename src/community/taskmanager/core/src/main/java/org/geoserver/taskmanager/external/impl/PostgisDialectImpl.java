@@ -40,7 +40,7 @@ public class PostgisDialectImpl extends DefaultDialectImpl {
         sb.append(" INDEX ");
         //sb.append(indexName);
         sb.append(" ON ");
-        sb.append(tableName);
+        sb.append(SqlUtil.quote(tableName));
 
         if (isSpatialIndex) {
             sb.append(" USING gist ");

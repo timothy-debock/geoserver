@@ -135,6 +135,7 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
                 try {
                     resource = builder.buildFeatureType(new NameImpl(
                             SqlUtil.notQualified(table.getTableName())));
+                    builder.setupBounds(resource);
                 } catch (Exception e) {
                     if (createStore) {
                         catalog.remove(store);

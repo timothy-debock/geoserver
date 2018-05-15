@@ -109,11 +109,11 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
                         String sqlCreateSchemaIfNotExists = targetdb.getDialect().createSchema(
                                 destConn,
-                                SqlUtil.schema(tempTableName));
+                                targetdb.getDialect().quote(SqlUtil.schema(tempTableName)));
 
                         // create the temp table structure
                         StringBuilder sb = new StringBuilder(sqlCreateSchemaIfNotExists);
-                        sb.append("CREATE TABLE ").append(tempTableName)
+                        sb.append("CREATE TABLE ").append(targetdb.getDialect().quote(tempTableName))
                                 .append(" ( ");
                         int columnCount = rsmd.getColumnCount();
 
@@ -182,7 +182,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         }
 
                         // copy the data
-                        sb = new StringBuilder("INSERT INTO ").append(tempTableName)
+                        sb = new StringBuilder("INSERT INTO ").append(targetdb.getDialect().quote(tempTableName))
                                 .append(" VALUES (");
                         for (int i = 0; i < columnCount; i++) {
                             if (i > 0) {
@@ -239,7 +239,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                     try (Statement stmt = conn.createStatement()) {
                         stmt.executeUpdate("DROP TABLE IF EXISTS " + targetdb.getDialect().quote(
                                 targetTable.getTableName()));
-                        stmt.executeUpdate("ALTER TABLE " + tempTableName + " RENAME TO " +
+                        stmt.executeUpdate("ALTER TABLE " + targetdb.getDialect().quote(tempTableName) + " RENAME TO " +
                                 targetdb.getDialect().quote(SqlUtil.notQualified(targetTable.getTableName())));
                     }
                     

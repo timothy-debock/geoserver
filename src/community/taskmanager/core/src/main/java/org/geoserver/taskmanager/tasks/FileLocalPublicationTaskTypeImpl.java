@@ -163,6 +163,7 @@ public class FileLocalPublicationTaskTypeImpl implements TaskType {
                     if (isShapeFile) {
                         resource = builder.buildFeatureType(((ShapefileDataStore) ((DataStoreInfo) store).getDataStore(null))
                                 .getFeatureSource());
+                        builder.setupBounds(resource);
                     } else {
                         resource = builder.buildCoverage();
                     }
