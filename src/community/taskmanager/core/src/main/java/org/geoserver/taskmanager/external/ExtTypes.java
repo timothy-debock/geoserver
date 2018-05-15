@@ -74,15 +74,17 @@ public class ExtTypes {
                 DbSource ds = dbSources.get(databaseName);
                 if (ds != null) {
                     try {
-                        Connection conn = ds.getDataSource().getConnection();
-                        DatabaseMetaData md = conn.getMetaData();
-                        ResultSet rs = md.getTables(null, ds.getSchema(), "%",
-                                new String[] { "TABLE", "VIEW" });
-                        while (rs.next()) {
-                            if (ds.getSchema() != null || rs.getString(2) == null) {
-                                tables.add(rs.getString(3));
-                            } else {
-                                tables.add(rs.getString(2) + "." + rs.getString(3));
+                        try (Connection conn = ds.getDataSource().getConnection()) {
+                            DatabaseMetaData md = conn.getMetaData();
+                            try (ResultSet rs = md.getTables(null, ds.getSchema(), "%",
+                                    new String[] { "TABLE", "VIEW" })) {
+                                while (rs.next()) {
+                                    if (ds.getSchema() != null || rs.getString(2) == null) {
+                                        tables.add(rs.getString(3));
+                                    } else {
+                                        tables.add(rs.getString(2) + "." + rs.getString(3));
+                                    }
+                                }
                             }
                         }
                     } catch (SQLException e) {
