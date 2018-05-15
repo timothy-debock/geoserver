@@ -115,8 +115,8 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
         }
                  
         final boolean createStore;
-        final List<String> createWorkspaces = new ArrayList<String>();    
-        final List<StyleInfo> createStyles = new ArrayList<StyleInfo>();
+        final Set<String> createWorkspaces = new HashSet<String>();    
+        final Set<StyleInfo> createStyles = new HashSet<StyleInfo>();
         
         if (!restManager.getReader().existsWorkspace(ws)) {
             createWorkspaces.add(ws);
