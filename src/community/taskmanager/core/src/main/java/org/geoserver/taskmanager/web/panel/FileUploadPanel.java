@@ -48,7 +48,7 @@ public class FileUploadPanel extends Panel {
      */
     private FileUploadField fileUploadField;
 
-    private DropDownChoice<FileService> fileServiceChoice;
+    private DropDownChoice<String> fileServiceChoice;
 
     private DropDownChoice<String> folderChoice;
 
@@ -62,7 +62,7 @@ public class FileUploadPanel extends Panel {
      * @param fileService 
      */
 
-    public FileUploadPanel(String id, IModel<String> fileNameModel, FileService fileService) {
+    public FileUploadPanel(String id, IModel<String> fileNameModel, String fileService) {
 
         super(id);
         this.fileNameModel = fileNameModel;
@@ -72,25 +72,25 @@ public class FileUploadPanel extends Panel {
         feedbackPanel.setOutputMarkupId(true);
 
         fileServiceChoice =
-                new DropDownChoice<FileService>("fileServiceSelection", new Model<FileService>(),
-                        new ArrayList<FileService>(TaskManagerBeans.get().getFileServices().all()),
-                        new IChoiceRenderer<FileService>() {
+                new DropDownChoice<String>("fileServiceSelection", new Model<String>(),
+                        new ArrayList<String>(TaskManagerBeans.get().getFileServices().names()),
+                        new IChoiceRenderer<String>() {
                             private static final long serialVersionUID = -1102965730550597918L;
 
                             @Override
-                            public Object getDisplayValue(FileService object) {
-                                return object.getDescription();
+                            public Object getDisplayValue(String object) {
+                                return TaskManagerBeans.get().getFileServices().get(object).getDescription();
                             }
 
                             @Override
-                            public String getIdValue(FileService object, int index) {
-                                return object.getName();
+                            public String getIdValue(String object, int index) {
+                                return object;
                             }
 
                             @Override
-                            public FileService getObject(String id, IModel<? extends List<? extends FileService>> choices) {
-                                return TaskManagerBeans.get().getFileServices().get(id);
-                            }                   
+                            public String getObject(String id, IModel<? extends List<? extends String>> choices) {
+                                return id;
+                            }
                     
                 }) {
                     private static final long serialVersionUID = 2231004332244002574L;
@@ -146,7 +146,8 @@ public class FileUploadPanel extends Panel {
     }
 
     protected void updateFolders() {
-        FileService service = fileServiceChoice.getModel().getObject();
+        FileService service = TaskManagerBeans.get().getFileServices().get(
+                fileServiceChoice.getModel().getObject());
         List<String> availableFolders = new ArrayList<String>();
         if (service != null) {
             List<String> paths = service.listSubfolders();
@@ -173,7 +174,8 @@ public class FileUploadPanel extends Panel {
         final List<FileUpload> uploads = fileUploadField.getFileUploads();
         if (uploads != null) {
             for (FileUpload upload : uploads) {
-                FileService fileService = fileServiceChoice.getModelObject();
+                FileService fileService = TaskManagerBeans.get().getFileServices().get(
+                        fileServiceChoice.getModel().getObject());
                 try {
                     String filePath = folderChoice.getModelObject() + "/" + upload.getClientFileName();
                     if (fileService.checkFileExists(filePath)) {

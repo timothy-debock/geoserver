@@ -29,6 +29,43 @@ public class FileUploadAction implements Action {
     private static final long serialVersionUID = 4996136164811697150L;
 
     private final static String NAME = "FileUpload";
+    
+    private static class DialogDelegate extends GeoServerDialog.DialogDelegate {
+
+        private static final long serialVersionUID = 7410393012930249966L;
+        
+        private FileUploadPanel panel;
+        
+        private ConfigurationPage onPage;
+        
+        private IModel<String> valueModel;
+        
+        private String fileService;
+        
+        public DialogDelegate(ConfigurationPage onPage, IModel<String> valueModel, String fileService) {
+            this.onPage = onPage;
+            this.valueModel = valueModel;
+            this.fileService = fileService;
+        }
+
+        @Override
+        protected org.apache.wicket.Component getContents(String id) {
+            panel = new FileUploadPanel(id, valueModel, fileService);
+            return panel;
+        }
+
+        @Override
+        protected boolean onSubmit(AjaxRequestTarget target, org.apache.wicket.Component contents) {
+            panel.onSubmit();
+            onPage.addAttributesPanel(target);
+            return true;
+        }
+
+        @Override
+        public void onError(AjaxRequestTarget target, Form<?> form) {
+            target.add(panel.getFeedbackPanel());
+        }
+    }
 
     @Autowired
     private LookupService<FileService> fileServices;
@@ -52,30 +89,7 @@ public class FileUploadAction implements Action {
         dialog.setTitle(new ParamResourceModel("FileUploadPanel.dialogTitle", onPage.getPage()));
         dialog.setInitialWidth(650);
         dialog.setInitialHeight(300);
-        dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
-
-            private static final long serialVersionUID = 7410393012930249966L;
-            
-            private FileUploadPanel panel;
-
-            @Override
-            protected org.apache.wicket.Component getContents(String id) {
-                panel = new FileUploadPanel(id, valueModel, fileService);
-                return panel;
-            }
-
-            @Override
-            protected boolean onSubmit(AjaxRequestTarget target, org.apache.wicket.Component contents) {
-                panel.onSubmit();
-                onPage.addAttributesPanel(target);
-                return true;
-            }
-
-            @Override
-            public void onError(AjaxRequestTarget target, Form<?> form) {
-                target.add(panel.getFeedbackPanel());
-            }
-        });
+        dialog.showOkCancel(target, new DialogDelegate(onPage, valueModel, fileService.getName()));
 
     }
     
