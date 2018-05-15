@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.taskmanager.data.Batch;
+import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.BatchRun;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.data.TaskManagerDao;
@@ -54,6 +55,13 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
 
     @Transactional("tmTransactionManager")
     protected void schedule(Batch batch) throws SchedulerException {
+        //check for inactive tasks
+        for (BatchElement be : batch.getElements()) {
+            if (!be.getTask().isActive()) {
+                throw new IllegalArgumentException("Cannot save & schedule a batch with inactive tasks!");
+            }
+        }
+        
         JobKey jobKey = JobKey.jobKey(batch.getId().toString());        
         
         boolean exists = scheduler.checkExists(jobKey);
@@ -165,7 +173,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
         for (Batch batch : dao.getBatches(false)) {
             try {
                 schedule(batch);
-            } catch (SchedulerException e) {
+            } catch (SchedulerException | IllegalArgumentException e) {
                 LOGGER.log(Level.WARNING, "Failed to schedule batch " + batch.getName() + ", disabling. ", e);
                 batch.setEnabled(false);
                 dao.save(batch); 

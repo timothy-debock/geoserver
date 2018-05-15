@@ -208,17 +208,18 @@ public class BatchPage extends GeoServerSecuredPage {
                     }
                     if (doReturn) {
                         doReturn();
+                    } else {
+                        form.success(new ParamResourceModel("success", getPage()).getString());
                     }
                 } catch (ConstraintViolationException e) { 
                     form.error(new ParamResourceModel("duplicate", getPage()).getString());
-                    addFeedbackPanels(target);
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, e.getMessage(), e);
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
                     form.error(rootCause == null ? e.getLocalizedMessage() : 
                         rootCause.getLocalizedMessage());
-                    addFeedbackPanels(target);
                 }
+                addFeedbackPanels(target);
             }
 
             protected void onError(AjaxRequestTarget target, Form<?> form) {
@@ -248,9 +249,13 @@ public class BatchPage extends GeoServerSecuredPage {
                     protected Component getContents(String id) {
                         tasks = new TreeMap<String, Task>();
                         for (Task task : TaskManagerBeans.get().getDao().getTasksAvailableForBatch(batchModel.getObject())) {
+                            if (batchModel.getObject().getConfiguration() != null
+                                    && !batchModel.getObject().getConfiguration().getTasks().containsKey(task.getName())) {
+                                //deleted in config
+                                continue;
+                            }
                             if (!addedTasks.contains(task) && 
-                                    TaskManagerBeans.get().getSecUtil().isWriteable(
-                                            BatchPage.this.getSession().getAuthentication(), 
+                                    TaskManagerBeans.get().getSecUtil().isWriteable(BatchPage.this.getSession().getAuthentication(),
                                             task.getConfiguration())) {
                                 tasks.put(task.getFullName(), task);
                             }
