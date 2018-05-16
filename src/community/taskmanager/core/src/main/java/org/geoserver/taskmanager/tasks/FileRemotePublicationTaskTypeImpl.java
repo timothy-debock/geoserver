@@ -12,6 +12,7 @@ import java.nio.file.Files;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.io.FilenameUtils;
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.StoreInfo;
@@ -22,12 +23,16 @@ import org.geoserver.taskmanager.schedule.BatchContext;
 import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
+import org.geoserver.taskmanager.schedule.TaskRunnable;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.StoreType;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.UploadMethod;
 import it.geosolutions.geoserver.rest.encoder.GSGenericStoreEncoder;
+import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
+import it.geosolutions.geoserver.rest.encoder.coverage.GSCoverageEncoder;
 
 @Component
 public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTaskTypeImpl {
@@ -96,6 +101,27 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
             //this will work for shapefiles, which I believe is the only purely file-based
             //(non-database) vector store
             return ((DataStoreInfo) storeInfo).getConnectionParameters().get("url").toString();
+        }
+    }
+    
+    @Override
+    protected void postProcess(GSResourceEncoder re, TaskContext ctx, TaskRunnable<GSResourceEncoder> update) throws TaskException {
+        FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE),
+                new BatchContext.Dependency() {
+                    @Override
+                    public void revert() throws TaskException {
+                        FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
+                        String nativeName = FilenameUtils.getBaseName(fileRef.getLatestVersion());
+                        GSCoverageEncoder re = new GSCoverageEncoder(false);
+                        re.setNativeName(SqlUtil.notQualified(nativeName));
+                        re.setNativeCoverageName(SqlUtil.notQualified(nativeName));
+                        update.run(re);
+                    }            
+        });
+        if (fileRef != null) {        
+            String nativeName = FilenameUtils.getBaseName(fileRef.getLatestVersion());
+            ((GSCoverageEncoder) re).setNativeName(SqlUtil.notQualified(nativeName));
+            ((GSCoverageEncoder) re).setNativeCoverageName(SqlUtil.notQualified(nativeName));
         }
     }
 
