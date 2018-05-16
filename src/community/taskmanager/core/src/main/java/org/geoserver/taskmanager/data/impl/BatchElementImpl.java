@@ -49,10 +49,10 @@ public class BatchElementImpl extends BaseImpl implements BatchElement {
     
     @OneToMany(targetEntity = RunImpl.class, mappedBy = "batchElement", cascade = CascadeType.ALL)
     @OrderBy("start")
-    List<Run> runs = new ArrayList<Run>();
+    private List<Run> runs = new ArrayList<Run>();
 
     @Column(nullable = false)
-    Long removeStamp = 0L;
+    private Long removeStamp = 0L;
     
     @Override
     public BatchImpl getBatch() {

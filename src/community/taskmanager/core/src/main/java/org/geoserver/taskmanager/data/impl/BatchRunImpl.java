@@ -47,7 +47,7 @@ public class BatchRunImpl extends BaseImpl implements BatchRun {
             cascade = CascadeType.ALL)
     @OrderBy("start")
     @Fetch(FetchMode.SUBSELECT)
-    List<Run> runs = new ArrayList<Run>();
+    private List<Run> runs = new ArrayList<Run>();
     
     @Column(nullable = false)
     private Boolean interruptMe = false; 

@@ -66,7 +66,7 @@ public class TaskImpl extends BaseImpl implements Task {
     private List<BatchElement> batchElements = new ArrayList<BatchElement>();
 
     @Column(nullable = false)
-    Long removeStamp = 0L;
+    private Long removeStamp = 0L;
     
     @Override
     public Long getId() {

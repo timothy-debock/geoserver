@@ -52,38 +52,38 @@ public class BatchImpl extends BaseImpl implements Batch {
     @OrderBy("index, id")
     @Filter(name="activeElementFilter")
     @Fetch(FetchMode.SUBSELECT)
-    List<BatchElement> elements = new ArrayList<BatchElement>();
+    private List<BatchElement> elements = new ArrayList<BatchElement>();
     
     @Column
-    String workspace;
+    private String workspace;
         
     @Column(nullable = false)
-    String name;
+    private String name;
 
     //stupid work-around
     //duplicate of name only set if configuration == null, just for unique constraint
     @Column
-    String nameNoConfig; 
+    private String nameNoConfig; 
 
     @ManyToOne
     @JoinColumn(name = "configuration", nullable = true)
     private ConfigurationImpl configuration;
     
     @Column
-    String description;
+    private String description;
     
     @Column(nullable = true)
-    String frequency;
+    private String frequency;
     
     @Column(nullable = false)
-    Boolean enabled = true;
+    private Boolean enabled = true;
 
     @Column(nullable = false)
-    Long removeStamp = 0L;
+    private Long removeStamp = 0L;
 
     @OneToMany(targetEntity = BatchRunImpl.class, mappedBy = "batch", cascade = CascadeType.ALL)
     @OrderBy("id")
-    List<BatchRun> batchRuns = new ArrayList<BatchRun>();
+    private List<BatchRun> batchRuns = new ArrayList<BatchRun>();
     
     @Override
     public Long getId() {
@@ -181,4 +181,5 @@ public class BatchImpl extends BaseImpl implements Batch {
     public long getRemoveStamp() {
         return removeStamp;
     }
+    
 }

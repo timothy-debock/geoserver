@@ -74,7 +74,7 @@ public class ConfigurationImpl extends BaseImpl implements Configuration {
     private Map<String, Batch> batches = new LinkedHashMap<String, Batch>();
 
     @Column(nullable = false)
-    Long removeStamp = 0L;
+    private Long removeStamp = 0L;
     
     @Column
     private String description;
