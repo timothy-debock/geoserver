@@ -190,6 +190,12 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
         }
         re.setProjectionPolicy(resource.getProjectionPolicy() == null ? ProjectionPolicy.NONE
                 : ProjectionPolicy.valueOf(resource.getProjectionPolicy().toString()));
+        if (resource.getNativeBoundingBox() != null) {
+            re.setNativeBoundingBox(resource.getNativeBoundingBox().getMinX(),
+                resource.getNativeBoundingBox().getMinY(),
+                resource.getNativeBoundingBox().getMaxX(),
+                resource.getNativeBoundingBox().getMaxY(), resource.getSRS());
+        }
         if (resource.getLatLonBoundingBox() != null) {
             re.setLatLonBoundingBox(resource.getLatLonBoundingBox().getMinX(),
                 resource.getLatLonBoundingBox().getMinY(),
