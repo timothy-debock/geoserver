@@ -24,7 +24,6 @@ import org.geoserver.taskmanager.schedule.ParameterInfo;
 import org.geoserver.taskmanager.schedule.TaskContext;
 import org.geoserver.taskmanager.schedule.TaskException;
 import org.geoserver.taskmanager.schedule.TaskRunnable;
-import org.geoserver.taskmanager.util.SqlUtil;
 import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
@@ -113,15 +112,15 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
                         FileReference fileRef = (FileReference) ctx.getBatchContext().get(ctx.getParameterValues().get(PARAM_FILE));
                         String nativeName = FilenameUtils.getBaseName(fileRef.getLatestVersion());
                         GSCoverageEncoder re = new GSCoverageEncoder(false);
-                        re.setNativeName(SqlUtil.notQualified(nativeName));
-                        re.setNativeCoverageName(SqlUtil.notQualified(nativeName));
+                        re.setNativeName(nativeName);
+                        re.setNativeCoverageName(nativeName);
                         update.run(re);
                     }            
         });
         if (fileRef != null) {        
             String nativeName = FilenameUtils.getBaseName(fileRef.getLatestVersion());
-            ((GSCoverageEncoder) re).setNativeName(SqlUtil.notQualified(nativeName));
-            ((GSCoverageEncoder) re).setNativeCoverageName(SqlUtil.notQualified(nativeName));
+            ((GSCoverageEncoder) re).setNativeName(nativeName);
+            ((GSCoverageEncoder) re).setNativeCoverageName(nativeName);
         }
     }
 
