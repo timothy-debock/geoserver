@@ -11,10 +11,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -336,7 +334,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
     private File createStyleZipFile(StyleInfo style) throws TaskException {        
         try {
             Style parsedStyle = geoServerDataDirectory.parsedStyle(style);
-            List<Resource> pictures = new ArrayList<Resource>();
+            Set<Resource> pictures = new HashSet<Resource>();
             parsedStyle.accept(new AbstractStyleVisitor() {
                 @Override
                 public void visit(ExternalGraphic exgr) {
