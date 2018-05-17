@@ -68,7 +68,7 @@ public interface TaskManagerDao {
      * 
      * @return the list of active batches.
      */
-    List<Batch> getBatches(boolean hideSpecialBatches);
+    List<Batch> getAllBatches();
     
     /**
      * Get a batch by its full name.
@@ -211,8 +211,8 @@ public interface TaskManagerDao {
      */
     BatchRun getBatchRunBySchedulerReference(String schedulerReference);
 
-    List<Batch> getBatchesWithLatestBatchRun(Configuration config);
+    List<Batch> getViewableBatches();
 
-    List<Batch> getBatchesWithLatestBatchRun();
+    void loadLatestBatchRuns(Configuration config);
 
 }

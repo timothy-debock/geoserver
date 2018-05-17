@@ -170,7 +170,7 @@ public class BatchJobServiceImpl implements BatchJobService, ApplicationListener
             throw new IllegalStateException(e);
         }
                 
-        for (Batch batch : dao.getBatches(false)) {
+        for (Batch batch : dao.getAllBatches()) {
             try {
                 schedule(batch);
             } catch (SchedulerException | IllegalArgumentException e) {

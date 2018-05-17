@@ -28,7 +28,7 @@ public class BatchesPageTest extends AbstractBatchesPanelTest<BatchesPage> {
 
     @Override
     protected Collection<Batch> getBatches() {
-        return dao.getBatches(false);
+        return dao.getAllBatches();
     }
     
     

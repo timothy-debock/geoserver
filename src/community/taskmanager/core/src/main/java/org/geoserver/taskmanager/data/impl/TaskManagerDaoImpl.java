@@ -96,7 +96,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<Batch> getBatches(boolean hideSpecial) {
+    public List<Batch> getAllBatches() {
         Criteria criteria = getSession().createCriteria(BatchImpl.class)
                 .createAlias("configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
                 .add(Restrictions.eq("removeStamp", 0L))
@@ -104,50 +104,27 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
                         Restrictions.isNull("configuration"),
                         Restrictions.eq("configuration.removeStamp", 0L))
                  );
-        if (hideSpecial) {
-            criteria.add(Restrictions.or(
-                    Restrictions.isNull("configuration"),
-                    Restrictions.and( 
-                            Restrictions.eq("configuration.validated", true), 
-                            Restrictions.not(Restrictions.like("name", "@%")))));
-        }
         return criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
     }
     
     @SuppressWarnings("unchecked")
     @Override
-    public List<Batch> getBatchesWithLatestBatchRun() {       
-        Criteria criteria = getSession().createCriteria(BatchRunImpl.class, "outerBatchRun")
-                .createAlias("batch", "batch")
-                .createAlias("batch.configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
-                .add(Restrictions.eq("batch.removeStamp", 0L));
-        criteria.add(Restrictions.or(Restrictions.isNull("batch.configuration"),
-                Restrictions.and(Restrictions.eq("configuration.removeStamp", 0L),
-                        Restrictions.and(Restrictions.eq("configuration.validated", true),
-                                Restrictions.not(Restrictions.like("batch.name", "@%"))))));
-        criteria.add(Subqueries.propertyEq("id", DetachedCriteria.forClass(BatchRunImpl.class)
-                .add(Restrictions.eqProperty("batch", "outerBatchRun.batch"))
-                .setProjection(Projections.max("id"))));
-        
-        for (BatchRunImpl br : (List<BatchRunImpl>)
-                criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list()) {
-            ((BatchImpl) br.getBatch()).setLatestBatchRun(br);
-        }
-        
-        return getBatches(true);
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<Batch> getBatchesWithLatestBatchRun(Configuration config) {       
-        Criteria criteria = getSession().createCriteria(BatchRunImpl.class, "outerBatchRun")
-                .createAlias("batch", "batch")
-                .createAlias("batch.configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
-                .add(Restrictions.eq("batch.removeStamp", 0L));
-        criteria.add(Restrictions.eq("batch.configuration", config));
-        criteria.add(Subqueries.propertyEq("id", DetachedCriteria.forClass(BatchRunImpl.class)
-                .add(Restrictions.eqProperty("batch", "outerBatchRun.batch"))
-                .setProjection(Projections.max("id"))));
+    public List<Batch> getViewableBatches() {       
+        Criteria criteria = getSession().createCriteria(BatchRunImpl.class, "outerBr")
+                .createAlias("outerBr.batch", "outerBatch")
+                .createAlias("outerBatch.configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
+                .add(Restrictions.eq("outerBatch.removeStamp", 0L));
+        criteria.add(Restrictions.or(
+                Restrictions.isNull("outerBatch.configuration"),
+                Restrictions.and(Restrictions.and(
+                        Restrictions.eq("configuration.removeStamp", 0L),
+                        Restrictions.eq("configuration.validated", true)),
+                        Restrictions.not(Restrictions.like("outerBatch.name", "@%")))));
+        criteria.add(Subqueries.propertyEq("outerBr.id", 
+                        DetachedCriteria.forClass(BatchRunImpl.class, "innerBr")
+                            .createAlias("innerBr.batch", "innerBatch")
+                            .add(Restrictions.eqProperty("innerBatch.id", "outerBatch.id"))
+                            .setProjection(Projections.max("innerBr.id"))));
         
         for (BatchRunImpl br : (List<BatchRunImpl>)
                 criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list()) {
@@ -155,9 +132,38 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         }
         
         return getSession().createCriteria(BatchImpl.class)
-                .add(Restrictions.eq("configuration", config))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
-                
+                .createAlias("configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
+                .add(Restrictions.eq("removeStamp", 0L))
+                .add(Restrictions.or(
+                        Restrictions.isNull("configuration"),
+                        Restrictions.and(Restrictions.and(
+                                Restrictions.eq("configuration.removeStamp", 0L),
+                                Restrictions.eq("configuration.validated", true)),
+                                Restrictions.not(Restrictions.like("name", "@%")))))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public void loadLatestBatchRuns(Configuration config) {       
+        Criteria criteria = getSession().createCriteria(BatchRunImpl.class, "outerBr")
+                .createAlias("outerBr.batch", "outerBatch")
+                .createAlias("outerBatch.configuration", "configuration", CriteriaSpecification.LEFT_JOIN)
+                .add(Restrictions.eq("outerBatch.removeStamp", 0L));
+        criteria.add(Restrictions.eq("configuration.id", config.getId()));
+        criteria.add(Subqueries.propertyEq("outerBr.id", 
+                        DetachedCriteria.forClass(BatchRunImpl.class, "innerBr")
+                            .createAlias("innerBr.batch", "innerBatch")
+                            .add(Restrictions.eqProperty("innerBatch.id", "outerBatch.id"))
+                            .setProjection(Projections.max("innerBr.id"))));
+        
+        for (BatchRunImpl br : (List<BatchRunImpl>)
+                criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list()) {
+            BatchImpl b = ((BatchImpl) config.getBatches().get(br.getBatch().getName()));
+            if (b != null) {
+                b.setLatestBatchRun(br);
+            }
+        }
     }
     
     @SuppressWarnings("unchecked")
