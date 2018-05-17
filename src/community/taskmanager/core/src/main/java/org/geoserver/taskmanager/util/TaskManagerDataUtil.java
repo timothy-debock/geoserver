@@ -271,45 +271,6 @@ public class TaskManagerDataUtil {
         }
         return batch;
     }
-    
-    /**
-     * Initialize lazy collection(s) in Task
-     * 
-     * @param task the task to be initialized
-     * @return return the initialized task
-     */
-    @Transactional("tmTransactionManager")    
-    public Task init(Task task) {
-        task = dao.reload(task);
-        Hibernate.initialize(task.getBatchElements());
-        return task;
-    }
-    
-    /**
-     * Initialize lazy collection(s) in BatchElement
-     * 
-     * @param be the BatchElement to be initialized
-     * @return return the initialized BatchElement
-     */
-    @Transactional("tmTransactionManager")    
-    public BatchElement init(BatchElement be) {
-        be = dao.reload(be);
-        Hibernate.initialize(be.getRuns());
-        return be;
-    }
-    
-    /**
-     * Initialize lazy collection(s) in Batch
-     * 
-     * @param be the Batch to be initialized
-     * @return return the initialized Batch
-     */
-    @Transactional("tmTransactionManager")    
-    public Batch init(Batch b) {
-        b = dao.reload(b);
-        Hibernate.initialize(b.getBatchRuns()); 
-        return b;
-    }
 
     /**
      * Run a batch element if possible (i.e. if the task is not being run already).
@@ -379,6 +340,49 @@ public class TaskManagerDataUtil {
             }
         }
         return dao.reload(br);
+    }
+    
+    // -----------------------
+    // Init methods
+    // -----------------------
+        
+    /**
+     * Initialize lazy collection(s) in Task
+     * 
+     * @param task the task to be initialized
+     * @return return the initialized task
+     */
+    @Transactional("tmTransactionManager")    
+    public Task init(Task task) {
+        task = dao.reload(task);
+        Hibernate.initialize(task.getBatchElements());
+        return task;
+    }
+    
+    /**
+     * Initialize lazy collection(s) in BatchElement
+     * 
+     * @param be the BatchElement to be initialized
+     * @return return the initialized BatchElement
+     */
+    @Transactional("tmTransactionManager")    
+    public BatchElement init(BatchElement be) {
+        be = dao.reload(be);
+        Hibernate.initialize(be.getRuns());
+        return be;
+    }
+    
+    /**
+     * Initialize lazy collection(s) in Batch
+     * 
+     * @param be the Batch to be initialized
+     * @return return the initialized Batch
+     */
+    @Transactional("tmTransactionManager")    
+    public Batch init(Batch b) {
+        b = dao.reload(b);
+        Hibernate.initialize(b.getBatchRuns()); 
+        return b;
     }
 
 }

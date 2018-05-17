@@ -61,9 +61,8 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
         @Override
         public Object getPropertyValue(Batch batch) {
             if (batch.getId() != null) {
-                batch = TaskManagerBeans.get().getDataUtil().init(batch);
-                if (!batch.getBatchRuns().isEmpty()) {
-                    return batch.getBatchRuns().get(batch.getBatchRuns().size() - 1).getStart();
+                if (batch.getLatestBatchRun() !=  null) {
+                    return batch.getLatestBatchRun().getStart();
                 }
             }
             return null;
@@ -77,9 +76,8 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
         @Override
         public Object getPropertyValue(Batch batch) {
             if (batch.getId() != null) {
-                batch = TaskManagerBeans.get().getDataUtil().init(batch);
-                if (!batch.getBatchRuns().isEmpty()) {
-                    return batch.getBatchRuns().get(batch.getBatchRuns().size() - 1).getStatus();
+                if (batch.getLatestBatchRun() !=  null) {
+                    return batch.getLatestBatchRun().getStatus();
                 }
             }
             return null;
@@ -126,8 +124,9 @@ public class BatchesModel extends GeoServerDataProvider<Batch> {
     @Override
     protected List<Batch> getItems() {
         List<Batch> list = new ArrayList<Batch>(
-                configurationModel == null ? TaskManagerBeans.get().getDao().getBatches(true) : 
-                    configurationModel.getObject().getBatches().values());
+                configurationModel == null ? 
+                   TaskManagerBeans.get().getDao().getBatchesWithLatestBatchRun() : 
+                   TaskManagerBeans.get().getDao().getBatchesWithLatestBatchRun(configurationModel.getObject()));
         list.removeIf(b -> !TaskManagerBeans.get().getSecUtil().isReadable(
             SecurityContextHolder.getContext().getAuthentication(), b));
         

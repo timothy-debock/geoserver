@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.sql.SQLException;
 
 import org.geoserver.catalog.CoverageInfo;
+import org.geoserver.catalog.Keyword;
 import org.geoserver.taskmanager.AbstractTaskManagerTest;
 import org.geoserver.taskmanager.beans.TestTaskTypeImpl;
 import org.geoserver.taskmanager.data.Batch;
@@ -127,6 +128,7 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         ci.setTitle("my title ë");
         ci.setAbstract("my abstract ë");
         ci.getDimensions().get(0).setName("CUSTOM_DIMENSION");
+        ci.getKeywords().add(new Keyword("demmiedem"));
         geoServer.getCatalog().save(ci);
         
         dataUtil.setConfigurationAttribute(config, ATT_LAYER, "mydem");
@@ -153,6 +155,7 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         assertEquals(ci.getAbstract(), cov.getAbstract());
         assertEquals(ci.getDimensions().get(0).getName(), 
                 cov.getEncodedDimensionsInfoList().get(0).getName());
+        assertTrue(cov.getKeywords().contains("demmiedem"));
         
         assertTrue(taskUtil.cleanup(config));      
         

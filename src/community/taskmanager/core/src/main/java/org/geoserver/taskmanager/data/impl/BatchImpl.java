@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.geoserver.taskmanager.data.Batch;
@@ -84,6 +85,9 @@ public class BatchImpl extends BaseImpl implements Batch {
     @OneToMany(targetEntity = BatchRunImpl.class, mappedBy = "batch", cascade = CascadeType.ALL)
     @OrderBy("id")
     private List<BatchRun> batchRuns = new ArrayList<BatchRun>();
+    
+    @Transient
+    private BatchRun latestBatchRun;
     
     @Override
     public Long getId() {
@@ -180,6 +184,15 @@ public class BatchImpl extends BaseImpl implements Batch {
     @Override
     public long getRemoveStamp() {
         return removeStamp;
+    }
+
+    @Override
+    public BatchRun getLatestBatchRun() {
+        return latestBatchRun;
+    }
+
+    public void setLatestBatchRun(BatchRun latestBatchRun) {
+        this.latestBatchRun = latestBatchRun;
     }
     
 }

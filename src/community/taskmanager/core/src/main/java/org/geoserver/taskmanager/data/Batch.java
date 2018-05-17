@@ -51,4 +51,6 @@ public interface Batch extends SoftRemove, Serializable, Identifiable {
                 getConfiguration().getName()) + FULL_NAME_DIVISOR + getName());
     }
 
+    BatchRun getLatestBatchRun();
+
 }

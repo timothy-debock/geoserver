@@ -211,4 +211,8 @@ public interface TaskManagerDao {
      */
     BatchRun getBatchRunBySchedulerReference(String schedulerReference);
 
+    List<Batch> getBatchesWithLatestBatchRun(Configuration config);
+
+    List<Batch> getBatchesWithLatestBatchRun();
+
 }
