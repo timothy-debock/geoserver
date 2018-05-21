@@ -7,7 +7,7 @@ package org.geoserver.taskmanager.util;
 public final class SqlUtil {
     
     private SqlUtil() {}
-
+    
     public static String quote(String tableName) {
         String[] parts = tableName.split("\\.");
         StringBuffer sb = new StringBuffer();

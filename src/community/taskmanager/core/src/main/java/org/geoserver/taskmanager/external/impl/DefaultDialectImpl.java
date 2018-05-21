@@ -49,7 +49,7 @@ public class DefaultDialectImpl implements Dialect {
     }
 
     @Override
-    public Set<String> getSpatialColumns(Connection sourceConn, String tableName) {
+    public Set<String> getSpatialColumns(Connection sourceConn, String tableName, String defaultSchema) {
         return Collections.emptySet();
     }
 

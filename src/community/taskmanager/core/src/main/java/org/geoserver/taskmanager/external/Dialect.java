@@ -47,9 +47,10 @@ public interface Dialect {
      * 
      * @param sourceConn
      * @param tableName
+     * @param string 
      * @return set of spatial columns
      */
-    Set<String> getSpatialColumns(Connection sourceConn, String tableName);
+    Set<String> getSpatialColumns(Connection sourceConn, String tableName, String defaultSchema);
 
     /**
      * translate nullable code 

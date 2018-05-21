@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.StringUtils;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.DbTable;
 import org.geoserver.taskmanager.external.ExtTypes;
@@ -151,8 +152,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
                         Map<String, Set<String>> indexAndColumnMap = getIndexesColumns(sourceConn, table.getTableName());
                         Set<String> uniqueIndexes = getUniqueIndexes(sourceConn, table.getTableName());
                         Set<String> spatialColumns = sourcedb.getDialect().getSpatialColumns(sourceConn,
-                                geTableName(sourceConn, table.getTableName()));
-
+                                table.getTableName(), sourcedb.getSchema());
 
                         for (String indexName : indexAndColumnMap.keySet()) {
                             Set<String> columnNames = indexAndColumnMap.get(indexName);
@@ -284,10 +284,30 @@ public class CopyTableTaskTypeImpl implements TaskType {
     public String getName() {
         return NAME;
     }
+    
+    private static String getTableName(Connection conn, String tableName) throws SQLException {
+        String name = StringUtils.strip(SqlUtil.notQualified(tableName));      
+        if (conn.getMetaData().storesUpperCaseIdentifiers()) {
+            name = name.toUpperCase();
+        } else if (conn.getMetaData().storesUpperCaseIdentifiers()) {
+            name = name.toLowerCase();
+        }
+        return name;
+    }
+    
+    private static String getSchema(Connection conn, String tableName) throws SQLException {
+        String schema = StringUtils.strip(SqlUtil.schema(tableName), "\"");  
+        if (conn.getMetaData().storesUpperCaseIdentifiers()) {
+            schema = schema.toUpperCase();
+        } else if (conn.getMetaData().storesUpperCaseIdentifiers()) {
+            schema =schema.toLowerCase();
+        }
+        return schema;
+    }
 
     private static String getPrimaryKey(Connection conn, String tableName) throws SQLException {
         String schema = getSchema(conn, tableName);
-        String name = geTableName(conn, tableName);
+        String name = getTableName(conn, tableName);
 
         try (ResultSet rsPrimaryKeys = conn.getMetaData().getPrimaryKeys(null, schema, name)) {
             StringBuilder sb = new StringBuilder();
@@ -314,8 +334,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
     private Set<String> getUniqueIndexes(Connection conn, String tableName) throws SQLException {
         String schema = getSchema(conn, tableName);
-        String name = geTableName(conn, tableName);
-
+        String name = getTableName(conn, tableName);
 
         Set<String> result = new HashSet<String>();
 
@@ -330,7 +349,7 @@ public class CopyTableTaskTypeImpl implements TaskType {
 
     private Map<String, Set<String>> getIndexesColumns(Connection conn, String tableName) throws SQLException {
         String schema = getSchema(conn, tableName);
-        String name = geTableName(conn, tableName);
+        String name = getTableName(conn, tableName);
 
         HashMap<String, Set<String>> result = new HashMap<>();
 
@@ -345,30 +364,6 @@ public class CopyTableTaskTypeImpl implements TaskType {
             }
         }
         return result;
-    }
-
-    private static String geTableName(Connection conn, String tableName) throws SQLException {
-        String name = tableName;
-        String[] split = tableName.split("\\.", 2);
-        if (split.length == 2) {
-            name = split[1];
-        }
-        if (conn.getMetaData().storesUpperCaseIdentifiers()) {
-            name = name.toUpperCase();
-        }
-        return name;
-    }
-
-    private static String getSchema(Connection conn, String tableName) throws SQLException {
-        String schema = null;
-        String[] split = tableName.split("\\.", 2);
-        if (split.length == 2) {
-            schema = split[0];
-        }
-        if (schema != null && conn.getMetaData().storesUpperCaseIdentifiers()) {
-            schema = schema.toUpperCase();
-        }
-        return schema;
     }
 
 }

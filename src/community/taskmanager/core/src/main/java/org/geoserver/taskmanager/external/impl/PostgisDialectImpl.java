@@ -4,6 +4,7 @@
  */
 package org.geoserver.taskmanager.external.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.geoserver.taskmanager.util.SqlUtil;
 import org.geotools.util.logging.Logging;
 
@@ -59,12 +60,20 @@ public class PostgisDialectImpl extends DefaultDialectImpl {
     }
 
     @Override
-    public Set<String> getSpatialColumns(Connection sourceConn, String tableName) {
+    public Set<String> getSpatialColumns(Connection sourceConn, String tableName, String defaultSchema) {
+        String schema = StringUtils.strip(SqlUtil.schema(tableName), "\"");
+        String unqualifiedTableName = StringUtils.strip(SqlUtil.notQualified(tableName), "\"");
+        
+        if (schema == null) {
+            schema = defaultSchema == null ? "public" : defaultSchema;
+        }
+        
         HashSet<String> spatialColumns = new HashSet<>();
         try (Statement stmt = sourceConn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("SELECT * FROM geometry_columns " +
-                    " WHERE geometry_columns.f_table_name='" + tableName + "' ")) {
-                if (rs.next()) {
+                    " WHERE geometry_columns.f_table_name='" + 
+                    unqualifiedTableName + "' and f_table_schema = '" + schema + "' ")) {
+                while (rs.next()) {
                     spatialColumns.add(rs.getString("f_geometry_column"));
                 }
             }
