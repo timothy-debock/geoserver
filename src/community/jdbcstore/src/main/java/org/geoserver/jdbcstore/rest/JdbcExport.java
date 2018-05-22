@@ -19,7 +19,7 @@ import org.geoserver.catalog.event.impl.CatalogAddEventImpl;
 import org.geoserver.catalog.event.impl.CatalogModifyEventImpl;
 import org.geoserver.catalog.util.CloseableIterator;
 import org.geoserver.config.GeoServer;
-import org.geoserver.config.GeoServerPersister;
+import org.geoserver.config.GeoServerConfigPersister;
 import org.geoserver.config.ServiceInfo;
 import org.geoserver.config.ServicePersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
@@ -57,7 +57,7 @@ public class JdbcExport {
     GeoServerResourceLoader loader;
 
         
-    private <T extends CatalogInfo> void exportType(Class<T> clazz, GeoServerPersister gp) {
+    private <T extends CatalogInfo> void exportType(Class<T> clazz, GeoServerConfigPersister gp) {
         CloseableIterator<T> it = catalog.list(clazz, Filter.INCLUDE);
         while (it.hasNext()) {
             CatalogAddEventImpl event = new CatalogAddEventImpl();
@@ -75,7 +75,7 @@ public class JdbcExport {
         
         //export jdbc config 
 
-        GeoServerPersister gp = new GeoServerPersister(loader, 
+        GeoServerConfigPersister gp = new GeoServerConfigPersister(loader, 
                 new XStreamPersisterFactory().createXMLPersister());
         
         //download jdbc catalog

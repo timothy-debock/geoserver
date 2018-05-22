@@ -37,7 +37,8 @@ import org.geoserver.catalog.impl.CatalogImpl;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.config.GeoServerInfo;
-import org.geoserver.config.GeoServerPersister;
+import org.geoserver.config.GeoServerResourcePersister;
+import org.geoserver.config.GeoServerConfigPersister;
 import org.geoserver.config.LoggingInfo;
 import org.geoserver.config.ServiceInfo;
 import org.geoserver.config.SettingsInfo;
@@ -307,8 +308,9 @@ public class SystemTestData extends CiteTestData {
         catalog.setExtendedValidation(false);
         catalog.setResourceLoader(new GeoServerResourceLoader(data));
         
-        catalog.addListener(new GeoServerPersister(catalog.getResourceLoader(), 
+        catalog.addListener(new GeoServerConfigPersister(catalog.getResourceLoader(), 
             createXStreamPersister()));
+        catalog.addListener(new GeoServerResourcePersister(catalog.getResourceLoader()));
 
         //workspaces
         addWorkspace(DEFAULT_PREFIX, DEFAULT_URI, catalog);
@@ -326,8 +328,9 @@ public class SystemTestData extends CiteTestData {
 
     protected void createConfig() {
         GeoServerImpl geoServer = new GeoServerImpl();
-        geoServer.addListener(new GeoServerPersister(new GeoServerResourceLoader(data), 
+        geoServer.addListener(new GeoServerConfigPersister(new GeoServerResourceLoader(data), 
             createXStreamPersister()));
+        catalog.addListener(new GeoServerResourcePersister(catalog.getResourceLoader()));
 
         GeoServerInfo global = geoServer.getFactory().createGlobal();
         geoServer.setGlobal(global);
