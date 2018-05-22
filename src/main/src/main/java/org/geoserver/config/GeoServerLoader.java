@@ -382,7 +382,8 @@ public abstract class GeoServerLoader {
         // we are going to synch up the catalogs and need to preserve listeners,
         // but these two fellas are attached to the new catalog as well
         catalog.removeListeners(ResourcePool.CacheClearingListener.class);
-        catalog.removeListeners(GeoServerPersister.class);
+        catalog.removeListeners(GeoServerConfigPersister.class);
+        catalog.removeListeners(GeoServerResourcePersister.class);
         List<CatalogListener> listeners = new ArrayList<CatalogListener>(catalog.getListeners());
 
         //look for catalog.xml, if it exists assume we are dealing with 
@@ -731,11 +732,13 @@ public abstract class GeoServerLoader {
         Catalog catalog2 = new CatalogImpl();
         catalog2.setResourceLoader(resourceLoader);
         
-        //add listener now as a converter which will convert from the old style 
+        //add listeners now as a converter which will convert from the old style 
         // data directory to the new
-        GeoServerPersister p = new GeoServerPersister( resourceLoader, xp );
+        GeoServerConfigPersister cp = new GeoServerConfigPersister(resourceLoader, xp);
+        GeoServerResourcePersister rp = new GeoServerResourcePersister(resourceLoader);
         if ( !legacy ) {
-            catalog2.addListener( p );
+            catalog2.addListener(cp);
+            catalog2.addListener(rp);
         }
         
         LegacyCatalogImporter importer = new LegacyCatalogImporter(catalog2);
@@ -743,7 +746,8 @@ public abstract class GeoServerLoader {
         importer.imprt(resourceLoader.getBaseDirectory());
         
         if ( !legacy ) {
-            catalog2.removeListener( p );
+            catalog2.removeListener(cp);
+            catalog2.removeListener(rp);
         }
         
         if ( !legacy ) {
@@ -855,13 +859,13 @@ public abstract class GeoServerLoader {
         } else {
             //add listener now as a converter which will convert from the old style 
             // data directory to the new
-            GeoServerPersister p = new GeoServerPersister( resourceLoader, xp );
-            geoServer.addListener( p );
+            GeoServerConfigPersister p = new GeoServerConfigPersister(resourceLoader, xp);
+            geoServer.addListener(p);
             
             //import old style services.xml
             new LegacyConfigurationImporter(geoServer).imprt(resourceLoader.getBaseDirectory());
             
-            geoServer.removeListener( p );
+            geoServer.removeListener(p);
             
             //rename the services.xml file
             f.renameTo( f.parent().get("services.xml.old" ) );

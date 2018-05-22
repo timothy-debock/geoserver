@@ -21,7 +21,8 @@ import org.junit.Assert;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.config.GeoServerPersister;
+import org.geoserver.config.GeoServerConfigPersister;
+import org.geoserver.config.GeoServerResourcePersister;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.GeoServerExtensions;
@@ -293,9 +294,11 @@ public class MemoryUserDetailsServiceTest extends AbstractUserDetailsServiceTest
         config.setConfigPasswordEncrypterName(encoder.getName());
         getSecurityManager().saveSecurityConfig(config);
 
-        GeoServerPersister p = 
-            new GeoServerPersister( getResourceLoader(), new XStreamPersisterFactory().createXMLPersister() );
-        cat.addListener( p );
+        GeoServerConfigPersister cp = 
+            new GeoServerConfigPersister(getResourceLoader(), new XStreamPersisterFactory().createXMLPersister());
+        GeoServerResourcePersister rp =  new GeoServerResourcePersister(getResourceLoader());
+        cat.addListener(cp);
+        cat.addListener(rp);
         
         WorkspaceInfo ws = cat.getFactory().createWorkspace();
         ws.setName("password");
