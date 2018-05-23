@@ -78,9 +78,9 @@ public class ReadOnlyGeoServerLoader extends DefaultGeoServerLoader {
 		this.enabled = enabled;
 		if (enabled) {
 			// remove Default persister
-			if (persister != null) {
-				geoserver.removeListener(persister);
-				persister = null;
+			if (configPersister != null) {
+				geoserver.removeListener(configPersister);
+				configPersister = null;
 			}
 			// remove Default listener
 			if (listener != null) {
@@ -95,11 +95,11 @@ public class ReadOnlyGeoServerLoader extends DefaultGeoServerLoader {
 				listener = new ServicePersister(loaders, geoserver);
 				geoserver.addListener(listener);
 			}
-			if (persister == null) {
-				persister = new GeoServerPersister(resourceLoader,
+			if (configPersister == null) {
+			        configPersister = new GeoServerConfigPersister(resourceLoader,
 						xpf.createXMLPersister());
 				// attach back the persister
-				geoserver.addListener(persister);
+				geoserver.addListener(configPersister);
 			}
 		}
 	}
