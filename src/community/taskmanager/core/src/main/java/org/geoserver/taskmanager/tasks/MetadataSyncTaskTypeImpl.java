@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher.StoreType;
+import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
@@ -91,14 +92,17 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
         if (!restManager.getReader().existGeoserver()) {
             throw new TaskException("Failed to connect to geoserver " + extGS.getUrl());
         }
+        
+        RESTLayer restLayer = restManager.getReader().getLayer(ws, layer.getName());
                  
-        if (!restManager.getReader().existsLayer(ws, layer.getName(), true)) {
+        if (restLayer == null) {
             throw new TaskException("Layer does not exist on destination " + layer.getName());
         }
         
         // sync resource
         GSResourceEncoder re = syncMetadata(resource);
-        if (!restManager.getPublisher().configureResource(ws, storeType, store.getName(), re)) {
+        if (!restManager.getPublisher().configureResource(ws, storeType, layer.getResource().getStore().getName(), 
+                re)) {
             throw new TaskException(
                     "Failed to configure resource " + ws + ":" + resource.getName());
         }
@@ -109,7 +113,6 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
             layer.getDefaultStyle().getWorkspace().getName(), 
             layer.getDefaultStyle().getName());
 
-        // resource might have already been created together with store
         if (!restManager.getPublisher().configureLayer(ws, layer.getName(), layerEncoder)) {
             throw new TaskException("Failed to configure layer " + ws + ":" + resource.getName());
         }
