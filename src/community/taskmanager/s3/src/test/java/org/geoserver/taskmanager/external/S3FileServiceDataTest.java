@@ -80,15 +80,19 @@ public class S3FileServiceDataTest extends AbstractTaskManagerTest {
         String content = "test the file service";
 
         //create
-        service.create(filenamePath, IOUtils.toInputStream(content, "UTF-8"));
+        try (InputStream is = IOUtils.toInputStream(content, "UTF-8")) {
+            service.create(filenamePath, is);
+        }
 
         //exists
         boolean fileExists = service.checkFileExists(filenamePath);
         Assert.assertTrue(fileExists);
 
         //read
-        String actualContent = IOUtils.toString(service.read(filenamePath));
-        Assert.assertEquals(content, actualContent);
+        try (InputStream is = service.read(filenamePath)) {
+            String actualContent = IOUtils.toString(is);
+            Assert.assertEquals(content, actualContent);
+        }
 
         //is create in the root folder?
         Assert.assertTrue(getS3Client().doesObjectExist(service.getRootFolder(), filenamePath));
@@ -106,14 +110,22 @@ public class S3FileServiceDataTest extends AbstractTaskManagerTest {
         String rootFolder = "tmp" + System.currentTimeMillis();
         ((S3FileServiceImpl) service).setRootFolder(rootFolder);
 
-        InputStream content = IOUtils.toInputStream("test the file service", "UTF-8");
-
-        service.create("foo/a.txt", content);
-        service.create("foo/bar/b.txt", content);
-        service.create("foo/bar/foobar/barfoo/c.txt", content);
-        service.create("hello/d.txt", content);
-
-
+        try (InputStream content = IOUtils.toInputStream("test the file service", "UTF-8")) {
+            service.create("foo/a.txt", content);
+        }
+        
+        try (InputStream content = IOUtils.toInputStream("test the file service", "UTF-8")) {
+            service.create("foo/bar/b.txt", content);
+        }
+        
+        try (InputStream content = IOUtils.toInputStream("test the file service", "UTF-8")) {
+            service.create("foo/bar/foobar/barfoo/c.txt", content);
+        }
+        
+        try (InputStream content = IOUtils.toInputStream("test the file service", "UTF-8")) {
+            service.create("hello/d.txt", content);
+        }
+        
         List<String> folders = service.listSubfolders();
 
         Assert.assertEquals(5, folders.size());

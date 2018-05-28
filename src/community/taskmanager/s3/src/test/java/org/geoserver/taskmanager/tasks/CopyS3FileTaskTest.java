@@ -30,6 +30,7 @@ import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,7 +102,9 @@ public class CopyS3FileTaskTest extends AbstractTaskManagerTest {
             
             //copy old version
             if (!targetFileService.checkFileExists(TARGET_FILE_OLD)) {
-                targetFileService.create(TARGET_FILE_OLD, sourceFileService.read(SOURCE_FILE));
+                try (InputStream is = sourceFileService.read(SOURCE_FILE)) {
+                    targetFileService.create(TARGET_FILE_OLD, is);
+                }
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);

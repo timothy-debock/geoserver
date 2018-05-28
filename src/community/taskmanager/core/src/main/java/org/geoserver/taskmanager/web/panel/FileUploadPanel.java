@@ -24,6 +24,7 @@ import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,7 +182,9 @@ public class FileUploadPanel extends Panel {
                     if (fileService.checkFileExists(filePath)) {
                         fileService.delete(filePath);
                     }
-                    fileService.create(filePath, upload.getInputStream());
+                    try (InputStream is = upload.getInputStream()) {
+                        fileService.create(filePath, is);
+                    }
 
                     fileNameModel.setObject(filePath);
                 } catch (Exception e) {

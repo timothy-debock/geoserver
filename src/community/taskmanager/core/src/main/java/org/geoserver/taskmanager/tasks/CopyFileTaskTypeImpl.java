@@ -5,6 +5,7 @@
 package org.geoserver.taskmanager.tasks;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -70,8 +71,9 @@ public class CopyFileTaskTypeImpl implements TaskType {
             if (target.getLatestVersion().equals(target.getNextVersion())) {
                 target.getService().delete(target.getNextVersion());
             }
-            target.getService().create(target.getNextVersion(), 
-                    source.getService().read(source.getLatestVersion()));
+            try (InputStream is = source.getService().read(source.getLatestVersion())) {
+                target.getService().create(target.getNextVersion(), is);
+            }
         } catch (IOException e) {
             throw new TaskException(e);
         }

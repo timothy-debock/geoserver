@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -123,7 +124,9 @@ public class ExtTypesTest extends AbstractTaskManagerTest {
     @Test
     public void testFile() throws IOException {
         FileService service = (FileService) extTypes.fileService.parse("data-directory", null);
-        service.create("temp", new ByteArrayInputStream("test".getBytes()));
+        try (InputStream is = new ByteArrayInputStream("test".getBytes())) {
+            service.create("temp", is);
+        }
         
         assertTrue(extTypes.file(true, false).validate("temp", Collections.singletonList("data-directory")));
         assertTrue(extTypes.file(true, false).validate("doesntexist", Collections.singletonList("data-directory")));

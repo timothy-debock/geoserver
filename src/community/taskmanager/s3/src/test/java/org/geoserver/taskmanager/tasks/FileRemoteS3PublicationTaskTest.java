@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.xml.namespace.QName;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -206,10 +207,12 @@ public class FileRemoteS3PublicationTaskTest extends AbstractTaskManagerTest {
             otherFileService = fileServices.get(S3FileServiceImpl.name(REMOTE_COVERAGE_ALIAS, 
                     REMOTE_COVERAGE_OTHER_BUCKET));
             Assume.assumeNotNull(otherFileService);
-            otherFileService.create(REMOTE_COVERAGE_OTHER_FILE_LOCATION_OLD,
-                    fileService.read(REMOTE_COVERAGE_FILE_LOCATION));
-            otherFileService.create(REMOTE_COVERAGE_OTHER_FILE_LOCATION,
-                    fileService.read(REMOTE_COVERAGE_FILE_LOCATION));
+            try (InputStream is = fileService.read(REMOTE_COVERAGE_FILE_LOCATION)) {
+                otherFileService.create(REMOTE_COVERAGE_OTHER_FILE_LOCATION_OLD, is);
+            }
+            try (InputStream is = fileService.read(REMOTE_COVERAGE_FILE_LOCATION)) {
+                otherFileService.create(REMOTE_COVERAGE_OTHER_FILE_LOCATION, is);
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             Assume.assumeTrue("S3 service is configured and available", false);
