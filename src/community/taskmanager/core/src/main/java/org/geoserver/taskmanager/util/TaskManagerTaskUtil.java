@@ -179,7 +179,7 @@ public class TaskManagerTaskUtil {
         try {
             type.cleanup(createContext(task));
             return true;
-        } catch (TaskException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Clean-up of task " + task.getFullName() + " failed", e);
             return false;
         }

@@ -214,7 +214,9 @@ public class DbLocalPublicationTaskTypeImpl implements TaskType {
         
         catalog.remove(layer);
         catalog.remove(resource);
-        catalog.remove(store);
+        if (catalog.getResourcesByStore(store, ResourceInfo.class).isEmpty()) {
+            catalog.remove(store);
+        }
     }
     
     private static <T> T unwrap(T o, Class<T> clazz) {
