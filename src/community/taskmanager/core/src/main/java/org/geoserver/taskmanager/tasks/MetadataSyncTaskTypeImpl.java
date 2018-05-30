@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 
@@ -98,10 +100,19 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
         if (restLayer == null) {
             throw new TaskException("Layer does not exist on destination " + layer.getName());
         }
+        String storeName;
         
+        Pattern pattern = Pattern.compile("rest/workspaces/" + ws + "/" + storeType.toString()
+                + "/([^/]*)/");
+        Matcher matcher = pattern.matcher(restLayer.getResourceUrl());
+        if (matcher.find()) {
+            storeName = matcher.group(1);
+        } else {
+            throw new TaskException("Couldn't determine store name for " + layer.getName());
+        }
         // sync resource
         GSResourceEncoder re = syncMetadata(resource);
-        if (!restManager.getPublisher().configureResource(ws, storeType, layer.getResource().getStore().getName(), 
+        if (!restManager.getPublisher().configureResource(ws, storeType, storeName, 
                 re)) {
             throw new TaskException(
                     "Failed to configure resource " + ws + ":" + resource.getName());
