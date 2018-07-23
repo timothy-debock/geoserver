@@ -561,6 +561,7 @@
         <module>taskmanager</module>      
         <module>s3-geotiff</module> 
         <module>web-resource</module>
+        <module>gwc-s3</module>
       </modules>
     </profile>
     <profile>
