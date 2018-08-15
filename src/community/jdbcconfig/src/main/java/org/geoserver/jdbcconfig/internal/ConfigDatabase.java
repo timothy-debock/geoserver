@@ -814,6 +814,9 @@ public class ConfigDatabase {
         final boolean updateResouceLayersAdvertised =
                 info instanceof ResourceInfo
                         && modificationProxy.getPropertyNames().contains("advertised");
+        final boolean updateResourceLayersEnabled =
+                info instanceof ResourceInfo
+                        && modificationProxy.getPropertyNames().contains("enabled");
         final boolean updateResourceLayersKeywords =
                 CollectionUtils.exists(
                         modificationProxy.getPropertyNames(),
@@ -853,13 +856,22 @@ public class ConfigDatabase {
         // a regular JavaBean property
         if (info instanceof ResourceInfo) {
             if (updateResouceLayersName) {
-                updateResourceLayerName((ResourceInfo) info);
+                updateResourceLayerProperty(
+                        (ResourceInfo) info, "name", ((ResourceInfo) info).getName());
             }
             if (updateResouceLayersAdvertised) {
-                updateResourceLayerAdvertised((ResourceInfo) info);
+                updateResourceLayerProperty(
+                        (ResourceInfo) info, "advertised", ((ResourceInfo) info).isAdvertised());
+            }
+            if (updateResourceLayersEnabled) {
+                updateResourceLayerProperty(
+                        (ResourceInfo) info, "enabled", ((ResourceInfo) info).isEnabled());
             }
             if (updateResourceLayersKeywords) {
-                updateResourceLayerKeywords((ResourceInfo) info);
+                updateResourceLayerProperty(
+                        (ResourceInfo) info,
+                        "resource.keywords.value",
+                        ((ResourceInfo) info).getKeywords());
             }
         }
         // / </HACK>
@@ -876,43 +888,14 @@ public class ConfigDatabase {
         return getById(id, clazz);
     }
 
-    private <T> void updateResourceLayerName(ResourceInfo info) {
-        final Object newValue = info.getName();
-        Filter filter = Predicates.equal("resource.id", info.getId());
-        List<LayerInfo> resourceLayers;
-        resourceLayers = this.queryAsList(LayerInfo.class, filter, null, null, null);
-        for (LayerInfo layer : resourceLayers) {
-            Set<PropertyType> propertyTypes = dbMappings.getPropertyTypes(LayerInfo.class, "name");
-            PropertyType propertyType = propertyTypes.iterator().next();
-            Property changedProperty = new Property(propertyType, newValue);
-            Integer layerOid = findObjectId(layer);
-            updateQueryableProperties(layer, layerOid, ImmutableSet.of(changedProperty));
-        }
-    }
-
-    private <T> void updateResourceLayerAdvertised(ResourceInfo info) {
-        final Object newValue = info.isAdvertised();
+    private <T> void updateResourceLayerProperty(
+            ResourceInfo info, String propertyPath, Object newValue) {
         Filter filter = Predicates.equal("resource.id", info.getId());
         List<LayerInfo> resourceLayers;
         resourceLayers = this.queryAsList(LayerInfo.class, filter, null, null, null);
         for (LayerInfo layer : resourceLayers) {
             Set<PropertyType> propertyTypes =
-                    dbMappings.getPropertyTypes(LayerInfo.class, "advertised");
-            PropertyType propertyType = propertyTypes.iterator().next();
-            Property changedProperty = new Property(propertyType, newValue);
-            Integer layerOid = findObjectId(layer);
-            updateQueryableProperties(layer, layerOid, ImmutableSet.of(changedProperty));
-        }
-    }
-
-    private <T> void updateResourceLayerKeywords(ResourceInfo info) {
-        final Object newValue = info.getKeywords();
-        Filter filter = Predicates.equal("resource.id", info.getId());
-        List<LayerInfo> resourceLayers;
-        resourceLayers = this.queryAsList(LayerInfo.class, filter, null, null, null);
-        for (LayerInfo layer : resourceLayers) {
-            Set<PropertyType> propertyTypes =
-                    dbMappings.getPropertyTypes(LayerInfo.class, "resource.keywords.value");
+                    dbMappings.getPropertyTypes(LayerInfo.class, propertyPath);
             PropertyType propertyType = propertyTypes.iterator().next();
             Property changedProperty = new Property(propertyType, newValue);
             Integer layerOid = findObjectId(layer);
