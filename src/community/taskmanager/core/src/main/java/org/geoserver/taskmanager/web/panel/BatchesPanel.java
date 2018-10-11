@@ -27,11 +27,11 @@ import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.Configuration;
 import org.geoserver.taskmanager.util.FrequencyUtil;
+import org.geoserver.taskmanager.util.InitConfigUtil;
 import org.geoserver.taskmanager.util.TaskManagerBeans;
 import org.geoserver.taskmanager.web.BatchPage;
 import org.geoserver.taskmanager.web.BatchRunsPage;
@@ -100,7 +100,7 @@ public class BatchesPanel extends Panel {
                         if (configurationModel != null) {
                             batch.setConfiguration(configurationModel.getObject());
                         }
-                        setResponsePage(new BatchPage(new Model<Batch>(batch), getPage()));
+                        setResponsePage(new BatchPage(batch, getPage()));
                     }
 
                     @Override
@@ -264,6 +264,12 @@ public class BatchesPanel extends Panel {
                                                 target.add(remove);
                                             }
 
+                                            @Override
+                                            public void onBeforeRender() {
+                                                batchesModel.reset();
+                                                super.onBeforeRender();
+                                            }
+
                                             @SuppressWarnings("unchecked")
                                             @Override
                                             protected Component getComponentForProperty(
@@ -289,7 +295,12 @@ public class BatchesPanel extends Panel {
                                                                     AjaxRequestTarget target) {
                                                                 setResponsePage(
                                                                         new BatchPage(
-                                                                                itemModel,
+                                                                                TaskManagerBeans
+                                                                                        .get()
+                                                                                        .getDao()
+                                                                                        .init(
+                                                                                                itemModel
+                                                                                                        .getObject()),
                                                                                 getPage()));
                                                             }
                                                         };
@@ -309,7 +320,12 @@ public class BatchesPanel extends Panel {
                                                                     Form<?> form) {
                                                                 setResponsePage(
                                                                         new BatchPage(
-                                                                                itemModel,
+                                                                                TaskManagerBeans
+                                                                                        .get()
+                                                                                        .getDao()
+                                                                                        .init(
+                                                                                                itemModel
+                                                                                                        .getObject()),
                                                                                 getPage()));
                                                             }
                                                         };
@@ -349,19 +365,26 @@ public class BatchesPanel extends Panel {
                                                                 AjaxRequestTarget target) {
                                                             setResponsePage(
                                                                     new BatchRunsPage(
-                                                                            itemModel, getPage()));
+                                                                            TaskManagerBeans.get()
+                                                                                    .getDao()
+                                                                                    .initHistory(
+                                                                                            itemModel
+                                                                                                    .getObject()),
+                                                                            getPage()));
                                                         }
                                                     };
                                                 } else if (property == BatchesModel.RUN) {
                                                     if (itemModel.getObject().getId() == null
-                                                            || itemModel
-                                                                    .getObject()
-                                                                    .getElements()
-                                                                    .isEmpty()
                                                             || (configurationModel != null
                                                                     && configurationModel
                                                                             .getObject()
                                                                             .isTemplate())
+                                                            || (configurationModel != null
+                                                                    && !configurationModel
+                                                                            .getObject()
+                                                                            .isValidated()
+                                                                    && !InitConfigUtil.isInitBatch(
+                                                                            itemModel.getObject()))
                                                             || !TaskManagerBeans.get()
                                                                     .getSecUtil()
                                                                     .isWritable(
