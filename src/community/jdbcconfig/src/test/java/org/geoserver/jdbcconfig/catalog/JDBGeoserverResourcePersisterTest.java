@@ -13,7 +13,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-
 import org.apache.commons.io.FileUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.StyleHandler;
@@ -57,16 +56,17 @@ public class JDBGeoserverResourcePersisterTest {
         ConfigDatabase configDb = testSupport.getDatabase();
         facade = new JDBCCatalogFacade(configDb);
         CatalogImpl catalogImpl = new CatalogImpl();
-        catalogImpl.setFacade(facade);        
+        catalogImpl.setFacade(facade);
         catalogImpl.addListener(new GeoServerResourcePersister(testSupport.getResourceLoader()));
-        
+
         WorkspaceInfo gs = new WorkspaceInfoImpl();
         gs.setName("gs");
         catalogImpl.add(gs);
 
         this.catalog = catalogImpl;
-        
-        GeoServerExtensionsHelper.singleton("sldHandler", new org.geoserver.catalog.SLDHandler(), StyleHandler.class);
+
+        GeoServerExtensionsHelper.singleton(
+                "sldHandler", new org.geoserver.catalog.SLDHandler(), StyleHandler.class);
         new File(testSupport.getResourceLoader().getBaseDirectory(), "styles").mkdir();
     }
 
@@ -95,8 +95,8 @@ public class JDBGeoserverResourcePersisterTest {
     public void testRemoveStyle() throws Exception {
         addStyle();
 
-        File sf = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
+        File sf =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
         sf.createNewFile();
         assertTrue(sf.exists());
 
@@ -105,8 +105,10 @@ public class JDBGeoserverResourcePersisterTest {
 
         assertThat(sf, not(fileExists()));
 
-        File sfb = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld.bak");
+        File sfb =
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "styles/foostyle.sld.bak");
         assertThat(sfb, fileExists());
 
         // do it a second time
@@ -121,24 +123,26 @@ public class JDBGeoserverResourcePersisterTest {
 
         assertThat(sf, not(fileExists()));
 
-        sfb = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld.bak.1");
+        sfb =
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "styles/foostyle.sld.bak.1");
         assertThat(sfb, fileExists());
     }
 
     @Test
     public void testRenameStyle() throws Exception {
         addStyle();
-        File sldFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
+        File sldFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
         sldFile.createNewFile();
 
         StyleInfo s = catalog.getStyleByName("foostyle");
         s.setName("boostyle");
         catalog.save(s);
 
-        File renamedSldFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/boostyle.sld");
+        File renamedSldFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/boostyle.sld");
         assertThat(sldFile, not(fileExists()));
         assertThat(renamedSldFile, fileExists());
     }
@@ -146,19 +150,20 @@ public class JDBGeoserverResourcePersisterTest {
     @Test
     public void testRenameStyleConflict() throws Exception {
         addStyle();
-        File sldFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
+        File sldFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
         sldFile.createNewFile();
-        File conflictingFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/boostyle.sld");
+        File conflictingFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/boostyle.sld");
         conflictingFile.createNewFile();
 
         StyleInfo s = catalog.getStyleByName("foostyle");
         s.setName("boostyle");
         catalog.save(s);
 
-        File renamedSldFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/boostyle1.sld");
+        File renamedSldFile =
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/boostyle1.sld");
         assertThat(sldFile, not(fileExists()));
         assertThat(renamedSldFile, fileExists());
     }
@@ -166,16 +171,18 @@ public class JDBGeoserverResourcePersisterTest {
     @Test
     public void testRenameStyleWithExistingIncrementedVersion() throws Exception {
         addStyle();
-        File sldFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
+        File sldFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
         sldFile.createNewFile();
 
-        File sldFile1 = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle1.sld");
+        File sldFile1 =
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle1.sld");
         sldFile1.createNewFile();
 
-        File sldFile2 = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle2.sld");
+        File sldFile2 =
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle2.sld");
 
         StyleInfo s = catalog.getStyleByName("foostyle");
         s.setName("foostyle");
@@ -193,8 +200,10 @@ public class JDBGeoserverResourcePersisterTest {
         addStyle();
 
         // copy an sld into place
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("default_line.sld"), new File(
-                testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("default_line.sld"),
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
 
         assertTrue(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld")
@@ -207,8 +216,11 @@ public class JDBGeoserverResourcePersisterTest {
         assertFalse(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld")
                         .exists());
-        assertTrue(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld").exists());
+        assertTrue(
+                new File(
+                                testSupport.getResourceLoader().getBaseDirectory(),
+                                "workspaces/gs/styles/foostyle.sld")
+                        .exists());
     }
 
     @Test
@@ -216,12 +228,17 @@ public class JDBGeoserverResourcePersisterTest {
         addStyleWithWorkspace();
 
         // copy an sld into place
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("default_line.sld"),
-                new File(testSupport.getResourceLoader().getBaseDirectory(),
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("default_line.sld"),
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
                         "workspaces/gs/styles/foostyle.sld"));
 
-        assertTrue(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld").exists());
+        assertTrue(
+                new File(
+                                testSupport.getResourceLoader().getBaseDirectory(),
+                                "workspaces/gs/styles/foostyle.sld")
+                        .exists());
 
         StyleInfo s = catalog.getStyleByName("foostyle");
         s.setWorkspace(null);
@@ -230,8 +247,11 @@ public class JDBGeoserverResourcePersisterTest {
         assertTrue(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld")
                         .exists());
-        assertFalse(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld").exists());
+        assertFalse(
+                new File(
+                                testSupport.getResourceLoader().getBaseDirectory(),
+                                "workspaces/gs/styles/foostyle.sld")
+                        .exists());
     }
 
     @Test
@@ -239,9 +259,12 @@ public class JDBGeoserverResourcePersisterTest {
         addStyle();
 
         // copy an sld with its resource into place
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg.sld"), new File(
-                testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"),
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg.sld"),
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg02.svg"),
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"));
 
         assertThat(
@@ -262,10 +285,16 @@ public class JDBGeoserverResourcePersisterTest {
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"),
                 fileExists());
 
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld"), fileExists());
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg02.svg"), fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/foostyle.sld"),
+                fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg02.svg"),
+                fileExists());
     }
 
     @Test
@@ -276,11 +305,15 @@ public class JDBGeoserverResourcePersisterTest {
         // The style will break but copying arbitrary files from parent directories around is a bad
         // idea. Handle the rest normally. KS
 
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burgParentReference.sld"), new File(
-                testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"),
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burgParentReference.sld"),
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"));
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg02.svg"),
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"));
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"),
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg02.svg"),
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"));
 
         new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg03.svg").delete();
@@ -291,7 +324,8 @@ public class JDBGeoserverResourcePersisterTest {
         assertThat(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"),
                 fileExists());
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
+        assertThat(
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
                 fileExists());
         assertThat(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg03.svg"),
@@ -305,20 +339,33 @@ public class JDBGeoserverResourcePersisterTest {
         assertThat(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld"),
                 not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
+        assertThat(
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
                 fileExists());
         assertThat(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"),
                 fileExists());
 
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld"), fileExists());
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg02.svg"), fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/foostyle.sld"),
+                fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg02.svg"),
+                fileExists());
     }
 
     @Test
@@ -328,10 +375,12 @@ public class JDBGeoserverResourcePersisterTest {
         // If an absolute uri is used, don't copy it anywhere. The reference is absolute
         // so it will still work.
 
-        File styleFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burgParentReference.sld"), styleFile);
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"),
+        File styleFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burgParentReference.sld"), styleFile);
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg02.svg"),
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"));
         File target = new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg");
         FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"), target);
@@ -366,18 +415,36 @@ public class JDBGeoserverResourcePersisterTest {
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"),
                 fileExists());
 
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld"), fileExists());
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs" + target.getPath()), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles" + target.getPath()), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg02.svg"), fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/foostyle.sld"),
+                fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs" + target.getPath()),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles" + target.getPath()),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg02.svg"),
+                fileExists());
     }
 
     @Test
@@ -387,10 +454,12 @@ public class JDBGeoserverResourcePersisterTest {
         // If an absolute uri is used, don't copy it anywhere. The reference is absolute
         // so it will still work.
 
-        File styleFile = new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "styles/foostyle.sld");
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burgRemoteReference.sld"), styleFile);
-        FileUtils.copyURLToFile(GeoServerPersistersTest.class.getResource("burg02.svg"),
+        File styleFile =
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/foostyle.sld");
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burgRemoteReference.sld"), styleFile);
+        FileUtils.copyURLToFile(
+                GeoServerPersistersTest.class.getResource("burg02.svg"),
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"));
 
         new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg03.svg").delete();
@@ -405,7 +474,8 @@ public class JDBGeoserverResourcePersisterTest {
         assertThat(
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg03.svg"),
                 not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
+        assertThat(
+                new File(testSupport.getResourceLoader().getBaseDirectory(), "burg03.svg"),
                 not(fileExists()));
 
         StyleInfo s = catalog.getStyleByName("foostyle");
@@ -420,16 +490,30 @@ public class JDBGeoserverResourcePersisterTest {
                 new File(testSupport.getResourceLoader().getBaseDirectory(), "styles/burg02.svg"),
                 fileExists());
 
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/foostyle.sld"), fileExists());
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/example.com/burg03.svg"), not(fileExists()));
-        assertThat(new File(testSupport.getResourceLoader().getBaseDirectory(),
-                "workspaces/gs/styles/burg02.svg"), fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/foostyle.sld"),
+                fileExists());
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/example.com/burg03.svg"),
+                not(fileExists()));
+        assertThat(
+                new File(
+                        testSupport.getResourceLoader().getBaseDirectory(),
+                        "workspaces/gs/styles/burg02.svg"),
+                fileExists());
     }
-
 }

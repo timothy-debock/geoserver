@@ -4,6 +4,9 @@
  */
 package org.geoserver.cluster.integration;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.impl.CatalogImpl;
@@ -11,10 +14,10 @@ import org.geoserver.cluster.client.JMSQueueListener;
 import org.geoserver.cluster.events.ToggleType;
 import org.geoserver.cluster.impl.rest.Controller;
 import org.geoserver.config.GeoServer;
+import org.geoserver.config.GeoServerConfigPersister;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.config.GeoServerLoader;
 import org.geoserver.config.GeoServerResourcePersister;
-import org.geoserver.config.GeoServerConfigPersister;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.data.test.SystemTestData;
@@ -32,13 +35,9 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-
 /**
- * Creates a GeoServer instance that can be used to tests JMS synchronizations. Note that
- * only the bare minimum required elements will be instance.
+ * Creates a GeoServer instance that can be used to tests JMS synchronizations. Note that only the
+ * bare minimum required elements will be instance.
  */
 public final class GeoServerInstance {
 
@@ -48,9 +47,7 @@ public final class GeoServerInstance {
     // cluster name for the interaction tests
     private static final String CLUSTER_NAME = UUID.randomUUID().toString();
 
-    /**
-     * Helper method that creates a system test data directory.
-     */
+    /** Helper method that creates a system test data directory. */
     private static SystemTestData createTestData() {
         SystemTestData testData;
         // instantiate a test data directory
@@ -66,21 +63,26 @@ public final class GeoServerInstance {
             throw new RuntimeException("Error creating base test directory.", exception);
         }
         // add a JVM shutdown for removing the test data directory
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                IOUtils.delete(BASE_TEST_DATA.getDataDirectoryRoot());
-            } catch (Exception exception) {
-                throw new RuntimeException(String.format(
-                        "Error deleting base test data directory '%s'.",
-                        BASE_TEST_DATA.getDataDirectoryRoot().getAbsolutePath()), exception);
-            }
-        }));
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    try {
+                                        IOUtils.delete(BASE_TEST_DATA.getDataDirectoryRoot());
+                                    } catch (Exception exception) {
+                                        throw new RuntimeException(
+                                                String.format(
+                                                        "Error deleting base test data directory '%s'.",
+                                                        BASE_TEST_DATA
+                                                                .getDataDirectoryRoot()
+                                                                .getAbsolutePath()),
+                                                exception);
+                                    }
+                                }));
         return testData;
     }
 
-    /**
-     * Helper method that adds GeoServer default styles to a dt directory.
-     */
+    /** Helper method that adds GeoServer default styles to a dt directory. */
     private static void addDefaultStyles(File dataDirectory) throws IOException {
         // prepare all the necessary GeoServer objects
         File stylesDirectory = new File(dataDirectory, "styles");
@@ -88,7 +90,8 @@ public final class GeoServerInstance {
         Catalog catalog = new CatalogImpl();
         catalog.setResourceLoader(loader);
         XStreamPersister xstreamPersister = new XStreamPersisterFactory().createXMLPersister();
-        GeoServerConfigPersister geoserverPersister = new GeoServerConfigPersister(loader, xstreamPersister);
+        GeoServerConfigPersister geoserverPersister =
+                new GeoServerConfigPersister(loader, xstreamPersister);
         catalog.addListener(geoserverPersister);
         catalog.addListener(new GeoServerResourcePersister(loader));
         // create default styles
@@ -99,23 +102,27 @@ public final class GeoServerInstance {
         createDefaultStyle(catalog, stylesDirectory, "generic", "default_generic.sld");
     }
 
-    /**
-     * Helper method that adds a GeoServer default style to the provided styles directory.
-     */
-    private static void createDefaultStyle(Catalog catalog, File stylesDirectory, String styleName, String fileName) {
+    /** Helper method that adds a GeoServer default style to the provided styles directory. */
+    private static void createDefaultStyle(
+            Catalog catalog, File stylesDirectory, String styleName, String fileName) {
         // copy style from classpath to styles directory
         try {
-            IOUtils.copy(GeoServerLoader.class.getResourceAsStream(fileName), new File(stylesDirectory, fileName));
+            IOUtils.copy(
+                    GeoServerLoader.class.getResourceAsStream(fileName),
+                    new File(stylesDirectory, fileName));
         } catch (Exception exception) {
-            throw new RuntimeException(String.format(
-                    "Error copying default style '%s' to directory '%s'.",
-                    fileName, stylesDirectory.getAbsolutePath()), exception);
+            throw new RuntimeException(
+                    String.format(
+                            "Error copying default style '%s' to directory '%s'.",
+                            fileName, stylesDirectory.getAbsolutePath()),
+                    exception);
         }
         // create GeoServer style object
         StyleInfo style = catalog.getFactory().createStyle();
         style.setName(styleName);
         style.setFilename(fileName);
-        // add the style to the catalog, GeoServer persister will take of writing the style description
+        // add the style to the catalog, GeoServer persister will take of writing the style
+        // description
         catalog.add(style);
     }
 
@@ -152,14 +159,13 @@ public final class GeoServerInstance {
             jmsController.setGroup(CLUSTER_NAME);
             saveJmsConfiguration();
         } catch (Exception exception) {
-            throw new RuntimeException(String.format(
-                    "Error instantiating GeoServer instance '%s'.", instanceName), exception);
+            throw new RuntimeException(
+                    String.format("Error instantiating GeoServer instance '%s'.", instanceName),
+                    exception);
         }
     }
 
-    /**
-     * Helper method that just creates a temporary directory using the provide prefix.
-     */
+    /** Helper method that just creates a temporary directory using the provide prefix. */
     private static File createTempDirectory(String prefix) {
         try {
             // creates a temporary directory using the provided prefix
@@ -170,23 +176,29 @@ public final class GeoServerInstance {
     }
 
     /**
-     * Instantiates this GeoServer instance, i.e. a resource loader based on this
-     * instance data directory is instantiated, a mocked servlet context is created
-     * and an application context is initiated.
+     * Instantiates this GeoServer instance, i.e. a resource loader based on this instance data
+     * directory is instantiated, a mocked servlet context is created and an application context is
+     * initiated.
      */
     private GeoServerTestApplicationContext initInstance() throws Exception {
         // instantiate GeoServer loader
         GeoServerResourceLoader loader = new GeoServerResourceLoader(dataDirectory);
         // setting logging level
-        LoggingUtils.configureGeoServerLogging(loader,
-                this.getClass().getResourceAsStream("/TEST_LOGGING.properties"), false, true, null);
+        LoggingUtils.configureGeoServerLogging(
+                loader,
+                this.getClass().getResourceAsStream("/TEST_LOGGING.properties"),
+                false,
+                true,
+                null);
         // create a mocked servlet context and instantiate the application context
         MockServletContext servletContext = createServletContext();
-        GeoServerTestApplicationContext applicationContext = new GeoServerTestApplicationContext(
-                new String[]{
-                        "classpath*:/applicationContext.xml",
-                        "classpath*:/applicationSecurityContext.xml"
-                }, servletContext);
+        GeoServerTestApplicationContext applicationContext =
+                new GeoServerTestApplicationContext(
+                        new String[] {
+                            "classpath*:/applicationContext.xml",
+                            "classpath*:/applicationSecurityContext.xml"
+                        },
+                        servletContext);
         applicationContext.setUseLegacyGeoServerLoader(false);
         applicationContext.refresh();
         applicationContext.publishEvent(new ContextLoadedEvent(applicationContext));
@@ -195,9 +207,7 @@ public final class GeoServerInstance {
         return applicationContext;
     }
 
-    /**
-     * Helper method that creates a mocked servlet context.
-     */
+    /** Helper method that creates a mocked servlet context. */
     private MockServletContext createServletContext() {
         // set up a fake WEB-INF directory
         ResourceLoader loader;
@@ -216,69 +226,53 @@ public final class GeoServerInstance {
         return servletContext;
     }
 
-    /**
-     * Returns this GeoServer instance catalog.
-     */
+    /** Returns this GeoServer instance catalog. */
     public Catalog getCatalog() {
         return (Catalog) applicationContext.getBean("catalog");
     }
 
-    /**
-     * Returns this GeoServer instance configuration accessor.
-     */
+    /** Returns this GeoServer instance configuration accessor. */
     public GeoServer getGeoServer() {
         return (GeoServer) applicationContext.getBean("geoServer");
     }
 
-    /**
-     * Returns this GeoServer instance resource loader.
-     */
+    /** Returns this GeoServer instance resource loader. */
     public GeoServerResourceLoader getResourceLoader() {
         return (GeoServerResourceLoader) applicationContext.getBean("resourceLoader");
     }
 
-    /**
-     * Returns this GeoServer instance data directory.
-     */
+    /** Returns this GeoServer instance data directory. */
     public GeoServerDataDirectory getDataDirectory() {
         return new GeoServerDataDirectory(getResourceLoader());
     }
 
-    /**
-     * This GeoServer instance will stop propagating JMS events.
-     */
+    /** This GeoServer instance will stop propagating JMS events. */
     public void disableJmsMaster() {
         jmsController.toggle(false, ToggleType.MASTER);
         saveJmsConfiguration();
     }
 
-    /**
-     * This GeoServer instance will propagate JMS events.
-     */
+    /** This GeoServer instance will propagate JMS events. */
     public void enableJmsMaster() {
         jmsController.toggle(true, ToggleType.MASTER);
         saveJmsConfiguration();
     }
 
-    /**
-     * This GeoServer instance will ignore JMS events.
-     */
+    /** This GeoServer instance will ignore JMS events. */
     public void disableJmsSlave() {
         jmsController.toggle(false, ToggleType.SLAVE);
         saveJmsConfiguration();
     }
 
-    /**
-     * This GeoServer instance will consume JMS events.
-     */
+    /** This GeoServer instance will consume JMS events. */
     public void enableJmsSlave() {
         jmsController.toggle(true, ToggleType.SLAVE);
         saveJmsConfiguration();
     }
 
     /**
-     * Makes this GeoServer instance belong to the default JMS cluster,
-     * propagate JMS events and consume JMS events.
+     * Makes this GeoServer instance belong to the default JMS cluster, propagate JMS events and
+     * consume JMS events.
      */
     public void setJmsDefaultConfiguration() {
         jmsController.setBrokerURL("");
@@ -287,10 +281,7 @@ public final class GeoServerInstance {
         enableJmsSlave();
     }
 
-    /**
-     * Will wait until the expected number of events was consumed or
-     * the timeout is reached.
-     */
+    /** Will wait until the expected number of events was consumed or the timeout is reached. */
     public void waitEvents(int number, int timeoutMs) {
         int loops = timeoutMs / 25;
         for (int i = 0; i <= loops && jmsQueueListener.getConsumedEvents() < number; i++) {
@@ -304,23 +295,17 @@ public final class GeoServerInstance {
         }
     }
 
-    /**
-     * Returns the total number of JMS events consumed by this GeoServer instance.
-     */
+    /** Returns the total number of JMS events consumed by this GeoServer instance. */
     public int getConsumedEventsCount() {
         return (int) jmsQueueListener.getConsumedEvents();
     }
 
-    /**
-     * Resets the total number of JMS events consumed by this GeoServer instance.
-     */
+    /** Resets the total number of JMS events consumed by this GeoServer instance. */
     public void resetConsumedEventsCount() {
         jmsQueueListener.resetconsumedevents();
     }
 
-    /**
-     * Helper method tht just saves the current JMS configuration
-     */
+    /** Helper method tht just saves the current JMS configuration */
     private void saveJmsConfiguration() {
         try {
             jmsController.save();
@@ -329,9 +314,7 @@ public final class GeoServerInstance {
         }
     }
 
-    /**
-     * Destroy everything related with this instance.
-     */
+    /** Destroy everything related with this instance. */
     public void destroy() {
         // dispose XSD schema, this is important for WFS schemas
         applicationContext.getBeansOfType(XSD.class).values().forEach(XSD::dispose);
@@ -341,9 +324,10 @@ public final class GeoServerInstance {
         try {
             IOUtils.delete(dataDirectory);
         } catch (Exception exception) {
-            throw new RuntimeException(String.format(
-                    "Error deleting test directory '%s'.",
-                    dataDirectory.getAbsolutePath()), exception);
+            throw new RuntimeException(
+                    String.format(
+                            "Error deleting test directory '%s'.", dataDirectory.getAbsolutePath()),
+                    exception);
         }
     }
 }

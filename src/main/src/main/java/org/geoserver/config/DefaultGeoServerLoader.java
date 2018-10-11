@@ -7,7 +7,6 @@ package org.geoserver.config;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.geoserver.catalog.Catalog;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamServiceLoader;
@@ -15,45 +14,44 @@ import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 
 /**
- * Default GeoServerLoader which loads and persists configuration from the classic GeoServer data 
+ * Default GeoServerLoader which loads and persists configuration from the classic GeoServer data
  * directory structure.
- *  
- * @author Justin Deoliveira, OpenGeo
  *
+ * @author Justin Deoliveira, OpenGeo
  */
 public class DefaultGeoServerLoader extends GeoServerLoader {
-    
+
     ConfigurationListener listener;
-    GeoServerConfigPersister configPersister; 
+    GeoServerConfigPersister configPersister;
 
     public DefaultGeoServerLoader(GeoServerResourceLoader resourceLoader) {
         super(resourceLoader);
     }
-    
+
     protected void loadCatalog(Catalog catalog, XStreamPersister xp) throws Exception {
         catalog.setResourceLoader(resourceLoader);
 
         readCatalog(catalog, xp);
-        
-        if ( !legacy ) {
-            //add the listener which will persist changes
+
+        if (!legacy) {
+            // add the listener which will persist changes
             catalog.addListener(new GeoServerConfigPersister(resourceLoader, xp));
             catalog.addListener(new GeoServerResourcePersister(catalog.getResourceLoader()));
         }
     }
-    
+
     protected void loadGeoServer(final GeoServer geoServer, XStreamPersister xp) throws Exception {
-        if(listener == null) { 
+        if (listener == null) {
             // add event listener which persists changes
-            final List<XStreamServiceLoader> loaders = 
-                GeoServerExtensions.extensions( XStreamServiceLoader.class );
+            final List<XStreamServiceLoader> loaders =
+                    GeoServerExtensions.extensions(XStreamServiceLoader.class);
             listener = new ServicePersister(loaders, geoServer);
         } else {
             // avoid re-dumping all service config files during load,
             // we'll attach it back once done
             geoserver.removeListener(listener);
         }
-        
+
         try {
             if (this.configPersister != null) {
                 // avoid having the persister write down new config files while we read the config,
@@ -70,19 +68,18 @@ public class DefaultGeoServerLoader extends GeoServerLoader {
             geoserver.addListener(listener);
         }
     }
-    
+
     @Override
     protected void initializeStyles(Catalog catalog, XStreamPersister xp) throws IOException {
-        //add a persister temporarily in case the styles don't exist on disk
+        // add a persister temporarily in case the styles don't exist on disk
         GeoServerConfigPersister cp = new GeoServerConfigPersister(resourceLoader, xp);
         GeoServerResourcePersister rp = new GeoServerResourcePersister(resourceLoader);
         catalog.addListener(cp);
         catalog.addListener(rp);
-        
+
         super.initializeStyles(catalog, xp);
-        
+
         catalog.removeListener(cp);
         catalog.removeListener(rp);
     }
-
 }
