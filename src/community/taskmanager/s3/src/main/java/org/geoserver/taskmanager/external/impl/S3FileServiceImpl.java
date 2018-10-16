@@ -238,13 +238,12 @@ public class S3FileServiceImpl implements FileService {
                 public int read() throws IOException {
                     return stream.read();
                 }
-                
+
                 @Override
                 public void close() throws IOException {
                     stream.close();
                     object.close();
                 }
-                
             };
         } catch (AmazonClientException e) {
             throw new IOException(e);

@@ -38,9 +38,8 @@ public class TaskManagerSecurityUtil {
 
     public boolean isReadable(Authentication user, Configuration config) {
         WorkspaceInfo wi = getWorkspace(config.getWorkspace());
-        if (wi
-                == null) { // lack of default workspace (allow) versus incorrect workspace (deny
-                           // unless admin)
+        if (wi == null) { // lack of default workspace (allow) versus incorrect workspace (deny
+            // unless admin)
             return config.getWorkspace() == null
                     || secManager.checkAuthenticationForAdminRole(user);
         } else {
@@ -87,9 +86,8 @@ public class TaskManagerSecurityUtil {
 
     public boolean isWriteable(Authentication user, Configuration config) {
         WorkspaceInfo wi = getWorkspace(config.getWorkspace());
-        if (wi
-                == null) { // lack of default workspace (allow) versus incorrect workspace (deny
-                           // unless admin)
+        if (wi == null) { // lack of default workspace (allow) versus incorrect workspace (deny
+            // unless admin)
             return config.getWorkspace() == null
                     || secManager.checkAuthenticationForAdminRole(user);
         } else {
@@ -135,9 +133,8 @@ public class TaskManagerSecurityUtil {
 
     public boolean isAdminable(Authentication user, Configuration config) {
         WorkspaceInfo wi = getWorkspace(config.getWorkspace());
-        if (wi
-                == null) { // lack of default workspace (allow) versus incorrect workspace (deny
-                           // unless admin)
+        if (wi == null) { // lack of default workspace (allow) versus incorrect workspace (deny
+            // unless admin)
             return config.getWorkspace() == null
                     || secManager.checkAuthenticationForAdminRole(user);
         } else {
