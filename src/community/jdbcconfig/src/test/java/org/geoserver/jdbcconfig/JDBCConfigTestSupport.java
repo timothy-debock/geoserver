@@ -24,6 +24,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.geoserver.catalog.impl.CatalogImpl;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.config.util.XStreamPersisterInitializer;
+import org.geoserver.jdbcconfig.catalog.JDBCCatalogFacade;
 import org.geoserver.jdbcconfig.internal.ConfigDatabase;
 import org.geoserver.jdbcconfig.internal.DbMappings;
 import org.geoserver.jdbcconfig.internal.JDBCConfigProperties;
@@ -261,6 +262,7 @@ public class JDBCConfigTestSupport {
         configDb = context.getBean(ConfigDatabase.class);
 
         catalog = new CatalogImpl();
+        catalog.setFacade(new JDBCCatalogFacade(configDb));
         configDb.setCatalog(catalog);
         configDb.initDb(null);
     }

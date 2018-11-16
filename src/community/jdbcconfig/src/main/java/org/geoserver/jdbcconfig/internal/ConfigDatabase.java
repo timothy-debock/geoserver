@@ -55,22 +55,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.wicket.util.string.Strings;
 import org.geoserver.catalog.CatalogInfo;
-import org.geoserver.catalog.CatalogVisitorAdapter;
-import org.geoserver.catalog.CoverageInfo;
-import org.geoserver.catalog.CoverageStoreInfo;
-import org.geoserver.catalog.DataStoreInfo;
-import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.Info;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.MetadataMap;
-import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.Predicates;
 import org.geoserver.catalog.PublishedInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StyleInfo;
-import org.geoserver.catalog.WMSLayerInfo;
-import org.geoserver.catalog.WMSStoreInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.event.CatalogAddEvent;
 import org.geoserver.catalog.event.CatalogListener;
@@ -148,7 +140,6 @@ public class ConfigDatabase {
 
     private InfoRowMapper<Info> configRowMapper;
 
-    private CatalogClearingListener catalogListener;
     private ConfigClearingListener configListener;
 
     /** Protected default constructor needed by spring-jdbc instrumentation */
@@ -315,7 +306,6 @@ public class ConfigDatabase {
         final Filter simplifiedFilter =
                 (Filter) sqlBuilder.getSupportedFilter().accept(filterSimplifier, null);
         if (simplifiedFilter instanceof PropertyIsEqualTo) {
-            String id = null;
             PropertyIsEqualTo isEqualTo = (PropertyIsEqualTo) simplifiedFilter;
             if (isEqualTo.getExpression1() instanceof PropertyName
                     && isEqualTo.getExpression2() instanceof Literal
@@ -537,17 +527,6 @@ public class ConfigDatabase {
             key = keyHolder.getKey();
         }
         addAttributes(info, key);
-
-        cache.put(id, info);
-
-        for (InfoIdentity identity : InfoIdentities.get().getIdentities(info)) {
-            if (identityCache.getIfPresent(identity) == null) {
-                identityCache.put(identity, id);
-            } else {
-                // not a unique identity
-                identityCache.invalidate(identity);
-            }
-        }
 
         return getById(id, interf);
     }
@@ -801,9 +780,6 @@ public class ConfigDatabase {
 
         final Info oldObject = (Info) modificationProxy.getProxyObject();
 
-        identityCache.invalidateAll(InfoIdentities.get().getIdentities(oldObject));
-        cache.invalidate(id);
-
         // get changed properties before h.commit()s
         final Iterable<Property> changedProperties = dbMappings.changedProperties(oldObject, info);
 
@@ -847,7 +823,6 @@ public class ConfigDatabase {
 
         updateQueryableProperties(oldObject, objectId, changedProperties);
 
-        cache.invalidate(id);
         Class<T> clazz = ClassMappings.fromImpl(oldObject.getClass()).getInterface();
 
         // / <HACK>
@@ -875,15 +850,6 @@ public class ConfigDatabase {
             }
         }
         // / </HACK>
-
-        for (InfoIdentity identity : InfoIdentities.get().getIdentities(info)) {
-            if (identityCache.getIfPresent(identity) == null) {
-                identityCache.put(identity, id);
-            } else {
-                // not a unique identity
-                identityCache.invalidate(identity);
-            }
-        }
 
         return getById(id, clazz);
     }
@@ -1461,9 +1427,26 @@ public class ConfigDatabase {
         return !propertyTypes.isEmpty();
     }
 
-    void clear(Info info) {
+    void clearCache(Info info) {
         identityCache.invalidateAll(InfoIdentities.get().getIdentities(info));
         cache.invalidate(info.getId());
+        if (info instanceof ResourceInfo) {
+            clearCache(getByIdentity(LayerInfo.class, "resource.id", info.getId()));
+        }
+    }
+
+    void updateCache(Info info) {
+        info = ModificationProxy.unwrap(info);
+        cache.put(info.getId(), info);
+
+        for (InfoIdentity identity : InfoIdentities.get().getIdentities(info)) {
+            if (identityCache.getIfPresent(identity) == null) {
+                identityCache.put(identity, info.getId());
+            } else {
+                // not a unique identity
+                identityCache.invalidate(identity);
+            }
+        }
     }
 
     public <T extends Info> T get(Class<T> type, Filter filter) throws IllegalArgumentException {
@@ -1506,108 +1489,98 @@ public class ConfigDatabase {
 
     /** Listens to catalog events clearing cache entires when resources are modified. */
     // Copied from org.geoserver.catalog.ResourcePool
-    public class CatalogClearingListener extends CatalogVisitorAdapter implements CatalogListener {
+    public class CatalogClearingListener implements CatalogListener {
 
-        public void handleAddEvent(CatalogAddEvent event) {}
+        public void handleAddEvent(CatalogAddEvent event) {
+            updateCache(event.getSource());
+        }
 
-        public void handleModifyEvent(CatalogModifyEvent event) {}
+        public void handleModifyEvent(CatalogModifyEvent event) {
+            clearCache(event.getSource());
+        }
 
         public void handlePostModifyEvent(CatalogPostModifyEvent event) {
-            event.getSource().accept(this);
+            updateCache(event.getSource());
         }
 
         public void handleRemoveEvent(CatalogRemoveEvent event) {
-            event.getSource().accept(this);
+            clearCache(event.getSource());
         }
 
         public void reloaded() {}
-
-        @Override
-        public void visit(DataStoreInfo dataStore) {
-            clear(dataStore);
-        }
-
-        @Override
-        public void visit(CoverageStoreInfo coverageStore) {
-            clear(coverageStore);
-        }
-
-        @Override
-        public void visit(FeatureTypeInfo featureType) {
-            clear(featureType);
-        }
-
-        @Override
-        public void visit(WMSStoreInfo wmsStore) {
-            clear(wmsStore);
-        }
-
-        @Override
-        public void visit(StyleInfo style) {
-            clear(style);
-        }
-
-        @Override
-        public void visit(WorkspaceInfo workspace) {
-            clear(workspace);
-        }
-
-        @Override
-        public void visit(NamespaceInfo workspace) {
-            clear(workspace);
-        }
-
-        @Override
-        public void visit(CoverageInfo coverage) {
-            clear(coverage);
-        }
-
-        @Override
-        public void visit(LayerInfo layer) {
-            clear(layer);
-        }
-
-        @Override
-        public void visit(LayerGroupInfo layerGroup) {
-            clear(layerGroup);
-        }
-
-        @Override
-        public void visit(WMSLayerInfo wmsLayerInfoImpl) {
-            clear(wmsLayerInfoImpl);
-        }
     }
     /** Listens to configuration events clearing cache entires when resources are modified. */
     public class ConfigClearingListener extends ConfigurationListenerAdapter {
 
         @Override
-        public void handlePostGlobalChange(GeoServerInfo global) {
-            clear(global);
+        public void handleGlobalChange(
+                GeoServerInfo global,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            clearCache(global);
         }
 
         @Override
-        public void handleSettingsPostModified(SettingsInfo settings) {
-            clear(settings);
+        public void handleSettingsModified(
+                SettingsInfo settings,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            clearCache(settings);
+        }
+
+        @Override
+        public void handleLoggingChange(
+                LoggingInfo logging,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            clearCache(logging);
+        }
+
+        @Override
+        public void handleServiceChange(
+                ServiceInfo service,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            clearCache(service);
         }
 
         @Override
         public void handleSettingsRemoved(SettingsInfo settings) {
-            clear(settings);
-        }
-
-        @Override
-        public void handlePostLoggingChange(LoggingInfo logging) {
-            clear(logging);
-        }
-
-        @Override
-        public void handlePostServiceChange(ServiceInfo service) {
-            clear(service);
+            clearCache(settings);
         }
 
         @Override
         public void handleServiceRemove(ServiceInfo service) {
-            clear(service);
+            clearCache(service);
+        }
+
+        @Override
+        public void handlePostGlobalChange(GeoServerInfo global) {
+            updateCache(global);
+        }
+
+        @Override
+        public void handleSettingsPostModified(SettingsInfo settings) {
+            updateCache(settings);
+        }
+
+        @Override
+        public void handlePostLoggingChange(LoggingInfo logging) {
+            updateCache(logging);
+        }
+
+        @Override
+        public void handlePostServiceChange(ServiceInfo service) {
+            updateCache(service);
+        }
+
+        @Override
+        public void handleSettingsAdded(SettingsInfo settings) {
+            updateCache(settings);
         }
     }
 }
