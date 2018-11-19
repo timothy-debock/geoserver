@@ -90,7 +90,8 @@ public class ConfigChangeEvent extends Event {
     public enum Type {
         ADD,
         REMOVE,
-        MODIFY
+        MODIFY,
+        POST_MODIFY
     }
 
     /** id of object */

@@ -38,10 +38,12 @@ import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.event.CatalogAddEvent;
 import org.geoserver.catalog.event.CatalogListener;
+import org.geoserver.catalog.event.CatalogModifyEvent;
 import org.geoserver.catalog.event.CatalogPostModifyEvent;
 import org.geoserver.catalog.event.CatalogRemoveEvent;
 import org.geoserver.catalog.event.impl.CatalogAddEventImpl;
 import org.geoserver.catalog.event.impl.CatalogEventImpl;
+import org.geoserver.catalog.event.impl.CatalogModifyEventImpl;
 import org.geoserver.catalog.event.impl.CatalogPostModifyEventImpl;
 import org.geoserver.catalog.event.impl.CatalogRemoveEventImpl;
 import org.geoserver.cluster.ConfigChangeEvent;
@@ -201,6 +203,13 @@ public class EventHzSynchronizer extends HzSynchronizer {
                 evt = new CatalogAddEventImpl();
                 break;
             case MODIFY:
+                subj = getCatalogInfo(cat, id, clazz);
+                notifyMethod =
+                        CatalogListener.class.getMethod(
+                                "handleModifyEvent", CatalogModifyEvent.class);
+                evt = new CatalogModifyEventImpl();
+                break;
+            case POST_MODIFY:
                 subj = getCatalogInfo(cat, id, clazz);
                 notifyMethod =
                         CatalogListener.class.getMethod(
