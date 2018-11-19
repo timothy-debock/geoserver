@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,6 +143,8 @@ public class ConfigDatabase {
 
     private ConfigClearingListener configListener;
 
+    private Map<String, List<InfoIdentity>> infoIdentities;
+
     /** Protected default constructor needed by spring-jdbc instrumentation */
     protected ConfigDatabase() {
         //
@@ -171,6 +174,7 @@ public class ConfigDatabase {
         cache = cacheProvider.getCache("catalog");
         identityCache = cacheProvider.getCache("catalogNames");
         serviceCache = cacheProvider.getCache("services");
+        infoIdentities = new ConcurrentHashMap<>();
     }
 
     private Dialect dialect() {
@@ -743,9 +747,6 @@ public class ConfigDatabase {
             return;
         }
 
-        identityCache.invalidateAll(InfoIdentities.get().getIdentities(info));
-        cache.invalidate(info.getId());
-
         String deleteObject = "delete from object where id = :id";
         String deleteRelatedProperties = "delete from object_property where related_oid = :oid";
 
@@ -1047,13 +1048,20 @@ public class ConfigDatabase {
 
         String id = null;
         try {
-            id = identityCache.get(infoIdentity, new IdentityLoader(infoIdentity));
+            id = identityCache.get(infoIdentity, new IdentityLoader(infoIdentity));            
 
         } catch (CacheLoader.InvalidCacheLoadException notFound) {
             return null;
         } catch (ExecutionException e) {
-            Throwables.propagate(e.getCause());
+            Throwables.propagate(e.getCause());            
         }
+        
+        List<InfoIdentity> identities = infoIdentities.get(id);
+        if (identities == null) {
+            identities = new ArrayList<InfoIdentity>();
+            infoIdentities.put(id, identities);
+        }
+        identities.add(infoIdentity);
 
         return id;
     }
@@ -1428,7 +1436,10 @@ public class ConfigDatabase {
     }
 
     void clearCache(Info info) {
-        identityCache.invalidateAll(InfoIdentities.get().getIdentities(info));
+        List<InfoIdentity> identities = infoIdentities.remove(info.getId());
+        if (identities != null) {
+            identityCache.invalidateAll();
+        }
         cache.invalidate(info.getId());
         if (info instanceof ResourceInfo) {
             clearCache(getByIdentity(LayerInfo.class, "resource.id", info.getId()));
@@ -1438,8 +1449,9 @@ public class ConfigDatabase {
     void updateCache(Info info) {
         info = ModificationProxy.unwrap(info);
         cache.put(info.getId(), info);
-
-        for (InfoIdentity identity : InfoIdentities.get().getIdentities(info)) {
+        List<InfoIdentity> identities = InfoIdentities.get().getIdentities(info);
+        infoIdentities.put(info.getId(), identities);
+        for (InfoIdentity identity : identities) {
             if (identityCache.getIfPresent(identity) == null) {
                 identityCache.put(identity, info.getId());
             } else {
@@ -1495,11 +1507,10 @@ public class ConfigDatabase {
             updateCache(event.getSource());
         }
 
-        public void handleModifyEvent(CatalogModifyEvent event) {
-            clearCache(event.getSource());
-        }
+        public void handleModifyEvent(CatalogModifyEvent event) {}
 
         public void handlePostModifyEvent(CatalogPostModifyEvent event) {
+            clearCache(event.getSource());
             updateCache(event.getSource());
         }
 
@@ -1513,42 +1524,6 @@ public class ConfigDatabase {
     public class ConfigClearingListener extends ConfigurationListenerAdapter {
 
         @Override
-        public void handleGlobalChange(
-                GeoServerInfo global,
-                List<String> propertyNames,
-                List<Object> oldValues,
-                List<Object> newValues) {
-            clearCache(global);
-        }
-
-        @Override
-        public void handleSettingsModified(
-                SettingsInfo settings,
-                List<String> propertyNames,
-                List<Object> oldValues,
-                List<Object> newValues) {
-            clearCache(settings);
-        }
-
-        @Override
-        public void handleLoggingChange(
-                LoggingInfo logging,
-                List<String> propertyNames,
-                List<Object> oldValues,
-                List<Object> newValues) {
-            clearCache(logging);
-        }
-
-        @Override
-        public void handleServiceChange(
-                ServiceInfo service,
-                List<String> propertyNames,
-                List<Object> oldValues,
-                List<Object> newValues) {
-            clearCache(service);
-        }
-
-        @Override
         public void handleSettingsRemoved(SettingsInfo settings) {
             clearCache(settings);
         }
@@ -1560,21 +1535,25 @@ public class ConfigDatabase {
 
         @Override
         public void handlePostGlobalChange(GeoServerInfo global) {
+            clearCache(global);
             updateCache(global);
         }
 
         @Override
         public void handleSettingsPostModified(SettingsInfo settings) {
+            clearCache(settings);
             updateCache(settings);
         }
 
         @Override
         public void handlePostLoggingChange(LoggingInfo logging) {
+            clearCache(logging);
             updateCache(logging);
         }
 
         @Override
         public void handlePostServiceChange(ServiceInfo service) {
+            clearCache(service);
             updateCache(service);
         }
 

@@ -35,6 +35,7 @@ import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.impl.DataStoreInfoImpl;
 import org.geoserver.catalog.impl.FeatureTypeInfoImpl;
 import org.geoserver.catalog.impl.LayerInfoImpl;
+import org.geoserver.catalog.impl.ModificationProxy;
 import org.geoserver.catalog.impl.WorkspaceInfoImpl;
 import org.geoserver.config.ConfigurationListener;
 import org.geoserver.config.GeoServer;
@@ -207,6 +208,9 @@ public class ConfigDatabaseTest {
         // can cause remove to actually be called twice on the workspace.
         database.remove(ws);
         database.remove(ws);
+        //Notify of update
+        database.getCatalog().fireRemoved(ws);
+        
         assertNull(database.getById(ws.getId(), WorkspaceInfo.class));
     }
 
@@ -264,9 +268,11 @@ public class ConfigDatabaseTest {
         assertEquals("name1", ws2.getName());
 
         // Notify of update
+        ws2.setName("name2");
+        ModificationProxy.handler(ws2).commit();
         testSupport
                 .getCatalog()
-                .fireModified(
+                .firePostModified(
                         ws2, Arrays.asList("name"), Arrays.asList("name1"), Arrays.asList("name2"));
 
         // Should show the new value
@@ -328,8 +334,10 @@ public class ConfigDatabaseTest {
         assertEquals("Foo", service.getMaintainer());
 
         // Notify of update
+        service.setMaintainer("Bar");
+        ModificationProxy.handler(service).commit();
         for (ConfigurationListener l : database.getGeoServer().getListeners()) {
-            l.handleServiceChange(service, null, null, null);
+            l.handlePostServiceChange(service);
         }
 
         // Should show the new value
