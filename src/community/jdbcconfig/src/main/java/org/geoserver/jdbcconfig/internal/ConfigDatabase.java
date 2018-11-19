@@ -1440,9 +1440,6 @@ public class ConfigDatabase {
     void clearCache(Info info) {
         identityCache.invalidateAll(InfoIdentities.get().getIdentities(info));
         cache.invalidate(info.getId());
-        if (info instanceof ResourceInfo) {
-            clearCache(getByIdentity(LayerInfo.class, "resource.id", info.getId()));
-        }
     }
 
     void updateCache(Info info) {
@@ -1509,11 +1506,23 @@ public class ConfigDatabase {
             // make sure that cache is not refilled before commit
             noCachingFlags.put(event.getSource().getId(), true);
             clearCache(event.getSource());
+            if (event.getSource() instanceof ResourceInfo) {
+                LayerInfo li =
+                        getByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
+                noCachingFlags.put(li.getId(), true);
+                clearCache(li);
+            }
         }
 
         public void handlePostModifyEvent(CatalogPostModifyEvent event) {
             updateCache(event.getSource());
             noCachingFlags.put(event.getSource().getId(), false);
+            if (event.getSource() instanceof ResourceInfo) {
+                LayerInfo li =
+                        getByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
+                updateCache(li);
+                noCachingFlags.put(li.getId(), false);
+            }
         }
 
         public void handleRemoveEvent(CatalogRemoveEvent event) {
