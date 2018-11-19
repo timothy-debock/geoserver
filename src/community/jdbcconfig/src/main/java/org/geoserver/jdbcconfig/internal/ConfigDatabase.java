@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -143,7 +144,7 @@ public class ConfigDatabase {
 
     private ConfigClearingListener configListener;
 
-    private Map<String, List<InfoIdentity>> infoIdentities;
+    private ConcurrentMap<String, Boolean> noCachingFlags;
 
     /** Protected default constructor needed by spring-jdbc instrumentation */
     protected ConfigDatabase() {
@@ -174,7 +175,7 @@ public class ConfigDatabase {
         cache = cacheProvider.getCache("catalog");
         identityCache = cacheProvider.getCache("catalogNames");
         serviceCache = cacheProvider.getCache("services");
-        infoIdentities = new ConcurrentHashMap<>();
+        noCachingFlags = new ConcurrentHashMap<>();
     }
 
     private Dialect dialect() {
@@ -1005,7 +1006,15 @@ public class ConfigDatabase {
                 valueLoader = new ConfigLoader(id);
             }
 
-            info = cache.get(id, valueLoader);
+            if (!Boolean.TRUE.equals(noCachingFlags.get(id))) {
+                info = cache.get(id, valueLoader);
+            } else {
+                try {
+                    info = valueLoader.call();
+                } catch (Exception e) {
+                    throw new ExecutionException(e);
+                }
+            }
 
         } catch (CacheLoader.InvalidCacheLoadException notFound) {
             return null;
@@ -1048,20 +1057,13 @@ public class ConfigDatabase {
 
         String id = null;
         try {
-            id = identityCache.get(infoIdentity, new IdentityLoader(infoIdentity));            
+            id = identityCache.get(infoIdentity, new IdentityLoader(infoIdentity));
 
         } catch (CacheLoader.InvalidCacheLoadException notFound) {
             return null;
         } catch (ExecutionException e) {
-            Throwables.propagate(e.getCause());            
+            Throwables.propagate(e.getCause());
         }
-        
-        List<InfoIdentity> identities = infoIdentities.get(id);
-        if (identities == null) {
-            identities = new ArrayList<InfoIdentity>();
-            infoIdentities.put(id, identities);
-        }
-        identities.add(infoIdentity);
 
         return id;
     }
@@ -1436,10 +1438,7 @@ public class ConfigDatabase {
     }
 
     void clearCache(Info info) {
-        List<InfoIdentity> identities = infoIdentities.remove(info.getId());
-        if (identities != null) {
-            identityCache.invalidateAll();
-        }
+        identityCache.invalidateAll(InfoIdentities.get().getIdentities(info));
         cache.invalidate(info.getId());
         if (info instanceof ResourceInfo) {
             clearCache(getByIdentity(LayerInfo.class, "resource.id", info.getId()));
@@ -1450,7 +1449,6 @@ public class ConfigDatabase {
         info = ModificationProxy.unwrap(info);
         cache.put(info.getId(), info);
         List<InfoIdentity> identities = InfoIdentities.get().getIdentities(info);
-        infoIdentities.put(info.getId(), identities);
         for (InfoIdentity identity : identities) {
             if (identityCache.getIfPresent(identity) == null) {
                 identityCache.put(identity, info.getId());
@@ -1507,11 +1505,15 @@ public class ConfigDatabase {
             updateCache(event.getSource());
         }
 
-        public void handleModifyEvent(CatalogModifyEvent event) {}
+        public void handleModifyEvent(CatalogModifyEvent event) {
+            // make sure that cache is not refilled before commit
+            noCachingFlags.put(event.getSource().getId(), true);
+            clearCache(event.getSource());
+        }
 
         public void handlePostModifyEvent(CatalogPostModifyEvent event) {
-            clearCache(event.getSource());
             updateCache(event.getSource());
+            noCachingFlags.put(event.getSource().getId(), false);
         }
 
         public void handleRemoveEvent(CatalogRemoveEvent event) {
@@ -1534,27 +1536,71 @@ public class ConfigDatabase {
         }
 
         @Override
-        public void handlePostGlobalChange(GeoServerInfo global) {
+        public void handleGlobalChange(
+                GeoServerInfo global,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            // make sure that cache is not refilled before commit
+            noCachingFlags.put(global.getId(), true);
             clearCache(global);
+        }
+
+        @Override
+        public void handlePostGlobalChange(GeoServerInfo global) {
             updateCache(global);
+            noCachingFlags.put(global.getId(), false);
+        }
+
+        @Override
+        public void handleSettingsModified(
+                SettingsInfo settings,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            // make sure that cache is not refilled before commit
+            noCachingFlags.put(settings.getId(), true);
+            clearCache(settings);
         }
 
         @Override
         public void handleSettingsPostModified(SettingsInfo settings) {
-            clearCache(settings);
             updateCache(settings);
+            noCachingFlags.put(settings.getId(), false);
+        }
+
+        @Override
+        public void handleLoggingChange(
+                LoggingInfo logging,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            // make sure that cache is not refilled before commit
+            noCachingFlags.put(logging.getId(), true);
+            clearCache(logging);
         }
 
         @Override
         public void handlePostLoggingChange(LoggingInfo logging) {
-            clearCache(logging);
             updateCache(logging);
+            noCachingFlags.put(logging.getId(), false);
+        }
+
+        @Override
+        public void handleServiceChange(
+                ServiceInfo service,
+                List<String> propertyNames,
+                List<Object> oldValues,
+                List<Object> newValues) {
+            // make sure that cache is not refilled before commit
+            noCachingFlags.put(service.getId(), true);
+            clearCache(service);
         }
 
         @Override
         public void handlePostServiceChange(ServiceInfo service) {
-            clearCache(service);
             updateCache(service);
+            noCachingFlags.put(service.getId(), false);
         }
 
         @Override

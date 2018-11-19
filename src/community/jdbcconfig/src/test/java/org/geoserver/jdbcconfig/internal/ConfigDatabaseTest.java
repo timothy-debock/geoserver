@@ -208,9 +208,9 @@ public class ConfigDatabaseTest {
         // can cause remove to actually be called twice on the workspace.
         database.remove(ws);
         database.remove(ws);
-        //Notify of update
+        // Notify of update
         database.getCatalog().fireRemoved(ws);
-        
+
         assertNull(database.getById(ws.getId(), WorkspaceInfo.class));
     }
 
@@ -268,6 +268,10 @@ public class ConfigDatabaseTest {
         assertEquals("name1", ws2.getName());
 
         // Notify of update
+        testSupport
+                .getCatalog()
+                .fireModified(
+                        ws2, Arrays.asList("name"), Arrays.asList("name1"), Arrays.asList("name2"));
         ws2.setName("name2");
         ModificationProxy.handler(ws2).commit();
         testSupport
