@@ -318,15 +318,16 @@ public class BatchesPanel extends Panel {
                                                             protected void onSubmit(
                                                                     AjaxRequestTarget target,
                                                                     Form<?> form) {
+                                                                Batch batch = itemModel.getObject();
+                                                                if (configurationModel == null) {
+                                                                    batch =
+                                                                            TaskManagerBeans.get()
+                                                                                    .getDao()
+                                                                                    .init(batch);
+                                                                }
                                                                 setResponsePage(
                                                                         new BatchPage(
-                                                                                TaskManagerBeans
-                                                                                        .get()
-                                                                                        .getDao()
-                                                                                        .init(
-                                                                                                itemModel
-                                                                                                        .getObject()),
-                                                                                getPage()));
+                                                                                batch, getPage()));
                                                             }
                                                         };
                                                     }
