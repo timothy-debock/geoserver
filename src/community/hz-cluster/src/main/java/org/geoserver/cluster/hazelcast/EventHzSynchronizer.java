@@ -253,7 +253,11 @@ public class EventHzSynchronizer extends HzSynchronizer {
             for (CatalogListener l : ImmutableList.copyOf(cat.getListeners())) {
                 // Don't notify self otherwise the event bounces back out into the
                 // cluster.
-                if (l != this && isStarted()) {
+                if (l != this
+                        && isStarted()
+                        && // HACK-HACK-HACK -- prevent infinite loop with update sequence listener
+                        !"org.geoserver.config.UpdateSequenceListener"
+                                .equals(l.getClass().getCanonicalName())) {
                     notifyMethod.invoke(l, evt);
                 }
             }
