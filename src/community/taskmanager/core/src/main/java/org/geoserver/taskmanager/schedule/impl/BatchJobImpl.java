@@ -4,11 +4,13 @@
  */
 package org.geoserver.taskmanager.schedule.impl;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.BatchRun;
@@ -28,6 +30,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * The scheduled batch job implementation.
@@ -43,6 +47,15 @@ public class BatchJobImpl implements Job {
 
     @Override
     public void execute(final JobExecutionContext context) throws JobExecutionException {
+
+        // run with admin rights
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null,
+                                Collections.singletonList(GeoServerRole.ADMIN_ROLE)));
+
         // get all the context beans
         ApplicationContext appContext;
         try {
