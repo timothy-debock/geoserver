@@ -301,7 +301,12 @@ public class EventHzSynchronizer extends HzSynchronizer {
 
         for (ConfigurationListener l : gs.getListeners()) {
             try {
-                if (l != this) notifyMethod.invoke(l, subj);
+                if (l != this
+                        && // HACK-HACK-HACK -- prevent infinite loop with update sequence listener
+                        !"org.geoserver.config.UpdateSequenceListener"
+                                .equals(l.getClass().getCanonicalName())) {
+                    notifyMethod.invoke(l, subj);
+                }
             } catch (Exception ex) {
                 LOGGER.log(
                         Level.WARNING, format("%s - Event dispatch failed: %s", nodeId(), ce), ex);
