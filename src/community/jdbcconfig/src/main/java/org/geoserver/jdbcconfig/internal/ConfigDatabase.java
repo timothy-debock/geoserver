@@ -49,6 +49,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -144,7 +146,7 @@ public class ConfigDatabase {
 
     private ConfigClearingListener configListener;
 
-    private ConcurrentMap<String, Boolean> noCachingFlags;
+    private ConcurrentMap<String, Lock> locks;
 
     /** Protected default constructor needed by spring-jdbc instrumentation */
     protected ConfigDatabase() {
@@ -175,7 +177,7 @@ public class ConfigDatabase {
         cache = cacheProvider.getCache("catalog");
         identityCache = cacheProvider.getCache("catalogNames");
         serviceCache = cacheProvider.getCache("services");
-        noCachingFlags = new ConcurrentHashMap<>();
+        locks = new ConcurrentHashMap<>();
     }
 
     private Dialect dialect() {
@@ -1006,9 +1008,27 @@ public class ConfigDatabase {
                 valueLoader = new ConfigLoader(id);
             }
 
-            if (!Boolean.TRUE.equals(noCachingFlags.get(id))) {
-                info = cache.get(id, valueLoader);
-            } else {
+            Lock lock = locks.get(id);
+            if (lock == null) {
+                lock = new ReentrantLock();
+                locks.put(id, lock);
+            }
+
+            info = cache.getIfPresent(id);
+            if (info == null) {
+                // we try the write lock
+                if (lock.tryLock()) {
+                    try {
+                        info = cache.get(id, valueLoader);
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            }
+
+            if (info == null) {
+                // if the write lock was locked, we fall back
+                // to a read-only method
                 try {
                     info = valueLoader.call();
                 } catch (Exception e) {
@@ -1442,6 +1462,13 @@ public class ConfigDatabase {
         cache.invalidate(info.getId());
     }
 
+    void clearCacheIfPresent(String id) {
+        Info info = cache.getIfPresent(id);
+        if (info != null) {
+            clearCache(info);
+        }
+    }
+
     void updateCache(Info info) {
         info = ModificationProxy.unwrap(info);
         cache.put(info.getId(), info);
@@ -1494,6 +1521,19 @@ public class ConfigDatabase {
         return result;
     }
 
+    private void acquireWriteLock(String id) {
+        Lock lock = locks.get(id);
+        if (lock == null) {
+            lock = new ReentrantLock();
+            locks.put(id, lock);
+        }
+        lock.lock();
+    }
+
+    private void releaseWriteLock(String id) {
+        locks.get(id).unlock();
+    }
+
     /** Listens to catalog events clearing cache entires when resources are modified. */
     // Copied from org.geoserver.catalog.ResourcePool
     public class CatalogClearingListener implements CatalogListener {
@@ -1504,24 +1544,23 @@ public class ConfigDatabase {
 
         public void handleModifyEvent(CatalogModifyEvent event) {
             // make sure that cache is not refilled before commit
-            noCachingFlags.put(event.getSource().getId(), true);
-            clearCache(event.getSource());
             if (event.getSource() instanceof ResourceInfo) {
-                LayerInfo li =
-                        getByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
-                noCachingFlags.put(li.getId(), true);
-                clearCache(li);
+                String liId =
+                        getIdByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
+                acquireWriteLock(liId);
+                clearCacheIfPresent(liId);
             }
+            acquireWriteLock(event.getSource().getId());
+            clearCache(event.getSource());
         }
 
         public void handlePostModifyEvent(CatalogPostModifyEvent event) {
             updateCache(event.getSource());
-            noCachingFlags.put(event.getSource().getId(), false);
+            releaseWriteLock(event.getSource().getId());
             if (event.getSource() instanceof ResourceInfo) {
-                LayerInfo li =
-                        getByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
-                updateCache(li);
-                noCachingFlags.put(li.getId(), false);
+                String liId =
+                        getIdByIdentity(LayerInfo.class, "resource.id", event.getSource().getId());
+                releaseWriteLock(liId);
             }
         }
 
@@ -1551,14 +1590,14 @@ public class ConfigDatabase {
                 List<Object> oldValues,
                 List<Object> newValues) {
             // make sure that cache is not refilled before commit
-            noCachingFlags.put(global.getId(), true);
+            acquireWriteLock(global.getId());
             clearCache(global);
         }
 
         @Override
         public void handlePostGlobalChange(GeoServerInfo global) {
             updateCache(global);
-            noCachingFlags.put(global.getId(), false);
+            releaseWriteLock(global.getId());
         }
 
         @Override
@@ -1568,14 +1607,14 @@ public class ConfigDatabase {
                 List<Object> oldValues,
                 List<Object> newValues) {
             // make sure that cache is not refilled before commit
-            noCachingFlags.put(settings.getId(), true);
+            acquireWriteLock(settings.getId());
             clearCache(settings);
         }
 
         @Override
         public void handleSettingsPostModified(SettingsInfo settings) {
             updateCache(settings);
-            noCachingFlags.put(settings.getId(), false);
+            releaseWriteLock(settings.getId());
         }
 
         @Override
@@ -1585,14 +1624,14 @@ public class ConfigDatabase {
                 List<Object> oldValues,
                 List<Object> newValues) {
             // make sure that cache is not refilled before commit
-            noCachingFlags.put(logging.getId(), true);
+            acquireWriteLock(logging.getId());
             clearCache(logging);
         }
 
         @Override
         public void handlePostLoggingChange(LoggingInfo logging) {
             updateCache(logging);
-            noCachingFlags.put(logging.getId(), false);
+            releaseWriteLock(logging.getId());
         }
 
         @Override
@@ -1602,14 +1641,14 @@ public class ConfigDatabase {
                 List<Object> oldValues,
                 List<Object> newValues) {
             // make sure that cache is not refilled before commit
-            noCachingFlags.put(service.getId(), true);
+            acquireWriteLock(service.getId());
             clearCache(service);
         }
 
         @Override
         public void handlePostServiceChange(ServiceInfo service) {
             updateCache(service);
-            noCachingFlags.put(service.getId(), false);
+            releaseWriteLock(service.getId());
         }
 
         @Override

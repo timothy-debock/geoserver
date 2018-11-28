@@ -339,6 +339,9 @@ public class ConfigDatabaseTest {
 
         // Notify of update
         service.setMaintainer("Bar");
+        for (ConfigurationListener l : database.getGeoServer().getListeners()) {
+            l.handleServiceChange(service, null, null, null);
+        }
         ModificationProxy.handler(service).commit();
         for (ConfigurationListener l : database.getGeoServer().getListeners()) {
             l.handlePostServiceChange(service);
