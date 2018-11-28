@@ -227,6 +227,14 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                                 si.getName())) {
                     throw new TaskException("Failed to create style " + si.getName());
                 }
+                // hack -- if the style is in SLD version 1.1.0 the file must be PUT with RAW
+                // and the right mime type in the header. otherwise, it is parsed as 1.0.0 and
+                // faulty.
+                if (!restManager
+                        .getStyleManager()
+                        .updateStyle(catalogUtil.getStyleContent(si), si.prefixedName(), true)) {
+                    throw new TaskException("Failed to update style " + si.getName());
+                }
             }
 
             // config layer

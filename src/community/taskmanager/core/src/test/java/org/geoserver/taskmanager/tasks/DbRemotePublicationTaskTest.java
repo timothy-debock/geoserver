@@ -36,6 +36,7 @@ import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.ExternalGS;
 import org.geoserver.taskmanager.schedule.BatchJobService;
 import org.geoserver.taskmanager.util.LookupService;
+import org.geoserver.taskmanager.util.SqlUtil;
 import org.geoserver.taskmanager.util.TaskManagerDataUtil;
 import org.geoserver.taskmanager.util.TaskManagerTaskUtil;
 import org.geoserver.util.IOUtils;
@@ -52,8 +53,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * To run this test you should have a geoserver running on http://localhost:9090/geoserver +
- * postgres running on localhost with database 'mydb' (or configure in application context),
- * initiated with create-source.sql.
+ * postgres running on localhost with database 'testtargetdb' (or configure in application context),
+ * initiated with create-target.sql, after running .
  *
  * @author Niels Charlier
  */
@@ -64,12 +65,16 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     // private static final String DB_NAME = "myjndidb";
     // private static final String TABLE_NAME = "grondwaterlichamen_new";
     private static final String DB_NAME = "mypostgresdb";
-    private static final String TABLE_NAME = "Grondwaterlichamen_Copy";
+    private static final String SCHEMA = "gw_beleid";
+    private static final String TABLE_NAME = SCHEMA + ".grondwaterlichamen_new";
+    private static final String LAYER = "grondwaterlichamen_new";
     private static final String STYLE = "grass";
     private static final String SECOND_STYLE = "second_grass";
+    private static final String STYLE_VERSION11 = "boringdiepte";
 
-    private static QName MY_TYPE = new QName(DB_NAME, TABLE_NAME, DB_NAME);
+    private static QName MY_TYPE = new QName(DB_NAME, LAYER, DB_NAME);
 
+    private static final String ATT_TABLE_NAME = "tableName";
     private static final String ATT_LAYER = "layer";
     private static final String ATT_EXT_GS = "geoserver";
     private static final String ATT_FAIL = "fail";
@@ -108,8 +113,10 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
                 IOUtils.copy(is, os);
             }
         }
+        DATA_DIRECTORY.addStyle(STYLE_VERSION11, getClass().getResource(STYLE_VERSION11 + ".sld"));
         Map<String, Serializable> params = new HashMap<String, Serializable>();
         params.putAll(dbSources.get(DB_NAME).getParameters());
+        params.put("schema", SCHEMA);
         params.put(MockData.KEY_STYLE, STYLE);
         DATA_DIRECTORY.addCustomType(MY_TYPE, params);
         return true;
@@ -119,7 +126,13 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
     public void setupBatch() throws MalformedURLException {
         Assume.assumeTrue(extGeoservers.get("mygs").getRESTManager().getReader().existGeoserver());
         try (Connection conn = dbSources.get(DB_NAME).getDataSource().getConnection()) {
-            try (ResultSet res = conn.getMetaData().getTables(null, null, TABLE_NAME, null)) {
+            try (ResultSet res =
+                    conn.getMetaData()
+                            .getTables(
+                                    null,
+                                    SqlUtil.schema(TABLE_NAME),
+                                    SqlUtil.notQualified(TABLE_NAME),
+                                    null)) {
                 Assume.assumeTrue(res.next());
             }
         } catch (SQLException e) {
@@ -139,6 +152,8 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
                 task1, DbRemotePublicationTaskTypeImpl.PARAM_EXT_GS, ATT_EXT_GS);
         dataUtil.setTaskParameterToAttribute(
                 task1, DbRemotePublicationTaskTypeImpl.PARAM_DB_NAME, ATT_DB_NAME);
+        dataUtil.setTaskParameterToAttribute(
+                task1, DbRemotePublicationTaskTypeImpl.PARAM_TABLE_NAME, ATT_TABLE_NAME);
         dataUtil.addTaskToConfiguration(config, task1);
 
         config = dao.save(config);
@@ -171,10 +186,12 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
         // set additional style
         LayerInfo li = geoServer.getCatalog().getLayerByName(MY_TYPE.getLocalPart());
         li.getStyles().add(geoServer.getCatalog().getStyleByName(SECOND_STYLE));
+        li.getStyles().add(geoServer.getCatalog().getStyleByName(STYLE_VERSION11));
         geoServer.getCatalog().save(li);
 
         dataUtil.setConfigurationAttribute(config, ATT_DB_NAME, DB_NAME);
-        dataUtil.setConfigurationAttribute(config, ATT_LAYER, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
         config = dao.save(config);
 
@@ -186,23 +203,28 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
 
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
 
-        assertTrue(restManager.getReader().existsDatastore(DB_NAME, DB_NAME));
-        assertTrue(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
-        assertTrue(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
+        assertTrue(restManager.getReader().existsDatastore(DB_NAME, DB_NAME + "_" + SCHEMA));
+        assertTrue(
+                restManager.getReader().existsFeatureType(DB_NAME, DB_NAME + "_" + SCHEMA, LAYER));
+        assertTrue(restManager.getReader().existsLayer(DB_NAME, LAYER, true));
 
         // test styles
-        RESTLayer layer = restManager.getReader().getLayer(DB_NAME, TABLE_NAME);
+        RESTLayer layer = restManager.getReader().getLayer(DB_NAME, LAYER);
         assertEquals(STYLE, layer.getDefaultStyle());
         assertEquals(SECOND_STYLE, layer.getStyles().get(0).getName());
         RESTStyle style = restManager.getReader().getStyle(STYLE);
         assertEquals(STYLE + ".sld", style.getFileName());
         RESTStyle second_style = restManager.getReader().getStyle(SECOND_STYLE);
         assertEquals(SECOND_STYLE + ".sld", second_style.getFileName());
+        RESTStyle style_version12 = restManager.getReader().getStyle(STYLE_VERSION11);
+        assertEquals(STYLE_VERSION11 + ".sld", style_version12.getFileName());
+        assertEquals("1.1.0", style_version12.getVersion());
 
         assertTrue(taskUtil.cleanup(config));
 
-        assertFalse(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
-        assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
+        assertFalse(restManager.getReader().existsLayer(DB_NAME, LAYER, true));
+        assertFalse(
+                restManager.getReader().existsFeatureType(DB_NAME, DB_NAME + "_" + SCHEMA, LAYER));
     }
 
     @Test
@@ -214,7 +236,8 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
         dataUtil.addTaskToConfiguration(config, task2);
 
         dataUtil.setConfigurationAttribute(config, ATT_DB_NAME, DB_NAME);
-        dataUtil.setConfigurationAttribute(config, ATT_LAYER, TABLE_NAME);
+        dataUtil.setConfigurationAttribute(config, ATT_LAYER, LAYER);
+        dataUtil.setConfigurationAttribute(config, ATT_TABLE_NAME, TABLE_NAME);
         dataUtil.setConfigurationAttribute(config, ATT_EXT_GS, "mygs");
         dataUtil.setConfigurationAttribute(config, ATT_FAIL, Boolean.TRUE.toString());
         config = dao.save(config);
@@ -230,8 +253,9 @@ public class DbRemotePublicationTaskTest extends AbstractTaskManagerTest {
 
         GeoServerRESTManager restManager = extGeoservers.get("mygs").getRESTManager();
 
-        assertFalse(restManager.getReader().existsDatastore(DB_NAME, DB_NAME));
-        assertFalse(restManager.getReader().existsFeatureType(DB_NAME, DB_NAME, TABLE_NAME));
-        assertFalse(restManager.getReader().existsLayer(DB_NAME, TABLE_NAME, true));
+        assertFalse(restManager.getReader().existsDatastore(DB_NAME, DB_NAME + "_" + SCHEMA));
+        assertFalse(
+                restManager.getReader().existsFeatureType(DB_NAME, DB_NAME + "_" + SCHEMA, LAYER));
+        assertFalse(restManager.getReader().existsLayer(DB_NAME, LAYER, true));
     }
 }

@@ -38,7 +38,7 @@ public class DbRemotePublicationTaskTypeImpl extends AbstractRemotePublicationTa
         paramInfo.put(PARAM_DB_NAME, dbInfo);
         paramInfo.put(
                 PARAM_TABLE_NAME,
-                new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName, false).dependsOn(dbInfo));
+                new ParameterInfo(PARAM_TABLE_NAME, extTypes.tableName, true).dependsOn(dbInfo));
     }
 
     @Override

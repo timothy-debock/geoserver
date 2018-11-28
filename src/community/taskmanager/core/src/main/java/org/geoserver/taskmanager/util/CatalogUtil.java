@@ -142,6 +142,15 @@ public class CatalogUtil {
         return ws == null ? null : ws.getName();
     }
 
+    public String getStyleContent(StyleInfo style) throws TaskException {
+        Resource resStyle = geoServerDataDirectory.style(style);
+        try (InputStream in = resStyle.in()) {
+            return IOUtils.toString(in);
+        } catch (IOException e) {
+            throw new TaskException(e);
+        }
+    }
+
     public File createStyleZipFile(StyleInfo style) throws TaskException {
         try {
             Style parsedStyle = geoServerDataDirectory.parsedStyle(style);
