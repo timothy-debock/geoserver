@@ -232,7 +232,11 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                 // faulty.
                 if (!restManager
                         .getStyleManager()
-                        .updateStyle(catalogUtil.getStyleContent(si), si.prefixedName(), true)) {
+                        .updateStyleInWorkspace(
+                                catalogUtil.getStyleContent(si),
+                                CatalogUtil.wsName(si.getWorkspace()),
+                                si.getName(),
+                                true)) {
                     throw new TaskException("Failed to update style " + si.getName());
                 }
             }

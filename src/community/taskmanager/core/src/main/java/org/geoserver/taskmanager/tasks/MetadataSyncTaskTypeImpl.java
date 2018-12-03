@@ -163,7 +163,8 @@ public class MetadataSyncTaskTypeImpl implements TaskType {
             // and the right mime type in the header. otherwise, it is parsed as 1.0.0 and faulty.
             if (!restManager
                     .getStyleManager()
-                    .updateStyle(catalogUtil.getStyleContent(si), si.prefixedName(), true)) {
+                    .updateStyleInWorkspace(
+                            catalogUtil.getStyleContent(si), wsName, si.getName(), true)) {
                 throw new TaskException("Failed to update style " + si.getName());
             }
         }
