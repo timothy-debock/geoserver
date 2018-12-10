@@ -1,0 +1,52 @@
+attributes:
+  - key: uuid-single
+    fieldType: UUID
+  - key: indentifier-single
+    fieldType: TEXT
+  - key: number-field
+    fieldType: NUMBER
+  - key: dropdown-field
+    fieldType: DROPDOWN
+    values:
+        - Select me
+        - Or select this row
+        - Don't select this one
+  - label: refsystem as list
+    key: refsystem-as-list
+    fieldType: TEXT
+    occurrence: REPEAT
+  - label: Referencesystem object
+    key: referencesystem-object
+    fieldType: COMPLEX
+    typename: referencesystem
+  - label: Referencesystem object list
+    key: referencesystem-object-list
+    fieldType: COMPLEX
+    typename: referencesystem
+    occurrence: REPEAT
+    #duplicates should be ignored
+  - label: Referencesystem object list
+    key: referencesystem-object-list
+    fieldType: COMPLEX
+    typename: referencesystem
+    occurrence: REPEAT
+
+types:
+  - typename: referencesystem
+    attributes:
+        - label: Code
+          key: code
+          fieldType: TEXT
+        - label: codeSpace
+          key: code-space
+          fieldType: TEXT
+
+geonetworks:
+  - name: geonetwork url
+    url: https://www.dov.vlaanderen.be/geonetwork/
+  - name: geonetwork oefen url
+    url: https://oefen.dov.vlaanderen.be/geonetwork/
+
+geonetworkmapping:
+    -  geoserver: indentifier-other
+       geonetwork: //gmd:fileIdentifier/gco:CharacterString/text()

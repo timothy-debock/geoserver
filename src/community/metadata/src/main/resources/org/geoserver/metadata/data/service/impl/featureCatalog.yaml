@@ -1,0 +1,50 @@
+attributes:  
+  - label: Object catalog
+    key: object-catalog
+    fieldType: COMPLEX
+    typename: objectCatalog
+    occurrence: REPEAT
+
+types:
+  - typename: objectCatalog
+    attributes:
+        - label: Name
+          key: name
+          fieldType: TEXT
+        - label: Type
+          key: type
+          fieldType: DROPDOWN
+          values:
+              - String
+              - Date
+              - Number
+              - Geometry
+              - Unknown
+        - label: Length
+          key: length
+          fieldType: NUMBER
+        - label: Definition
+          key: definition
+          fieldType: TEXT
+        - label: Minimal Cardinality
+          key: min-occurence
+          fieldType: NUMBER
+        - label: Maximal Cardinality
+          key: max-occurence
+          fieldType: NUMBER
+        - label: Domain
+          key: domain
+          fieldType: COMPLEX
+          typename: domain
+          occurrence: REPEAT
+  - typename: domain
+    attributes:
+        - label: Code
+          key: code
+          fieldType: TEXT
+        - label: Value
+          key: value
+          fieldType: TEXT
+        - label: Definition
+          key: definition
+          fieldType: TEXT
