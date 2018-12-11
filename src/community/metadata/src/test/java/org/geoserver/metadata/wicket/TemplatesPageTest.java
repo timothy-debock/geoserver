@@ -9,6 +9,7 @@ import java.util.Locale;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.FeedbackMessage;
+import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.geoserver.catalog.LayerInfo;
@@ -142,7 +143,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         tester.clickLink("removeSelected");
 
         print(tester.getLastRenderedPage(), true, true);
-        tester.assertLabel("dialog:dialog:content:form:userPanel", "Are you sure?");
+        tester.assertComponent("dialog:dialog:content:form:userPanel", MultiLineLabel.class);
         tester.clickLink("dialog:dialog:content:form:submit");
 
         // Check update content of the table
@@ -179,7 +180,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         tester.getComponentFromLastRenderedPage("removeSelected").setEnabled(true);
         tester.clickLink("removeSelected");
 
-        tester.assertLabel("dialog:dialog:content:form:userPanel", "Are you sure?");
+        tester.assertComponent("dialog:dialog:content:form:userPanel", MultiLineLabel.class);
         tester.clickLink("dialog:dialog:content:form:submit");
 
         // Check update content of the table

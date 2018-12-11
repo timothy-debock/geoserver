@@ -113,9 +113,9 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                 .getBean(MetadataTemplateService.class);
                 try {
                     if (isNew) {
-                        service.save(metadataTemplateModel.getObject());
+                        service.add(metadataTemplateModel.getObject());
                     } else {
-                        service.update(metadataTemplateModel.getObject());
+                        service.save(metadataTemplateModel.getObject(), true);
                     }
                     setResponsePage(new MetadataTemplatesPage());
                 } catch (IOException e) {

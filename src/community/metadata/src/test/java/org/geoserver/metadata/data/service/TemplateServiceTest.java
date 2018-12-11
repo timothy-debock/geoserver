@@ -62,7 +62,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         metadataTemplate.setName("new-record");
         metadataTemplate.setMetadata(new ComplexMetadataMapImpl(new HashMap<>()));
 
-        service.save(metadataTemplate);
+        service.add(metadataTemplate);
 
         MetadataTemplate actual = service.load("new-record");
         Assert.assertEquals("new-record", actual.getName());
@@ -78,7 +78,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         MetadataTemplate metadataTemplate = new MetadataTemplateImpl();
         // name required
         try {
-            service.save(metadataTemplate);
+            service.add(metadataTemplate);
             Assert.fail("Should trow error");
         } catch (IOException ignored) {
 
@@ -86,7 +86,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         // no duplicate names
         metadataTemplate.setName("allData");
         try {
-            service.save(metadataTemplate);
+            service.add(metadataTemplate);
             Assert.fail("Should trow error");
         } catch (IOException ignored) {
         }
@@ -116,7 +116,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
                         new ComplexMetadataMapImpl((HashMap<String, Serializable>) initialCustom));
         Assert.assertEquals(1, initialMetadataModel.getObject().size("object-catalog/type"));
 
-        service.update(initial);
+        service.save(initial, true);
 
         MetadataTemplate actual = service.load("simple fields");
         Assert.assertEquals(
@@ -167,7 +167,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
     public void testUpdateShouldRemoveDeletedLayers() throws IOException {
         MetadataTemplate template = service.load("template-nested-object");
         Assert.assertEquals(2, template.getLinkedLayers().size());
-        service.update(template);
+        service.save(template, true);
         Assert.assertEquals(0, template.getLinkedLayers().size());
     }
 
