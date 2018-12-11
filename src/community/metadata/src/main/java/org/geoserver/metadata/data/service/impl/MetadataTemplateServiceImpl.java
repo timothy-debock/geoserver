@@ -55,7 +55,6 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
 
     @Autowired private ComplexMetadataService metadataService;
 
-    // TODO is this correct?
     @Autowired protected GeoServer geoServer;
 
     public MetadataTemplateServiceImpl() {

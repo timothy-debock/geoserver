@@ -5,6 +5,8 @@
 
 package org.geoserver.metadata.web;
 
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +14,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -71,9 +73,6 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-                        dialog.setTitle(
-                                new ParamResourceModel(
-                                        "deleteDialog.title", MetadataTemplatesPage.this));
                         dialog.showOkCancel(
                                 target,
                                 new GeoServerDialog.DialogDelegate() {
@@ -87,7 +86,15 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                                 new ParamResourceModel(
                                                         "deleteDialog.content",
                                                         MetadataTemplatesPage.this);
-                                        return new Label(id, resource.getString());
+                                        StringBuffer sb = new StringBuffer();
+                                        sb.append(resource.getString());
+                                        for (MetadataTemplate template :
+                                                templatesPanel.getSelection()) {
+                                            sb.append("\n&nbsp;&nbsp;");
+                                            sb.append(escapeHtml(template.getName()));
+                                        }
+                                        return new MultiLineLabel(id, sb.toString())
+                                                .setEscapeModelStrings(false);
                                     }
 
                                     @Override
@@ -161,7 +168,6 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                             new StringResourceModel("errorIsLinked", templatesPanel)
                                     .setParameters(template.getName(), layers);
                     error(msg.getString());
-                    ;
                 } else {
                     error(e.getMessage());
                 }
