@@ -33,7 +33,7 @@ import org.geoserver.web.wicket.ParamResourceModel;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class ImportGeonetworkPanel extends Panel {
+public abstract class ImportGeonetworkPanel extends Panel {
     private static final long serialVersionUID = 1297739738862860160L;
 
     private List<MetadataGeonetworkConfiguration> geonetworks = new ArrayList<>();
@@ -151,7 +151,7 @@ public class ImportGeonetworkPanel extends Panel {
         };
     }
 
-    public void handleImport(String url, AjaxRequestTarget target) {}
+    public abstract void handleImport(String url, AjaxRequestTarget target);
 
     private String generateMetadataUrl(String modelValue, String uuid) {
         String url = "";
@@ -192,9 +192,5 @@ public class ImportGeonetworkPanel extends Panel {
 
     public FeedbackPanel getFeedbackPanel() {
         return (FeedbackPanel) get("importFeedback");
-    }
-
-    public void suppressWarnings(boolean suppressWarnings) {
-        this.suppressWarnings = suppressWarnings;
     }
 }

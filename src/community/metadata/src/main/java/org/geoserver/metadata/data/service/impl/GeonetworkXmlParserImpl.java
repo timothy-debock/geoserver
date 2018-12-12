@@ -101,26 +101,6 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
         }
     }
 
-    /*private Document readXmlMetadata(Resource resource) throws IOException {
-        try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            dbf.setNamespaceAware(true);
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(resource.in());
-            doc.getDocumentElement().normalize();
-            return doc;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
-        throw new IOException("Could not read resource:" + resource);
-    }*/
-
     private NodeList findNode(Document doc, String geonetwork, Node node) {
         try {
             XPathFactory factory = XPathFactory.newInstance();
@@ -134,9 +114,6 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
                 result = expr.evaluate(doc, XPathConstants.NODESET);
             }
             NodeList nodes = (NodeList) result;
-            /* for (int i = 0; i < nodes.getLength(); i++) {
-                System.out.println(nodes.item(i).getTextContent());
-            }*/
             return nodes;
         } catch (XPathExpressionException e) {
 

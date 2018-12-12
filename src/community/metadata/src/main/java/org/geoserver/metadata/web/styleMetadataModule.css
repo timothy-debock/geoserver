@@ -8,8 +8,13 @@ ul.links-above-table {
 }
 
 .attribute-panel > table > tbody > tr.even td,
+.attribute-panel > table > tbody > tr td,
 .attribute-panel tr.even th,
-.attribute-panel tr.odd th {
+.attribute-panel tr th,
+.attribute-panel tr:hover td,
+.attribute-panel tr.even:hover td,
+.attribute-panel tr:hover th,
+.attribute-panel tr.even:hover th {
     background: rgba(255, 255, 255, 0);
 }
 
@@ -18,14 +23,8 @@ ul.links-above-table {
     display: none;
 }
 
-.repeat-panel > table {
-    border: 1px solid #0076a1;
-    border-width: 0px;
-    border-top-width: 1px;
-}
-
-.repeat-panel > table > tbody > tr.even td {
-    background: #e2efcd;
+.repeat-panel .attribute-panel > table {
+    border: 1px solid #e2efcd;
 }
 
 input:disabled,
