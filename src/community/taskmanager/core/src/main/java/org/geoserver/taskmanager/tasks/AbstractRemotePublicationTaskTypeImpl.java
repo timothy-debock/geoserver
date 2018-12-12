@@ -170,7 +170,7 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
 
             // create resource (and layer)
 
-            final GSResourceEncoder re = CatalogUtil.syncMetadata(resource, tempName);
+            final GSResourceEncoder re = catalogUtil.syncMetadata(resource, tempName);
             re.setAdvertised(false);
             postProcess(
                     re,
