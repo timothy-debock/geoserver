@@ -29,7 +29,7 @@
       </HashMap>
     </entry>
     <entry key="custom">
-      <HashMap>
+      <map>
         <entry>
           <string>dropdown-field</string>
           <string>Or select this row</string>
@@ -123,10 +123,10 @@
           <string>number-field</string>
           <string>77</string>
         </entry>
-      </HashMap>
+      </map>
     </entry>
     <entry key="custom-derived-attributes">
-      <HashMap>
+      <map>
         <entry>
           <string>dropdown-field</string>
           <list>
@@ -161,7 +161,7 @@
           <string>referencesystem-object</string>
           <list/>
         </entry>
-      </HashMap>
+      </map>
     </entry>
     <entry key="cachingEnabled">false</entry>
   </metadata>
