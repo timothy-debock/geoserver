@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.catalog.LayerInfo;
@@ -109,7 +110,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                     private static final long serialVersionUID = -4620394948554985874L;
 
                     @Override
-                    public void handleImport(String url, AjaxRequestTarget target) {
+                    public void handleImport(String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel) {
                         try {
                             // First unlink all templates
                             importTemplatePanel()
@@ -129,7 +130,8 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                             xmlParser.parseMetadata(doc, metadataModel.getObject());
                         } catch (IOException e) {
                             LOGGER.severe(e.getMessage());
-                            getPage().error(e.getMessage());
+                            feedbackPanel.error(e.getMessage());
+                            target.add(feedbackPanel);
                         }
                         target.add(
                                 metadataPanel()

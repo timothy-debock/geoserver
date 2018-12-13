@@ -38,8 +38,6 @@ public abstract class ImportGeonetworkPanel extends Panel {
 
     private List<MetadataGeonetworkConfiguration> geonetworks = new ArrayList<>();
 
-    private boolean suppressWarnings;
-
     public ImportGeonetworkPanel(String id) {
         super(id);
         MetadataEditorConfigurationService metadataService =
@@ -100,14 +98,13 @@ public abstract class ImportGeonetworkPanel extends Panel {
                                     .getString());
                     valid = false;
                 }
-                if ("".equals(inputUUID.getValue())) {
-                    error(
-                            new ParamResourceModel("errorUuidRequired", ImportGeonetworkPanel.this)
+                final String uuId = inputUUID.getValue();
+                if ("".equals(uuId)) {
+                    error(new ParamResourceModel("errorUuidRequired", ImportGeonetworkPanel.this)
                                     .getString());
                     valid = false;
                 }
                 if (valid) {
-                    if (!suppressWarnings) {
                         dialog.setTitle(
                                 new ParamResourceModel(
                                         "confirmImportDialog.title", ImportGeonetworkPanel.this));
@@ -133,17 +130,11 @@ public abstract class ImportGeonetworkPanel extends Panel {
                                         String url =
                                                 generateMetadataUrl(
                                                         dropDown.getModelObject(),
-                                                        inputUUID.getValue());
-                                        handleImport(url, target);
+                                                        uuId);
+                                        handleImport(url, target, getFeedbackPanel());
                                         return true;
                                     }
                                 });
-                    } else {
-                        String url =
-                                generateMetadataUrl(
-                                        dropDown.getModelObject(), inputUUID.getValue());
-                        handleImport(url, target);
-                    }
                 }
 
                 target.add(getFeedbackPanel());
@@ -151,7 +142,7 @@ public abstract class ImportGeonetworkPanel extends Panel {
         };
     }
 
-    public abstract void handleImport(String url, AjaxRequestTarget target);
+    public abstract void handleImport(String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel);
 
     private String generateMetadataUrl(String modelValue, String uuid) {
         String url = "";
