@@ -889,6 +889,7 @@ public class ConfigurationPage extends GeoServerSecuredPage {
                                     : originalConfigurationModel.getObject());
                     removedTasks.clear();
                     batchesPanel.getRemovedBatches().clear();
+                    attributesModel.reset();
                     if (doReturn) {
                         doReturn();
                     } else {
