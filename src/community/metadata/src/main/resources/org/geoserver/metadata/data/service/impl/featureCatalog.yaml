@@ -3,10 +3,19 @@ attributes:
     key: object-catalog
     fieldType: COMPLEX
     typename: objectCatalog
-    occurrence: REPEAT
 
 types:
   - typename: objectCatalog
+    attributes:
+        - label: Unique identifier
+          key: uuid
+          fieldType: UUID
+        - label: Feature attribute
+          key: feature-attribute
+          fieldType: COMPLEX
+          typename: featureAttribute
+          occurence: REPEAT
+  - typename: featureAttribute
     attributes:
         - label: Name
           key: name
