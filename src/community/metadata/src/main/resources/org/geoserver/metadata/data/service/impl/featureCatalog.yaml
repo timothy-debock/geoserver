@@ -1,14 +1,14 @@
 attributes:  
-  - label: Object catalog
-    key: object-catalog
+  - label: Feature catalog
+    key: feature-catalog
     fieldType: COMPLEX
-    typename: objectCatalog
+    typename: featureCatalog
 
 types:
-  - typename: objectCatalog
+  - typename: featureCatalog
     attributes:
         - label: Unique identifier
-          key: uuid
+          key: feature-catalog-identifier
           fieldType: UUID
         - label: Feature attribute
           key: feature-attribute
