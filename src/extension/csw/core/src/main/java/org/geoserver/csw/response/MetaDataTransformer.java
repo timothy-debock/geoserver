@@ -118,14 +118,6 @@ public class MetaDataTransformer extends AbstractRecordTransformer {
                     }
                 }
 
-                /*for (Property p2 : ((ComplexAttribute) p).getProperties()) {
-                    if (p2.getName().equals(ComplexFeatureConstants.SIMPLE_CONTENT)) {
-                        chars(p2.getValue().toString());
-                    } else if (!p2.getName().getLocalPart().substring(0, 1).equals("@")) {
-                        encodeProperty(f, p2);
-                    }
-                }*/
-
                 end(prefix + ":" + p.getName().getLocalPart());
 
             } else if (MetaDataDescriptor.RECORD_BBOX_NAME.equals(p.getName())) {
