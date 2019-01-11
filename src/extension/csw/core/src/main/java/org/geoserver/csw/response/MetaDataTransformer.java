@@ -5,6 +5,7 @@
  */
 package org.geoserver.csw.response;
 
+import java.util.Collection;
 import java.util.List;
 import net.opengis.cat.csw20.RequestBaseType;
 import org.geoserver.csw.records.AbstractRecordDescriptor;
@@ -18,7 +19,9 @@ import org.geotools.xml.transform.Translator;
 import org.opengis.feature.ComplexAttribute;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
+import org.opengis.feature.type.ComplexType;
 import org.opengis.feature.type.Name;
+import org.opengis.feature.type.PropertyDescriptor;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -56,6 +59,14 @@ public class MetaDataTransformer extends AbstractRecordTransformer {
             encodeProperty(f, f);
         }
 
+        protected void encodeProperties(Feature f, Collection<Property> properties) {
+            if (properties != null) {
+                for (Property property : properties) {
+                    encodeProperty(f, property);
+                }
+            }
+        }
+
         private void encodeProperty(Feature f, Property p) {
             if (p instanceof ComplexAttribute) {
 
@@ -85,13 +96,35 @@ public class MetaDataTransformer extends AbstractRecordTransformer {
 
                 start(prefix + ":" + p.getName().getLocalPart(), atts);
 
-                for (Property p2 : ((ComplexAttribute) p).getProperties()) {
+                Property pSimple =
+                        ((ComplexAttribute) p).getProperty(ComplexFeatureConstants.SIMPLE_CONTENT);
+                if (pSimple != null) {
+                    chars(pSimple.getValue().toString());
+                }
+
+                for (PropertyDescriptor pd : ((ComplexType) p.getType()).getDescriptors()) {
+                    if (!pd.getName().getLocalPart().substring(0, 1).equals("@")) {
+                        encodeProperties(f, ((ComplexAttribute) p).getProperties(pd.getName()));
+                        @SuppressWarnings("unchecked")
+                        Collection<PropertyDescriptor> substitionGroup =
+                                (Collection<PropertyDescriptor>)
+                                        pd.getUserData().get("substitutionGroup");
+                        if (substitionGroup != null) {
+                            for (PropertyDescriptor pdSub : substitionGroup) {
+                                encodeProperties(
+                                        f, ((ComplexAttribute) p).getProperties(pdSub.getName()));
+                            }
+                        }
+                    }
+                }
+
+                /*for (Property p2 : ((ComplexAttribute) p).getProperties()) {
                     if (p2.getName().equals(ComplexFeatureConstants.SIMPLE_CONTENT)) {
                         chars(p2.getValue().toString());
                     } else if (!p2.getName().getLocalPart().substring(0, 1).equals("@")) {
                         encodeProperty(f, p2);
                     }
-                }
+                }*/
 
                 end(prefix + ":" + p.getName().getLocalPart());
 
