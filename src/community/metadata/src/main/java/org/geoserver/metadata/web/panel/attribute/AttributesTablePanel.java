@@ -16,7 +16,7 @@ import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.OccurenceEnum;
+import org.geoserver.metadata.data.dto.OccurrenceEnum;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.service.GeneratorService;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
@@ -99,7 +99,7 @@ public class AttributesTablePanel extends Panel {
                 }
                 if (property.equals(AttributeDataProvider.VALUE)) {
                     MetadataAttributeConfiguration attributeConfiguration = itemModel.getObject();
-                    if (OccurenceEnum.SINGLE.equals(attributeConfiguration.getOccurrence())) {
+                    if (OccurrenceEnum.SINGLE.equals(attributeConfiguration.getOccurrence())) {
                         Component component =
                                 EditorFactory.getInstance()
                                         .create(

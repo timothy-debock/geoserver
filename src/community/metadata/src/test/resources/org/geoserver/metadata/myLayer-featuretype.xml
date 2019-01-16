@@ -35,7 +35,7 @@
           <string>Or select this row</string>
         </entry>
         <entry>
-          <string>object-catalog/max-occurence</string>
+          <string>feature-catalog/feature-attribute/max-occurrence</string>
           <list/>
         </entry>
         <entry>
@@ -43,7 +43,7 @@
           <string>refsystem-codeSpace</string>
         </entry>
         <entry>
-          <string>object-catalog/domain/code</string>
+          <string>feature-catalog/feature-attribute/domain/code</string>
           <list>
             <list>
               <string>nestedobject</string>
@@ -51,7 +51,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/definition</string>
+          <string>feature-catalog/feature-attribute/definition</string>
           <list>
             <string>a date</string>
           </list>
@@ -61,7 +61,7 @@
           <string>refsystem-code</string>
         </entry>
         <entry>
-          <string>object-catalog/name</string>
+          <string>feature-catalog/feature-attribute/name</string>
           <list>
             <string>theObject catalog</string>
           </list>
@@ -71,7 +71,7 @@
           <date>2018-11-05 23:00:00.0 UTC</date>
         </entry>
         <entry>
-          <string>object-catalog/min-occurence</string>
+          <string>feature-catalog/feature-attribute/min-occurrence</string>
           <list/>
         </entry>
         <entry>
@@ -85,7 +85,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/definition</string>
+          <string>feature-catalog/feature-attribute/domain/definition</string>
           <list/>
         </entry>
         <entry>
@@ -110,13 +110,13 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/type</string>
+          <string>feature-catalog/feature-attribute/type</string>
           <list>
             <string>Date</string>
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/value</string>
+          <string>feature-catalog/feature-attribute/domain/value</string>
           <list/>
         </entry>
         <entry>
@@ -138,7 +138,7 @@
           <list/>
         </entry>
         <entry>
-          <string>object-catalog</string>
+          <string>feature-catalog/feature-attribute</string>
           <list/>
         </entry>
         <entry>

@@ -37,12 +37,12 @@ public class DomainGenerator implements ComplexAttributeGenerator {
     @Override
     public void generate(ComplexMetadataMap metadata, LayerInfo layerInfo) {
         String attName =
-                metadata.get(String.class, MetadataConstants.FEATURE_CATALOG_ATT_NAME).getValue();
+                metadata.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME).getValue();
 
         FeatureTypeInfo fti = (FeatureTypeInfo) layerInfo.getResource();
 
         // clear everything and build again
-        metadata.delete(MetadataConstants.FEATURE_CATALOG);
+        metadata.delete(MetadataConstants.FEATURE_ATTRIBUTE_DOMAIN);
         try {
             Query query = new Query(fti.getName());
             query.setPropertyNames(Arrays.asList(attName));
@@ -53,7 +53,7 @@ public class DomainGenerator implements ComplexAttributeGenerator {
             int index = 0;
             for (Object value : new TreeSet<Object>(visitor.getUnique())) {
                 ComplexMetadataMap domainMap =
-                        metadata.subMap(MetadataConstants.FEATURE_CATALOG_ATT_DOMAIN, index++);
+                        metadata.subMap(MetadataConstants.FEATURE_ATTRIBUTE_DOMAIN, index++);
                 domainMap
                         .get(String.class, MetadataConstants.DOMAIN_ATT_VALUE)
                         .setValue(Converters.convert(value, String.class));

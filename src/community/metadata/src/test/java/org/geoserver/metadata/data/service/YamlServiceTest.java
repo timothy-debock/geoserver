@@ -29,7 +29,7 @@ public class YamlServiceTest extends AbstractMetadataTest {
         Assert.assertNotNull(configuration);
         Assert.assertEquals(8, configuration.getAttributes().size());
         Assert.assertEquals(3, configuration.getGeonetworks().size());
-        Assert.assertEquals(3, configuration.getTypes().size());
+        Assert.assertEquals(4, configuration.getTypes().size());
 
         Assert.assertEquals(
                 "indentifier-single",

@@ -11,7 +11,7 @@ package org.geoserver.metadata.data.dto;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public enum OccurenceEnum {
+public enum OccurrenceEnum {
     SINGLE,
     REPEAT
 }

@@ -18,7 +18,7 @@ import org.geoserver.metadata.data.dto.AttributeComplexTypeMapping;
 import org.geoserver.metadata.data.dto.AttributeMapping;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
-import org.geoserver.metadata.data.dto.OccurenceEnum;
+import org.geoserver.metadata.data.dto.OccurrenceEnum;
 import org.geoserver.metadata.data.dto.impl.AttributeMappingImpl;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
@@ -87,7 +87,7 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
                 }
             }
         } else {
-            if (OccurenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
+            if (OccurrenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
                 ComplexMetadataAttribute<String> att =
                         metadataMap.get(String.class, attributeMapping.getGeoserver());
                 att.setValue(node.getNodeValue());

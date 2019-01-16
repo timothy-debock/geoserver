@@ -14,7 +14,7 @@ types:
           key: feature-attribute
           fieldType: COMPLEX
           typename: featureAttribute
-          occurence: REPEAT
+          occurrence: REPEAT
   - typename: featureAttribute
     attributes:
         - label: Name
@@ -36,10 +36,10 @@ types:
           key: definition
           fieldType: TEXT
         - label: Minimal Cardinality
-          key: min-occurence
+          key: min-occurrence
           fieldType: NUMBER
         - label: Maximal Cardinality
-          key: max-occurence
+          key: max-occurrence
           fieldType: NUMBER
         - label: Domain
           key: domain

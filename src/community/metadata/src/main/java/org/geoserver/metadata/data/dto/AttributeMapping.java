@@ -30,9 +30,9 @@ public interface AttributeMapping extends Serializable {
 
     public void setFieldType(FieldTypeEnum fieldType);
 
-    public OccurenceEnum getOccurrence();
+    public OccurrenceEnum getOccurrence();
 
-    public void setOccurrence(OccurenceEnum occurrence);
+    public void setOccurrence(OccurrenceEnum occurrence);
 
     public String getTypename();
 

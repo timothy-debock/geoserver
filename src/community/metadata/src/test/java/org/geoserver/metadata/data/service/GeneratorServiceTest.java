@@ -14,7 +14,7 @@ public class GeneratorServiceTest extends AbstractMetadataTest {
     @Test
     public void testGeneratorService() {
         assertNotNull(
-                generatorService.findGeneratorByType(MetadataConstants.FEATURE_CATALOG_TYPENAME));
+                generatorService.findGeneratorByType(MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME));
 
         assertNotNull(generatorService.findGeneratorByType(MetadataConstants.DOMAIN_TYPENAME));
     }

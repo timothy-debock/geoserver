@@ -41,7 +41,7 @@ public interface MetadataAttributeConfiguration extends Serializable {
 
     public void setTypename(String typename);
 
-    public OccurenceEnum getOccurrence();
+    public OccurrenceEnum getOccurrence();
 
-    public void setOccurrence(OccurenceEnum occurrence);
+    public void setOccurrence(OccurrenceEnum occurrence);
 }

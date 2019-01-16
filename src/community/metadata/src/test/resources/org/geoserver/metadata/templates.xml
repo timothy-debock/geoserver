@@ -502,13 +502,13 @@
       <delegate class="org.geoserver.catalog.MetadataMap">
         <map>
           <entry>
-            <string>object-catalog/type</string>
+            <string>feature-catalog/feature-attribute/type</string>
             <list>
               <string>Geometry</string>
             </list>
           </entry>
           <entry>
-            <string>object-catalog/domain/code</string>
+            <string>feature-catalog/feature-attribute/domain/code</string>
             <list>
               <list>
                 <string>template-domain-code01</string>
@@ -517,13 +517,13 @@
             </list>
           </entry>
           <entry>
-            <string>object-catalog/definition</string>
+            <string>feature-catalog/feature-attribute/definition</string>
             <list>
               <string>template-definition</string>
             </list>
           </entry>
           <entry>
-            <string>object-catalog/domain/value</string>
+            <string>feature-catalog/feature-attribute/domain/value</string>
             <list>
               <list>
                 <string>template-domain-code01</string>
@@ -532,7 +532,7 @@
             </list>
           </entry>
           <entry>
-            <string>object-catalog/name</string>
+            <string>feature-catalog/feature-attribute/name</string>
             <list>
               <string>template-identifier</string>
             </list>
@@ -553,7 +553,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/max-occurence</string>
+          <string>feature-catalog/feature-attribute/max-occurrence</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -571,7 +571,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain</string>
+          <string>feature-catalog/feature-attribute/domain</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -588,7 +588,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/code</string>
+          <string>feature-catalog/feature-attribute/domain/code</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -605,7 +605,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/definition</string>
+          <string>feature-catalog/feature-attribute/definition</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -631,7 +631,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/name</string>
+          <string>feature-catalog/feature-attribute/name</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -649,7 +649,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/min-occurence</string>
+          <string>feature-catalog/feature-attribute/min-occurrence</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -659,7 +659,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog</string>
+          <string>feature-catalog/feature-attribute</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -669,7 +669,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/definition</string>
+          <string>feature-catalog/feature-attribute/domain/definition</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -710,7 +710,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/type</string>
+          <string>feature-catalog/feature-attribute/type</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -720,7 +720,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/value</string>
+          <string>feature-catalog/feature-attribute/domain/value</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -771,7 +771,7 @@
             <string>Select me</string>
           </entry>
           <entry>
-            <string>object-catalog/max-occurence</string>
+            <string>feature-catalog/feature-attribute/max-occurrence</string>
             <list>
               <string>01 2</string>
               <string>02 20</string>
@@ -782,7 +782,7 @@
             <string>object-codeSpace</string>
           </entry>
           <entry>
-            <string>object-catalog/domain/code</string>
+            <string>feature-catalog/feature-attribute/domain/code</string>
             <list>
               <list>
                 <string>a domain for first catalog object</string>
@@ -794,7 +794,7 @@
             </list>
           </entry>
           <entry>
-            <string>object-catalog/definition</string>
+            <string>feature-catalog/feature-attribute/definition</string>
             <list>
               <string>01 the definition</string>
               <string>02 the definition</string>
@@ -805,14 +805,14 @@
             <string>object-code</string>
           </entry>
           <entry>
-            <string>object-catalog/name</string>
+            <string>feature-catalog/feature-attribute/name</string>
             <list>
               <string>First object catalog object</string>
               <string>Other object catalog object</string>
             </list>
           </entry>
           <entry>
-            <string>object-catalog/min-occurence</string>
+            <string>feature-catalog/feature-attribute/min-occurrence</string>
             <list>
               <string>01 0</string>
               <string>02 10</string>
@@ -826,7 +826,7 @@
             </list>
           </entry>
           <entry>
-            <string>object-catalog/domain/definition</string>
+            <string>feature-catalog/feature-attribute/domain/definition</string>
             <list>
               <list>
                 <string>01- the other one</string>
@@ -857,14 +857,14 @@
             </list>
           </entry>
           <entry>
-            <string>object-catalog/type</string>
+            <string>feature-catalog/feature-attribute/type</string>
             <list>
               <string>String</string>
               <string>Date</string>
             </list>
           </entry>
           <entry>
-            <string>object-catalog/domain/value</string>
+            <string>feature-catalog/feature-attribute/domain/value</string>
             <list>
               <list>
                 <string>15</string>
@@ -910,7 +910,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/max-occurence</string>
+          <string>feature-catalog/feature-attribute/max-occurrence</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -933,7 +933,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain</string>
+          <string>feature-catalog/feature-attribute/domain</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -956,7 +956,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/code</string>
+          <string>feature-catalog/feature-attribute/domain/code</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -979,7 +979,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/definition</string>
+          <string>feature-catalog/feature-attribute/definition</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1010,7 +1010,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/name</string>
+          <string>feature-catalog/feature-attribute/name</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1033,7 +1033,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/min-occurence</string>
+          <string>feature-catalog/feature-attribute/min-occurrence</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1063,7 +1063,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog</string>
+          <string>feature-catalog/feature-attribute</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1078,7 +1078,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/definition</string>
+          <string>feature-catalog/feature-attribute/domain/definition</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1160,7 +1160,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/type</string>
+          <string>feature-catalog/feature-attribute/type</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>
@@ -1175,7 +1175,7 @@
           </list>
         </entry>
         <entry>
-          <string>object-catalog/domain/value</string>
+          <string>feature-catalog/feature-attribute/domain/value</string>
           <list>
             <ComplexMetadataIndexReference>
               <index>

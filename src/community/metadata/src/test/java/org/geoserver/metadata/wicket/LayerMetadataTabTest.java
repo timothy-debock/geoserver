@@ -7,6 +7,9 @@ package org.geoserver.metadata.wicket;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
@@ -20,6 +23,7 @@ import org.geoserver.catalog.LayerInfo;
 import org.geoserver.metadata.AbstractWicketMetadataTest;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
+import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
 import org.geoserver.metadata.web.panel.ImportTemplatePanel;
 import org.geoserver.metadata.web.panel.MetadataPanel;
@@ -37,6 +41,8 @@ import org.junit.Test;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
+    
+    private LayerInfo layer;
 
     @Before
     public void before() throws IOException {
@@ -44,7 +50,7 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         restoreTemplates();
         restoreLayers();
 
-        LayerInfo layer = geoServer.getCatalog().getLayers().get(0);
+        layer = geoServer.getCatalog().getLayers().get(0);
         login();
         ResourceConfigurationPage page = new ResourceConfigurationPage(layer, false);
         tester.startPage(page);
@@ -127,18 +133,18 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:textfield",
                 "First object :codeSpace");
 
-        // nested objects (object catalog)
+        // nested objects (object catalog)        
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
                 "theObject catalog");
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:dropdown",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:dropdown",
                 "Date");
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:4:itemProperties:1:component:textfield",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:4:itemProperties:1:component:textfield",
                 "a date");
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
                 "nestedobject");
 
         // test list of linked templates
@@ -192,6 +198,30 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         tester.assertComponent(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:noData",
                 Label.class);
+    }
+    
+    /** Test if we can add complex field from a list, and that the underlying model creates empty spaces to keep all
+     * attribute lengths the same for the complex field. 
+     **/
+    @Test
+    public void testRepeatComplexFields() {
+        // add row
+        tester.clickLink(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:addNew");
+        print(tester.getLastRenderedPage(), true, true);
+        
+        tester.assertComponent(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel",
+                GeoServerTablePanel.class);
+        
+        @SuppressWarnings("unchecked")
+        HashMap<String, Serializable> underlying = (HashMap<String, Serializable>) 
+                layer.getResource().getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+        
+        ArrayList<?> list1 = (ArrayList<?>) underlying.get("referencesystem-object-list/code");
+        ArrayList<?> list2 = (ArrayList<?>) underlying.get("referencesystem-object-list/code-space");
+        assertEquals(2, list1.size());
+        assertEquals(2, list2.size());
     }
 
     /** Test if we can add links with a template. */
@@ -614,57 +644,55 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
     @Test
     public void testGenerateFeatureCatalogueAndDomain() {
         tester.assertComponent(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:generate",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:generate",
                 AjaxSubmitLink.class);
 
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:generate");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:generate");
 
         tester.assertComponent(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:dialog",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:dialog",
                 GeoServerDialog.class);
 
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:dialog:dialog:content:form:submit");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:dialog:dialog:content:form:submit");
 
         @SuppressWarnings("unchecked")
         GeoServerTablePanel<ComplexMetadataMap> panel =
                 (GeoServerTablePanel<ComplexMetadataMap>)
                         tester.getComponentFromLastRenderedPage(
-                                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel");
+                                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel");
 
         assertEquals(23, panel.getDataProvider().size());
 
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component",
                 "STATE_NAME");
 
         tester.assertComponent(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:generate",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:generate",
                 AjaxSubmitLink.class);
 
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:generate");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:generate");
 
         tester.assertComponent(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:dialog",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:dialog",
                 GeoServerDialog.class);
 
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:dialog:dialog:content:form:submit");
-
-        // print(tester.getLastRenderedPage(), true, true);
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:dialog:dialog:content:form:submit");
 
         @SuppressWarnings("unchecked")
         GeoServerTablePanel<ComplexMetadataMap> panel2 =
                 (GeoServerTablePanel<ComplexMetadataMap>)
                         tester.getComponentFromLastRenderedPage(
-                                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel");
+                                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel");
 
         assertEquals(49, panel2.getDataProvider().size());
 
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component",
                 "Alabama");
     }
 }

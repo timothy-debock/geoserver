@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.OccurenceEnum;
+import org.geoserver.metadata.data.dto.OccurrenceEnum;
 
 /**
  * Object that matches yaml structure.
@@ -27,7 +27,7 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
 
     FieldTypeEnum fieldType;
 
-    OccurenceEnum occurrence = OccurenceEnum.SINGLE;
+    OccurrenceEnum occurrence = OccurrenceEnum.SINGLE;
 
     List<String> values = new ArrayList<>();
 
@@ -105,12 +105,12 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
     }
 
     @Override
-    public OccurenceEnum getOccurrence() {
+    public OccurrenceEnum getOccurrence() {
         return occurrence;
     }
 
     @Override
-    public void setOccurrence(OccurenceEnum occurrence) {
+    public void setOccurrence(OccurrenceEnum occurrence) {
         this.occurrence = occurrence;
     }
 }

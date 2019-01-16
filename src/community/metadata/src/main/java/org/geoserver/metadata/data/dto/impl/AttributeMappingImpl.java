@@ -6,7 +6,7 @@ package org.geoserver.metadata.data.dto.impl;
 
 import org.geoserver.metadata.data.dto.AttributeMapping;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
-import org.geoserver.metadata.data.dto.OccurenceEnum;
+import org.geoserver.metadata.data.dto.OccurrenceEnum;
 
 /**
  * Object that matches yaml structure.
@@ -26,7 +26,7 @@ public class AttributeMappingImpl implements AttributeMapping {
 
     FieldTypeEnum fieldType = FieldTypeEnum.TEXT;
 
-    OccurenceEnum occurrence = OccurenceEnum.SINGLE;
+    OccurrenceEnum occurrence = OccurrenceEnum.SINGLE;
 
     String typename;
 
@@ -73,12 +73,12 @@ public class AttributeMappingImpl implements AttributeMapping {
     }
 
     @Override
-    public OccurenceEnum getOccurrence() {
+    public OccurrenceEnum getOccurrence() {
         return occurrence;
     }
 
     @Override
-    public void setOccurrence(OccurenceEnum occurrence) {
+    public void setOccurrence(OccurrenceEnum occurrence) {
         this.occurrence = occurrence;
     }
 

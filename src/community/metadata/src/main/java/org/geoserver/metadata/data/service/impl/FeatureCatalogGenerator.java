@@ -30,7 +30,7 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
     @Override
     public String getType() {
-        return MetadataConstants.FEATURE_CATALOG_TYPENAME;
+        return MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME;
     }
 
     @Override
@@ -49,31 +49,31 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
         // we will save the old details for attributes that still exist
         Map<String, ComplexMetadataMap> old = new HashMap<>();
-        for (int i = 0; i < metadata.size(MetadataConstants.FEATURE_CATALOG); i++) {
-            ComplexMetadataMap attMap = metadata.subMap(MetadataConstants.FEATURE_CATALOG, i);
+        for (int i = 0; i < metadata.size(MetadataConstants.FEATURE_ATTRIBUTE); i++) {
+            ComplexMetadataMap attMap = metadata.subMap(MetadataConstants.FEATURE_ATTRIBUTE, i);
             old.put(
-                    attMap.get(String.class, MetadataConstants.FEATURE_CATALOG_ATT_NAME).getValue(),
+                    attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME).getValue(),
                     attMap.clone());
         }
 
         // clear everything and build again
-        metadata.delete(MetadataConstants.FEATURE_CATALOG);
+        metadata.delete(MetadataConstants.FEATURE_ATTRIBUTE);
         int index = 0;
         try {
             for (AttributeTypeInfo att : fti.attributes()) {
                 ComplexMetadataMap attMap =
-                        metadata.subMap(MetadataConstants.FEATURE_CATALOG, index++);
+                        metadata.subMap(MetadataConstants.FEATURE_ATTRIBUTE, index++);
 
                 ComplexMetadataMap oldMap = old.get(att.getName());
                 if (oldMap != null) {
                     service.merge(
                             attMap,
                             oldMap,
-                            MetadataConstants.FEATURE_CATALOG_TYPENAME,
+                            MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME,
                             derivedAtts);
                 }
 
-                attMap.get(String.class, MetadataConstants.FEATURE_CATALOG_ATT_NAME)
+                attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME)
                         .setValue(att.getName());
                 if (att.getBinding() != null) {
                     String type = MetadataConstants.FEATURECATALOG_TYPE_UNKNOWN;
@@ -83,16 +83,16 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
                             break;
                         }
                     }
-                    attMap.get(String.class, MetadataConstants.FEATURE_CATALOG_ATT_TYPE)
+                    attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_TYPE)
                             .setValue(type);
                 }
                 if (att.getLength() != null) {
-                    attMap.get(Integer.class, MetadataConstants.FEATURE_CATALOG_ATT_TYPE)
+                    attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_TYPE)
                             .setValue(att.getLength());
                 }
-                attMap.get(Integer.class, MetadataConstants.FEATURE_CATALOG_ATT_MIN_OCCURENCE)
+                attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_MIN_OCCURRENCE)
                         .setValue(att.getMinOccurs());
-                attMap.get(Integer.class, MetadataConstants.FEATURE_CATALOG_ATT_MAX_OCCURENCE)
+                attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_MAX_OCCURRENCE)
                         .setValue(att.getMaxOccurs());
             }
         } catch (IOException e) {

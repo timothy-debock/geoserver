@@ -76,8 +76,8 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 "list-objectcodeSpace02", submap02.get(String.class, "code-space").getValue());
         // list of nested objects
-        Assert.assertEquals(2, parent.size("object-catalog"));
-        ComplexMetadataMap submapNested01 = parent.subMap("object-catalog", 0);
+        Assert.assertEquals(2, parent.size("feature-catalog"));
+        ComplexMetadataMap submapNested01 = parent.subMap("feature-catalog/feature-attribute", 0);
         Assert.assertEquals(
                 "First object catalog object", submapNested01.get(String.class, "name").getValue());
         Assert.assertEquals("String", submapNested01.get(String.class, "type").getValue());
@@ -263,8 +263,8 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 "list-objectcodeSpace02", submap02.get(String.class, "code-space").getValue());
         // Should be updated list of nested objects
-        Assert.assertEquals(3, parent.size("object-catalog"));
-        ComplexMetadataMap submapTemplate = parent.subMap("object-catalog", 0);
+        Assert.assertEquals(3, parent.size("feature-catalog/feature-attribute"));
+        ComplexMetadataMap submapTemplate = parent.subMap("feature-catalog/feature-attribute", 0);
         Assert.assertEquals(
                 "template-identifier", submapTemplate.get(String.class, "name").getValue());
         Assert.assertEquals("Geometry", submapTemplate.get(String.class, "type").getValue());

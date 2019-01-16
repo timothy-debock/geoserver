@@ -39,6 +39,7 @@ public class EditorFactory {
 
         ComplexMetadataAttribute<T> metadataModel =
                 metadataMap.get(getItemClass(configuration), configuration.getKey());
+        metadataModel.init();
         IModel<T> model = new ComplexMetadataAttributeModel<T>(metadataModel);
 
         return create(configuration, id, model, metadataMap.subMap(configuration.getKey()));
