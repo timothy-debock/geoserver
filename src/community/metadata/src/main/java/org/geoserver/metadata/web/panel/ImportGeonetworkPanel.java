@@ -100,41 +100,39 @@ public abstract class ImportGeonetworkPanel extends Panel {
                 }
                 final String uuId = inputUUID.getValue();
                 if ("".equals(uuId)) {
-                    error(new ParamResourceModel("errorUuidRequired", ImportGeonetworkPanel.this)
+                    error(
+                            new ParamResourceModel("errorUuidRequired", ImportGeonetworkPanel.this)
                                     .getString());
                     valid = false;
                 }
                 if (valid) {
-                        dialog.setTitle(
-                                new ParamResourceModel(
-                                        "confirmImportDialog.title", ImportGeonetworkPanel.this));
-                        dialog.showOkCancel(
-                                target,
-                                new GeoServerDialog.DialogDelegate() {
+                    dialog.setTitle(
+                            new ParamResourceModel(
+                                    "confirmImportDialog.title", ImportGeonetworkPanel.this));
+                    dialog.showOkCancel(
+                            target,
+                            new GeoServerDialog.DialogDelegate() {
 
-                                    private static final long serialVersionUID =
-                                            -5552087037163833563L;
+                                private static final long serialVersionUID = -5552087037163833563L;
 
-                                    @Override
-                                    protected Component getContents(String id) {
-                                        ParamResourceModel resource =
-                                                new ParamResourceModel(
-                                                        "confirmImportDialog.content",
-                                                        ImportGeonetworkPanel.this);
-                                        return new MultiLineLabel(id, resource.getString());
-                                    }
+                                @Override
+                                protected Component getContents(String id) {
+                                    ParamResourceModel resource =
+                                            new ParamResourceModel(
+                                                    "confirmImportDialog.content",
+                                                    ImportGeonetworkPanel.this);
+                                    return new MultiLineLabel(id, resource.getString());
+                                }
 
-                                    @Override
-                                    protected boolean onSubmit(
-                                            AjaxRequestTarget target, Component contents) {
-                                        String url =
-                                                generateMetadataUrl(
-                                                        dropDown.getModelObject(),
-                                                        uuId);
-                                        handleImport(url, target, getFeedbackPanel());
-                                        return true;
-                                    }
-                                });
+                                @Override
+                                protected boolean onSubmit(
+                                        AjaxRequestTarget target, Component contents) {
+                                    String url =
+                                            generateMetadataUrl(dropDown.getModelObject(), uuId);
+                                    handleImport(url, target, getFeedbackPanel());
+                                    return true;
+                                }
+                            });
                 }
 
                 target.add(getFeedbackPanel());
@@ -142,7 +140,8 @@ public abstract class ImportGeonetworkPanel extends Panel {
         };
     }
 
-    public abstract void handleImport(String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel);
+    public abstract void handleImport(
+            String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel);
 
     private String generateMetadataUrl(String modelValue, String uuid) {
         String url = "";

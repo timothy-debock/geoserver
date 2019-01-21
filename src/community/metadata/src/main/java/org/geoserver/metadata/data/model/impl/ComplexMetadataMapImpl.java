@@ -98,7 +98,7 @@ public class ComplexMetadataMapImpl implements ComplexMetadataMap {
         String strPath = String.join(PATH_SEPARATOR, concat(basePath, path));
         int[] fullIndex = concat(baseIndexRef.getIndex(), index);
         if (getDelegate().containsKey(strPath)) {
-            return sizeInternal(strPath, index);
+            return sizeInternal(strPath, fullIndex);
         } else {
             // subtype
             int size = 0;

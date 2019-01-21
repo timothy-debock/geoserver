@@ -30,4 +30,6 @@ public interface AttributeMappingConfiguration {
     public List<AttributeComplexTypeMapping> getObjectmapping();
 
     public void setObjectmapping(List<AttributeComplexTypeMapping> objectmapping);
+
+    public AttributeComplexTypeMapping findType(String typename);
 }

@@ -110,7 +110,8 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                     private static final long serialVersionUID = -4620394948554985874L;
 
                     @Override
-                    public void handleImport(String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel) {
+                    public void handleImport(
+                            String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel) {
                         try {
                             // First unlink all templates
                             importTemplatePanel()

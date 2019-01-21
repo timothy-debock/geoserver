@@ -175,7 +175,8 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                 if (source.size(attribute.getKey()) > 0) {
                     ComplexMetadataMap sourceMap = source.subMap(attribute.getKey());
                     ComplexMetadataMap destinationMap = destination.subMap(attribute.getKey());
-                    mergeAttribute(destinationMap, sourceMap, type.getAttributes(), config, derivedAtts);
+                    mergeAttribute(
+                            destinationMap, sourceMap, type.getAttributes(), config, derivedAtts);
                     indexes.add(0);
                 }
                 break;

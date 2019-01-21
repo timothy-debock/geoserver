@@ -15,6 +15,11 @@ geonetworkmapping:
        fieldType: COMPLEX
        typename: referencesystem
        occurrence: REPEAT
+    -  geoserver: contact
+       geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty
+       fieldType: COMPLEX
+       typename: contact
+       occurrence: REPEAT
 
 objectmapping:
     - typename: referencesystem
@@ -23,3 +28,12 @@ objectmapping:
             geonetwork: .//gmd:code//gco:CharacterString/text()
           - geoserver: codeSpace
             geonetwork: .//gmd:codeSpace//gco:CharacterString/text()
+    - typename: contact
+      mapping:
+          - geoserver: name
+            geonetwork: ./gmd:organisationName/gco:CharacterString/text()
+          - geoserver: url
+            geonetwork: ./gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL/text()
+          - geoserver: phone
+            occurrence: REPEAT
+            geonetwork: .//gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()

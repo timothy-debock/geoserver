@@ -4,6 +4,8 @@
  */
 package org.geoserver.metadata.data.service;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -78,6 +80,17 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 "http://www.opengis.net/def/crs/EPSG/0/3043",
                 ((List<?>) actualObjectCodeList).get(2));
+
+        // check equal sizes for complex repeatables
+        List<?> names = (List<?>) metadataMap.get("contact/name");
+        assertEquals(3, names.size());
+        List<?> urls = (List<?>) metadataMap.get("contact/url");
+        assertEquals(3, urls.size());
+
+        // check multidimensional
+        List<?> phones = (List<?>) metadataMap.get("contact/phone");
+        assertEquals(3, phones.size());
+        assertEquals(2, ((List<?>) phones.get(2)).size());
     }
 
     private Document getDocument(String fileName) throws IOException {

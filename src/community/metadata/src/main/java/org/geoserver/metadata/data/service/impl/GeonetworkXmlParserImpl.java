@@ -6,7 +6,6 @@ package org.geoserver.metadata.data.service.impl;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
@@ -42,7 +41,7 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
         AttributeMappingConfiguration mapping = yamlService.readMapping();
 
         for (AttributeMapping attributeMapping : mapping.getGeonetworkmapping()) {
-            addAttribute(metadataMap, attributeMapping, doc, null, mapping.getObjectmapping());
+            addAttribute(metadataMap, attributeMapping, doc, null, mapping);
         }
     }
 
@@ -51,20 +50,24 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
             AttributeMapping attributeMapping,
             Document doc,
             Node node,
-            List<AttributeComplexTypeMapping> mapping) {
+            AttributeMappingConfiguration mapping) {
         NodeList nodes = findNode(doc, attributeMapping.getGeonetwork(), node);
 
-        if (nodes != null && nodes.getLength() > 0) {
-            switch (attributeMapping.getOccurrence()) {
-                case SINGLE:
+        switch (attributeMapping.getOccurrence()) {
+            case SINGLE:
+                if (nodes != null && nodes.getLength() > 0) {
                     mapNode(metadataMap, attributeMapping, doc, nodes.item(0), mapping);
-                    break;
-                case REPEAT:
+                } else {
+                    mapNode(metadataMap, attributeMapping, doc, null, mapping);
+                }
+                break;
+            case REPEAT:
+                if (nodes != null) {
                     for (int count = 0; count < nodes.getLength(); count++) {
                         mapNode(metadataMap, attributeMapping, doc, nodes.item(count), mapping);
                     }
-                    break;
-            }
+                }
+                break;
         }
     }
 
@@ -73,31 +76,30 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
             AttributeMapping attributeMapping,
             Document doc,
             Node node,
-            List<AttributeComplexTypeMapping> mapping) {
+            AttributeMappingConfiguration mapping) {
         if (FieldTypeEnum.COMPLEX.equals(attributeMapping.getFieldType())) {
-            for (AttributeComplexTypeMapping complexTypeMapping : mapping) {
-                if (attributeMapping.getTypename().equals(complexTypeMapping.getTypename())) {
-                    ComplexMetadataMap submap = metadataMap.subMap(attributeMapping.getGeoserver());
-                    for (AttributeMapping aMapping : complexTypeMapping.getMapping()) {
-                        AttributeMapping am = new AttributeMappingImpl(aMapping);
-                        am.setOccurrence(attributeMapping.getOccurrence());
-                        addAttribute(submap, am, doc, node, mapping);
-                    }
-                    break;
-                }
-            }
-        } else {
+            AttributeComplexTypeMapping complexTypeMapping =
+                    mapping.findType(attributeMapping.getTypename());
+            ComplexMetadataMap submap;
             if (OccurrenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
-                ComplexMetadataAttribute<String> att =
-                        metadataMap.get(String.class, attributeMapping.getGeoserver());
-                att.setValue(node.getNodeValue());
-
+                submap = metadataMap.subMap(attributeMapping.getGeoserver());
             } else {
                 int currentSize = metadataMap.size(attributeMapping.getGeoserver());
-                ComplexMetadataAttribute<String> att =
-                        metadataMap.get(String.class, attributeMapping.getGeoserver(), currentSize);
-                att.setValue(node.getNodeValue());
+                submap = metadataMap.subMap(attributeMapping.getGeoserver(), currentSize);
             }
+            for (AttributeMapping aMapping : complexTypeMapping.getMapping()) {
+                AttributeMapping am = new AttributeMappingImpl(aMapping);
+                addAttribute(submap, am, doc, node, mapping);
+            }
+        } else {
+            ComplexMetadataAttribute<String> att;
+            if (OccurrenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
+                att = metadataMap.get(String.class, attributeMapping.getGeoserver());
+            } else {
+                int currentSize = metadataMap.size(attributeMapping.getGeoserver());
+                att = metadataMap.get(String.class, attributeMapping.getGeoserver(), currentSize);
+            }
+            att.setValue(node == null ? null : node.getNodeValue());
         }
     }
 

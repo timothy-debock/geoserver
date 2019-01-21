@@ -47,4 +47,14 @@ public class AttributeMappingConfigurationImpl implements AttributeMappingConfig
     public void setObjectmapping(List<AttributeComplexTypeMapping> objectmapping) {
         this.objectmapping = objectmapping;
     }
+
+    @Override
+    public AttributeComplexTypeMapping findType(String typename) {
+        for (AttributeComplexTypeMapping type : objectmapping) {
+            if (typename.equals(type.getTypename())) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

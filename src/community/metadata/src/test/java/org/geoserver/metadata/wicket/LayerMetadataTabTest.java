@@ -41,7 +41,7 @@ import org.junit.Test;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
-    
+
     private LayerInfo layer;
 
     @Before
@@ -133,7 +133,7 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:textfield",
                 "First object :codeSpace");
 
-        // nested objects (object catalog)        
+        // nested objects (object catalog)
         tester.assertModelValue(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
                 "theObject catalog");
@@ -199,27 +199,32 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:noData",
                 Label.class);
     }
-    
-    /** Test if we can add complex field from a list, and that the underlying model creates empty spaces to keep all
-     * attribute lengths the same for the complex field. 
-     **/
+
+    /**
+     * Test if we can add complex field from a list, and that the underlying model creates empty
+     * spaces to keep all attribute lengths the same for the complex field.
+     */
     @Test
     public void testRepeatComplexFields() {
         // add row
         tester.clickLink(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:addNew");
         print(tester.getLastRenderedPage(), true, true);
-        
+
         tester.assertComponent(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel",
                 GeoServerTablePanel.class);
-        
+
         @SuppressWarnings("unchecked")
-        HashMap<String, Serializable> underlying = (HashMap<String, Serializable>) 
-                layer.getResource().getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
-        
+        HashMap<String, Serializable> underlying =
+                (HashMap<String, Serializable>)
+                        layer.getResource()
+                                .getMetadata()
+                                .get(MetadataConstants.CUSTOM_METADATA_KEY);
+
         ArrayList<?> list1 = (ArrayList<?>) underlying.get("referencesystem-object-list/code");
-        ArrayList<?> list2 = (ArrayList<?>) underlying.get("referencesystem-object-list/code-space");
+        ArrayList<?> list2 =
+                (ArrayList<?>) underlying.get("referencesystem-object-list/code-space");
         assertEquals(2, list1.size());
         assertEquals(2, list2.size());
     }

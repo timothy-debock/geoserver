@@ -18,9 +18,9 @@ public final class MetadataConstants {
     public static final String DERIVED_KEY = "custom-derived-attributes";
 
     public static final String FEATURE_CATALOG_CONFIG_FILE = "featureCatalog.yaml";
-    
+
     public static final String FEATURE_ATTRIBUTE = "feature-attribute";
-    
+
     public static final String FEATURE_ATTRIBUTE_TYPENAME = "featureAttribute";
 
     public static final String FEATURE_ATTRIBUTE_NAME = "name";
@@ -41,7 +41,6 @@ public final class MetadataConstants {
             new Class<?>[] {String.class, Number.class, Geometry.class, Date.class};
 
     public static final String FEATURECATALOG_TYPE_UNKNOWN = "unknown";
-
 
     private MetadataConstants() {}
 }

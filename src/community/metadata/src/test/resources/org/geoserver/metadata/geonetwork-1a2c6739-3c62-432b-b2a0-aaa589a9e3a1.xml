@@ -207,60 +207,12 @@
                               <gmd:URL>https://www.omgevingvlaanderen.be</gmd:URL>
                            </gmd:linkage>
                         </gmd:CI_OnlineResource>
-                     </gmd:onlineResource>
+                     </gmd:onlineResource> 
                   </gmd:CI_Contact>
                </gmd:contactInfo>
                <gmd:role>
                   <gmd:CI_RoleCode codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/ML_gmxCodelists.xml#CI_RoleCode"
                                    codeListValue="custodian"/>
-               </gmd:role>
-            </gmd:CI_ResponsibleParty>
-         </gmd:pointOfContact>
-         <gmd:pointOfContact>
-            <gmd:CI_ResponsibleParty>
-               <gmd:organisationName>
-                  <gco:CharacterString>Databank Ondergrond Vlaanderen (DOV)</gco:CharacterString>
-               </gmd:organisationName>
-               <gmd:contactInfo>
-                  <gmd:CI_Contact>
-                     <gmd:phone>
-                        <gmd:CI_Telephone>
-                           <gmd:voice>
-                              <gco:CharacterString>+32 9 240 75 93</gco:CharacterString>
-                           </gmd:voice>
-                        </gmd:CI_Telephone>
-                     </gmd:phone>
-                     <gmd:address>
-                        <gmd:CI_Address>
-                           <gmd:deliveryPoint>
-                              <gco:CharacterString>Technologiepark Gebouw 905</gco:CharacterString>
-                           </gmd:deliveryPoint>
-                           <gmd:city>
-                              <gco:CharacterString>Zwijnaarde</gco:CharacterString>
-                           </gmd:city>
-                           <gmd:postalCode>
-                              <gco:CharacterString>9052</gco:CharacterString>
-                           </gmd:postalCode>
-                           <gmd:country>
-                              <gco:CharacterString>België</gco:CharacterString>
-                           </gmd:country>
-                           <gmd:electronicMailAddress>
-                              <gco:CharacterString>dov@vlaanderen.be</gco:CharacterString>
-                           </gmd:electronicMailAddress>
-                        </gmd:CI_Address>
-                     </gmd:address>
-                     <gmd:onlineResource>
-                        <gmd:CI_OnlineResource>
-                           <gmd:linkage>
-                              <gmd:URL>https://www.dov.vlaanderen.be</gmd:URL>
-                           </gmd:linkage>
-                        </gmd:CI_OnlineResource>
-                     </gmd:onlineResource>
-                  </gmd:CI_Contact>
-               </gmd:contactInfo>
-               <gmd:role>
-                  <gmd:CI_RoleCode codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/ML_gmxCodelists.xml#CI_RoleCode"
-                                   codeListValue="distributor"/>
                </gmd:role>
             </gmd:CI_ResponsibleParty>
          </gmd:pointOfContact>
@@ -301,33 +253,43 @@
          <gmd:pointOfContact>
             <gmd:CI_ResponsibleParty>
                <gmd:organisationName>
-                  <gco:CharacterString>Vlaamse overheid, Departement Omgeving, Vlaams Planbureau voor Omgeving (VPO)</gco:CharacterString>
+                  <gco:CharacterString>Databank Ondergrond Vlaanderen (DOV)</gco:CharacterString>
                </gmd:organisationName>
                <gmd:contactInfo>
                   <gmd:CI_Contact>
+                     <gmd:phone>
+                        <gmd:CI_Telephone>
+                           <gmd:voice>
+                              <gco:CharacterString>+32 9 240 75 93</gco:CharacterString>
+                           </gmd:voice>
+                           <gmd:voice>
+                              <gco:CharacterString>+32 9 240 75 94</gco:CharacterString>
+                           </gmd:voice>
+                        </gmd:CI_Telephone>
+                     </gmd:phone>
                      <gmd:address>
                         <gmd:CI_Address>
                            <gmd:deliveryPoint>
-                              <gco:CharacterString>Koning Albert II-laan 20 bus 8</gco:CharacterString>
+                              <gco:CharacterString>Technologiepark Gebouw 905</gco:CharacterString>
                            </gmd:deliveryPoint>
                            <gmd:city>
-                              <gco:CharacterString>Brussel</gco:CharacterString>
+                              <gco:CharacterString>Zwijnaarde</gco:CharacterString>
                            </gmd:city>
                            <gmd:postalCode>
-                              <gco:CharacterString>1000</gco:CharacterString>
+                              <gco:CharacterString>9052</gco:CharacterString>
                            </gmd:postalCode>
                            <gmd:country>
                               <gco:CharacterString>België</gco:CharacterString>
                            </gmd:country>
                            <gmd:electronicMailAddress>
-                              <gco:CharacterString>natuurlijkerijkdommenbrussel.omgeving@vlaanderen.be</gco:CharacterString>
+                              <gco:CharacterString>dov@vlaanderen.be</gco:CharacterString>
                            </gmd:electronicMailAddress>
                         </gmd:CI_Address>
                      </gmd:address>
                      <gmd:onlineResource>
                         <gmd:CI_OnlineResource>
                            <gmd:linkage>
-                              <gmd:URL>https://www.omgevingvlaanderen.be</gmd:URL>
+                              <gmd:URL>https://www.dov.vlaanderen.be</gmd:URL>
                            </gmd:linkage>
                         </gmd:CI_OnlineResource>
                      </gmd:onlineResource>
@@ -335,7 +297,7 @@
                </gmd:contactInfo>
                <gmd:role>
                   <gmd:CI_RoleCode codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/ML_gmxCodelists.xml#CI_RoleCode"
-                                   codeListValue="owner"/>
+                                   codeListValue="distributor"/>
                </gmd:role>
             </gmd:CI_ResponsibleParty>
          </gmd:pointOfContact>
