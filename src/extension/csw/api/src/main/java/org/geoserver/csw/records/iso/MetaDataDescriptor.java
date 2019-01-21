@@ -41,6 +41,7 @@ public class MetaDataDescriptor extends AbstractRecordDescriptor {
 
     public static final NamespaceSupport NAMESPACES;
 
+    public static final String NAMESPACE_GML = "http://www.opengis.net/gml/3.2";
     public static final String NAMESPACE_GFC = "http://www.isotc211.org/2005/gfc";
     public static final String NAMESPACE_GMX = "http://www.isotc211.org/2005/gmx";
 
@@ -71,6 +72,7 @@ public class MetaDataDescriptor extends AbstractRecordDescriptor {
         NAMESPACES.declarePrefix("gmd", NAMESPACE_GMD);
         NAMESPACES.declarePrefix("gmx", NAMESPACE_GMX);
         NAMESPACES.declarePrefix("gfc", NAMESPACE_GFC);
+        NAMESPACES.declarePrefix("gml", NAMESPACE_GML);
 
         FeatureTypeFactory typeFactory = new FeatureTypeFactoryImpl();
 

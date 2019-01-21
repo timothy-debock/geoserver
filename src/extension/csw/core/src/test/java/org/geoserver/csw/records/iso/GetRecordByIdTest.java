@@ -17,7 +17,7 @@ public class GetRecordByIdTest extends MDTestSupport {
                 "csw?service=CSW&version=2.0.2&request=GetRecordById&typeNames=gmd:MD_Metadata&outputSchema=http://www.isotc211.org/2005/gmd&id="
                         + forestId;
         Document d = getAsDOM(request);
-        // print(d);
+        print(d);
         // validateSchema(d.getElementsByTagName("//gmd:MD_MetaData"));
 
         // check we have the expected results
@@ -55,6 +55,10 @@ public class GetRecordByIdTest extends MDTestSupport {
         assertXpathEvaluatesTo(
                 "180.0",
                 "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude",
+                d);
+        assertXpathEvaluatesTo(
+                "2018-01-01",
+                "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:temporalElement/gmd:EX_TemporalExtent/gmd:extent/gml:TimePeriod/gml:beginPosition",
                 d);
 
         // check proper order

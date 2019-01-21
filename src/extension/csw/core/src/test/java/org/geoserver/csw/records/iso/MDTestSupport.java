@@ -30,7 +30,6 @@ public class MDTestSupport extends CSWInternalTestSupport {
         namespaces.put("csw", CSW.NAMESPACE);
         namespaces.put("ows", OWS.NAMESPACE);
         namespaces.put("ogc", OGC.NAMESPACE);
-        namespaces.put("gml", "http://www.opengis.net/gml");
         namespaces.put("xlink", XLINK.NAMESPACE);
         namespaces.put("xsi", "http://www.w3.org/2001/XMLSchema-instance");
         namespaces.put("xsd", "http://www.w3.org/2001/XMLSchema");
@@ -39,6 +38,7 @@ public class MDTestSupport extends CSWInternalTestSupport {
         namespaces.put("gco", MetaDataDescriptor.NAMESPACE_GCO);
         namespaces.put("gmx", MetaDataDescriptor.NAMESPACE_GMX);
         namespaces.put("gfc", MetaDataDescriptor.NAMESPACE_GFC);
+        namespaces.put("gml", MetaDataDescriptor.NAMESPACE_GML);
 
         XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(namespaces));
     };
