@@ -81,5 +81,8 @@ public class GetRecordByIdTest extends MDTestSupport {
                         .getChildNodes()
                         .item(7)
                         .getNodeName());
+
+        // check that resourceConstraints are separate tags
+        assertXpathEvaluatesTo("2", "count(//gmd:resourceConstraints)", d);
     }
 }
