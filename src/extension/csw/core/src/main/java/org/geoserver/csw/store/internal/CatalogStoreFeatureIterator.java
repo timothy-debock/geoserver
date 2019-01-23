@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.ObjectUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogFacade;
 import org.geoserver.catalog.CatalogInfo;
@@ -209,7 +210,7 @@ class CatalogStoreFeatureIterator implements Iterator<Feature> {
         for (CatalogStoreMapping.CatalogStoreMappingElement mappingElement : mapping.elements()) {
             Object value = mappingElement.getContent().evaluate(resource);
 
-            if (value != null) {
+            if (value != null || mappingElement.isRequired()) {
                 if (value instanceof Collection) {
                     List<Object> elements =
                             interpolate(interpolationProperties, (Collection<?>) value);
@@ -222,11 +223,11 @@ class CatalogStoreFeatureIterator implements Iterator<Feature> {
                 } else {
                     builder.addElement(
                             mappingElement.getKey(),
-                            interpolate(interpolationProperties, value.toString()));
+                            interpolate(interpolationProperties, ObjectUtils.toString(value)));
                 }
 
                 if (mappingElement == mapping.getIdentifierElement()) {
-                    id = interpolate(interpolationProperties, value.toString());
+                    id = interpolate(interpolationProperties, ObjectUtils.toString(value));
                 }
             }
         }
