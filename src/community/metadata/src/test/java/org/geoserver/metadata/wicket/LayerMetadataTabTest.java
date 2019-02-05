@@ -27,6 +27,8 @@ import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
 import org.geoserver.metadata.web.panel.ImportTemplatePanel;
 import org.geoserver.metadata.web.panel.MetadataPanel;
+import org.geoserver.metadata.web.panel.attribute.CheckBoxPanel;
+import org.geoserver.metadata.web.panel.attribute.DateTimeFieldPanel;
 import org.geoserver.web.data.resource.ResourceConfigurationPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -176,6 +178,20 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 tester.getComponentFromLastRenderedPage(
                                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:4:itemProperties:1:component")
                         .isEnabled());
+    }
+
+    /** test special types * */
+    @Test
+    public void testSpecialTypeFields() {
+        tester.assertComponent(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:8:itemProperties:1:component",
+                DateTimeFieldPanel.class);
+        tester.assertComponent(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:9:itemProperties:1:component",
+                DateTimeFieldPanel.class);
+        tester.assertComponent(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:10:itemProperties:1:component",
+                CheckBoxPanel.class);
     }
 
     /** Test if we can add and remove fields from a list. */

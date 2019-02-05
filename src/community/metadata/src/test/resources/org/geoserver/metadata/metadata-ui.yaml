@@ -30,6 +30,12 @@ attributes:
     fieldType: COMPLEX
     typename: referencesystem
     occurrence: REPEAT
+  - key: date-field
+    fieldType: DATE
+  - key: date-time-field
+    fieldType: DATETIME
+  - key: boolean-field
+    fieldType: BOOLEAN
 
 types:
   - typename: referencesystem

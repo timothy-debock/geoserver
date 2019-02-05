@@ -16,6 +16,8 @@ public enum FieldTypeEnum {
     NUMBER,
     TEXT_AREA,
     DATE,
+    DATETIME,
+    BOOLEAN,
     UUID,
     DROPDOWN,
     SUGGESTBOX,

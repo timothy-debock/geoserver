@@ -70,12 +70,16 @@ public class EditorFactory {
                 return new TextFieldPanel(id, (IModel<String>) model);
             case NUMBER:
                 return new NumberFieldPanel(id, (IModel<Integer>) model);
+            case BOOLEAN:
+                return new CheckBoxPanel(id, (IModel<Boolean>) model);
             case DROPDOWN:
                 return new DropDownPanel(id, (IModel<String>) model, configuration.getValues());
             case TEXT_AREA:
                 return new TextAreaPanel(id, (IModel<String>) model);
             case DATE:
-                return new DateFieldPanel(id, (IModel<Date>) model);
+                return new DateTimeFieldPanel(id, (IModel<Date>) model, false);
+            case DATETIME:
+                return new DateTimeFieldPanel(id, (IModel<Date>) model, true);
             case UUID:
                 return new UUIDFieldPanel(id, (IModel<String>) model);
             case SUGGESTBOX:
@@ -94,21 +98,14 @@ public class EditorFactory {
     public <T extends Serializable> Class<T> getItemClass(
             MetadataAttributeConfiguration attributeConfiguration) {
         switch (attributeConfiguration.getFieldType()) {
-            case TEXT:
-                break;
             case NUMBER:
                 return (Class<T>) Integer.class;
-            case TEXT_AREA:
-                break;
             case DATE:
+            case DATETIME:
                 return (Class<T>) Date.class;
-            case UUID:
-                break;
-            case DROPDOWN:
-                break;
-            case SUGGESTBOX:
-                break;
-            case COMPLEX:
+            case BOOLEAN:
+                return (Class<T>) Boolean.class;
+            default:
                 break;
         }
         return (Class<T>) String.class;
