@@ -27,6 +27,8 @@ public final class MetadataConstants {
 
     public static final String FEATURE_ATTRIBUTE_TYPE = "type";
 
+    public static final String FEATURE_ATTRIBUTE_LENGTH = "length";
+
     public static final String FEATURE_ATTRIBUTE_MIN_OCCURRENCE = "min-occurrence";
 
     public static final String FEATURE_ATTRIBUTE_MAX_OCCURRENCE = "max-occurrence";

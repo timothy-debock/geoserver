@@ -87,7 +87,7 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
                             .setValue(type);
                 }
                 if (att.getLength() != null) {
-                    attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_TYPE)
+                    attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_LENGTH)
                             .setValue(att.getLength());
                 }
                 attMap.get(Integer.class, MetadataConstants.FEATURE_ATTRIBUTE_MIN_OCCURRENCE)
