@@ -7,7 +7,6 @@ package org.geoserver.csw.store.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -350,19 +349,16 @@ class CatalogStoreFeatureIterator implements Iterator<Feature> {
     }
 
     protected static List<Object> interpolate(Map<String, String> properties, Collection<?> value) {
-        value.removeAll(Collections.singleton(null));
         if (((Collection<?>) value).size() > 0) {
             List<Object> elements = new ArrayList<Object>();
             for (Object element : value) {
-                Object result;
+                Object result = null;
                 if (element instanceof Collection<?>) {
                     result = interpolate(properties, (Collection<?>) element);
-                } else {
+                } else if (element != null) {
                     result = interpolate(properties, element.toString());
                 }
-                if (result != null) {
-                    elements.add(result);
-                }
+                elements.add(result);
             }
             return elements;
         }
