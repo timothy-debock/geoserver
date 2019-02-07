@@ -18,7 +18,10 @@ import org.geoserver.metadata.data.dto.impl.AttributeMappingConfigurationImpl;
  */
 @JsonDeserialize(as = AttributeMappingConfigurationImpl.class)
 public interface AttributeMappingConfiguration extends Serializable {
+
     public String getGeoserver();
 
     public String getGeonetwork();
+
+    public MappingTypeEnum getMappingType();
 }

@@ -53,7 +53,7 @@ public class ConfigurationServiceTest extends AbstractMetadataTest {
     public void testGeonetworkMappingRegistry() throws IOException {
         MappingConfiguration configuration = yamlService.getMappingConfiguration();
         Assert.assertNotNull(configuration);
-        Assert.assertEquals(6, configuration.getGeonetworkmapping().size());
+        Assert.assertEquals(8, configuration.getGeonetworkmapping().size());
         Assert.assertEquals(2, configuration.getObjectmapping().size());
     }
 

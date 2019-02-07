@@ -11,6 +11,12 @@ geonetworkmapping:
        geonetwork: //gmd:referenceSystemInfo
     -  geoserver: contact
        geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty
+    -  geoserver: title
+       geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()
+       mappingType: NATIVE
+    -  geoserver: alias
+       geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:alternateTitle/gco:CharacterString/text()
+       mappingType: NATIVE
 
 objectmapping:
     - typename: referencesystem

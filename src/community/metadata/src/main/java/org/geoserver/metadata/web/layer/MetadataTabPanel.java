@@ -128,7 +128,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                                             .getBean(GeonetworkXmlParser.class);
                             // import metadata
                             Document doc = geonetworkReader.readDocument(new URL(url));
-                            xmlParser.parseMetadata(doc, metadataModel.getObject());
+                            xmlParser.parseMetadata(doc, resource, metadataModel.getObject());
                         } catch (IOException e) {
                             LOGGER.severe(e.getMessage());
                             feedbackPanel.error(e.getMessage());

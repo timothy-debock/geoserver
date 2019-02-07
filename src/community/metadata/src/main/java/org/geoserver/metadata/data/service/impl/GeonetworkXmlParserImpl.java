@@ -5,7 +5,10 @@
 package org.geoserver.metadata.data.service.impl;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
@@ -13,18 +16,24 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
 import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
 import org.geoserver.metadata.data.dto.AttributeTypeMappingConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
+import org.geoserver.metadata.data.dto.MappingTypeEnum;
 import org.geoserver.metadata.data.dto.OccurrenceEnum;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.metadata.data.service.GeonetworkXmlParser;
+import org.geotools.util.Converters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -37,20 +46,58 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
     @Autowired private ConfigurationService configService;
 
     @Override
-    public void parseMetadata(Document doc, ComplexMetadataMap metadataMap) throws IOException {
+    public void parseMetadata(Document doc, ResourceInfo rInfo, ComplexMetadataMap metadataMap)
+            throws IOException {
         for (AttributeMappingConfiguration attributeMapping :
                 configService.getMappingConfiguration().getGeonetworkmapping()) {
-            AttributeConfiguration att =
-                    configService
-                            .getMetadataConfiguration()
-                            .findAttribute(attributeMapping.getGeoserver());
-            if (att == null) {
-                throw new IOException(
-                        "attribute "
-                                + attributeMapping.getGeoserver()
-                                + " not found in configuration");
+            if (attributeMapping.getMappingType() == MappingTypeEnum.NATIVE) {
+                addNativeAttribute(rInfo, attributeMapping, doc);
+            } else {
+                AttributeConfiguration att =
+                        configService
+                                .getMetadataConfiguration()
+                                .findAttribute(attributeMapping.getGeoserver());
+                if (att == null) {
+                    throw new IOException(
+                            "attribute "
+                                    + attributeMapping.getGeoserver()
+                                    + " not found in configuration");
+                }
+                addAttribute(metadataMap, attributeMapping, att, doc, null);
             }
-            addAttribute(metadataMap, attributeMapping, att, doc, null);
+        }
+    }
+
+    private void addNativeAttribute(
+            ResourceInfo rInfo, AttributeMappingConfiguration attributeMapping, Document doc)
+            throws IOException {
+        NodeList nodes = findNode(doc, attributeMapping.getGeonetwork(), null);
+
+        if (nodes.getLength() > 0) {
+            try {
+                Class<?> clazz =
+                        PropertyUtils.getPropertyDescriptor(rInfo, attributeMapping.getGeoserver())
+                                .getPropertyType();
+
+                if (List.class.isAssignableFrom(clazz)) {
+                    List<String> list = new ArrayList<String>();
+                    for (int i = 0; i < nodes.getLength(); i++) {
+                        list.add(nodes.item(i).getNodeValue());
+                    }
+                    BeanUtils.setProperty(rInfo, attributeMapping.getGeoserver(), list);
+                } else {
+                    Object value =
+                            clazz == null
+                                    ? nodes.item(0).getNodeValue()
+                                    : Converters.convert(nodes.item(0).getNodeValue(), clazz);
+                    BeanUtils.setProperty(rInfo, attributeMapping.getGeoserver(), value);
+                }
+            } catch (IllegalAccessException
+                    | InvocationTargetException
+                    | DOMException
+                    | NoSuchMethodException e) {
+                throw new IOException(e);
+            }
         }
     }
 

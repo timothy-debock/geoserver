@@ -5,6 +5,7 @@
 package org.geoserver.metadata.data.dto.impl;
 
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
+import org.geoserver.metadata.data.dto.MappingTypeEnum;
 
 /**
  * Object that matches yaml structure.
@@ -21,6 +22,8 @@ public class AttributeMappingConfigurationImpl implements AttributeMappingConfig
     String geoserver;
 
     String geonetwork;
+
+    MappingTypeEnum mappingType = MappingTypeEnum.CUSTOM;
 
     public AttributeMappingConfigurationImpl() {}
 
@@ -39,5 +42,10 @@ public class AttributeMappingConfigurationImpl implements AttributeMappingConfig
     @Override
     public String getGeonetwork() {
         return geonetwork;
+    }
+
+    @Override
+    public MappingTypeEnum getMappingType() {
+        return mappingType;
     }
 }

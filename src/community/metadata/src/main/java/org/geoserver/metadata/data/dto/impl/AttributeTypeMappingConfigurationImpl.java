@@ -30,16 +30,8 @@ public class AttributeTypeMappingConfigurationImpl implements AttributeTypeMappi
         return typename;
     }
 
-    public void setTypename(String typename) {
-        this.typename = typename;
-    }
-
     @Override
     public List<AttributeMappingConfiguration> getMapping() {
         return mapping;
-    }
-
-    public void setMapping(List<AttributeMappingConfiguration> mapping) {
-        this.mapping = mapping;
     }
 }

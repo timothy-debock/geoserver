@@ -15,6 +15,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.geoserver.catalog.MetadataMap;
+import org.geoserver.catalog.ResourceInfo;
+import org.geoserver.catalog.impl.FeatureTypeInfoImpl;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.metadata.AbstractMetadataTest;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
@@ -41,10 +43,12 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
         MetadataMap metadataMap = new MetadataMap();
         ComplexMetadataMapImpl complexMetadataMap = new ComplexMetadataMapImpl(metadataMap);
 
+        ResourceInfo rInfo = new FeatureTypeInfoImpl(null);
+
         Document fileAsResource =
                 getDocument("geonetwork-1a2c6739-3c62-432b-b2a0-aaa589a9e3a1.xml");
 
-        xmlParser.parseMetadata(fileAsResource, complexMetadataMap);
+        xmlParser.parseMetadata(fileAsResource, rInfo, complexMetadataMap);
 
         // simple single
         Assert.assertEquals(
@@ -91,6 +95,14 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
         List<?> phones = (List<?>) metadataMap.get("contact/phone");
         assertEquals(3, phones.size());
         assertEquals(2, ((List<?>) phones.get(2)).size());
+
+        // test native mappings
+        assertEquals("G3Dv2_01_Q, dikte niet-tabulair Quartair", rInfo.getTitle());
+        assertEquals(2, rInfo.getAlias().size());
+        assertEquals(
+                "Geologisch 3D model Vlaamse Ondergrond versie2- Dikte niet-tabulair Quartair",
+                rInfo.getAlias().get(0));
+        assertEquals("AndereTitel", rInfo.getAlias().get(1));
     }
 
     private Document getDocument(String fileName) throws IOException {

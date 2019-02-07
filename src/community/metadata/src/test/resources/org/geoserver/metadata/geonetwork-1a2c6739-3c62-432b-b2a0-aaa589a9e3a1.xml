@@ -124,6 +124,9 @@
                <gmd:alternateTitle>
                   <gco:CharacterString>Geologisch 3D model Vlaamse Ondergrond versie2- Dikte niet-tabulair Quartair</gco:CharacterString>
                </gmd:alternateTitle>
+               <gmd:alternateTitle>
+                  <gco:CharacterString>AndereTitel</gco:CharacterString>
+               </gmd:alternateTitle>
                <gmd:date>
                   <gmd:CI_Date>
                      <gmd:date>
