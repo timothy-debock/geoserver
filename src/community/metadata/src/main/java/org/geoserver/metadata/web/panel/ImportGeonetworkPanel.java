@@ -18,9 +18,9 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
-import org.geoserver.metadata.data.dto.MetadataEditorConfiguration;
-import org.geoserver.metadata.data.dto.MetadataGeonetworkConfiguration;
-import org.geoserver.metadata.data.service.MetadataEditorConfigurationService;
+import org.geoserver.metadata.data.dto.GeonetworkConfiguration;
+import org.geoserver.metadata.data.dto.MetadataConfiguration;
+import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -36,15 +36,15 @@ import org.geoserver.web.wicket.ParamResourceModel;
 public abstract class ImportGeonetworkPanel extends Panel {
     private static final long serialVersionUID = 1297739738862860160L;
 
-    private List<MetadataGeonetworkConfiguration> geonetworks = new ArrayList<>();
+    private List<GeonetworkConfiguration> geonetworks = new ArrayList<>();
 
     public ImportGeonetworkPanel(String id) {
         super(id);
-        MetadataEditorConfigurationService metadataService =
+        ConfigurationService configService =
                 GeoServerApplication.get()
                         .getApplicationContext()
-                        .getBean(MetadataEditorConfigurationService.class);
-        MetadataEditorConfiguration configuration = metadataService.readConfiguration();
+                        .getBean(ConfigurationService.class);
+        MetadataConfiguration configuration = configService.getMetadataConfiguration();
         if (configuration != null && configuration.getGeonetworks() != null) {
             this.geonetworks = configuration.getGeonetworks();
         }
@@ -62,7 +62,7 @@ public abstract class ImportGeonetworkPanel extends Panel {
                         .setOutputMarkupId(true));
 
         ArrayList<String> optionsGeonetwork = new ArrayList<>();
-        for (MetadataGeonetworkConfiguration geonetwork : geonetworks) {
+        for (GeonetworkConfiguration geonetwork : geonetworks) {
             optionsGeonetwork.add(geonetwork.getName());
         }
 
@@ -147,7 +147,7 @@ public abstract class ImportGeonetworkPanel extends Panel {
         String url = "";
 
         if (modelValue != null) {
-            for (MetadataGeonetworkConfiguration geonetwork : geonetworks) {
+            for (GeonetworkConfiguration geonetwork : geonetworks) {
                 if (modelValue.equals(geonetwork.getName())) {
                     url = geonetwork.getUrl();
                 }

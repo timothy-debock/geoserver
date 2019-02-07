@@ -1,7 +1,7 @@
 attributes:
   - key: uuid-single
     fieldType: UUID
-  - key: indentifier-single
+  - key: identifier-single
     fieldType: TEXT
   - key: number-field
     fieldType: NUMBER
@@ -36,6 +36,12 @@ attributes:
     fieldType: DATETIME
   - key: boolean-field
     fieldType: BOOLEAN
+  - key: contact
+    fieldType: COMPLEX
+    typename: contact
+    occurrence: REPEAT
+  - key: identifier-other
+    fieldType: TEXT
 
 types:
   - typename: referencesystem
@@ -46,6 +52,16 @@ types:
         - label: codeSpace
           key: code-space
           fieldType: TEXT
+  - typename: contact
+    attributes:
+        - key: name
+          fieldType: TEXT
+        - key: url
+          fieldType: TEXT
+        - key: phone
+          fieldType: TEXT
+          occurrence: REPEAT
+
 
 geonetworks:
   - name: geonetwork url
@@ -54,5 +70,5 @@ geonetworks:
     url: https://oefen.dov.vlaanderen.be/geonetwork/
 
 geonetworkmapping:
-    -  geoserver: indentifier-other
+    -  geoserver: identifier-other
        geonetwork: //gmd:fileIdentifier/gco:CharacterString/text()

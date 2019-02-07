@@ -7,7 +7,7 @@ package org.geoserver.metadata.data.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
 import java.util.List;
-import org.geoserver.metadata.data.dto.impl.MetadataAttributeTypeConfigurationImpl;
+import org.geoserver.metadata.data.dto.impl.AttributeTypeConfigurationImpl;
 
 /**
  * Object that matches yaml structure.
@@ -17,14 +17,12 @@ import org.geoserver.metadata.data.dto.impl.MetadataAttributeTypeConfigurationIm
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonDeserialize(as = MetadataAttributeTypeConfigurationImpl.class)
-public interface MetadataAttributeTypeConfiguration extends Serializable {
+@JsonDeserialize(as = AttributeTypeConfigurationImpl.class)
+public interface AttributeTypeConfiguration extends Serializable {
 
-    public List<MetadataAttributeConfiguration> getAttributes();
-
-    public void setAttributes(List<MetadataAttributeConfiguration> attributes);
+    public List<AttributeConfiguration> getAttributes();
 
     public String getTypename();
 
-    public void setTypename(String typename);
+    public AttributeConfiguration findAttribute(String attName);
 }

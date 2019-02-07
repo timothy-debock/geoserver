@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.wicket.model.IModel;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.web.wicket.GeoServerDataProvider;
@@ -29,7 +29,7 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
     private final Property<ComplexMetadataAttribute<T>> REMOVE_ROW =
             new BeanProperty<ComplexMetadataAttribute<T>>(KEY_REMOVE_ROW, "value");
 
-    private final MetadataAttributeConfiguration attributeConfiguration;
+    private final AttributeConfiguration attributeConfiguration;
 
     private IModel<ComplexMetadataMap> metadataModel;
 
@@ -37,7 +37,7 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
 
     public RepeatableAttributeDataProvider(
             Class<T> clazz,
-            MetadataAttributeConfiguration attributeConfiguration,
+            AttributeConfiguration attributeConfiguration,
             IModel<ComplexMetadataMap> metadataModel) {
 
         this.metadataModel = metadataModel;
@@ -77,7 +77,7 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
         items.remove(index);
     }
 
-    public MetadataAttributeConfiguration getConfiguration() {
+    public AttributeConfiguration getConfiguration() {
         return attributeConfiguration;
     }
 }

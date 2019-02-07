@@ -6,8 +6,8 @@ package org.geoserver.metadata.data.dto.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
 import org.geoserver.metadata.data.dto.OccurrenceEnum;
 
 /**
@@ -17,7 +17,7 @@ import org.geoserver.metadata.data.dto.OccurrenceEnum;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class MetadataAttributeConfigurationImpl implements MetadataAttributeConfiguration {
+public class AttributeConfigurationImpl implements AttributeConfiguration {
 
     private static final long serialVersionUID = 3130368513874060531L;
 
@@ -33,15 +33,15 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
 
     String typename;
 
-    public MetadataAttributeConfigurationImpl() {}
+    public AttributeConfigurationImpl() {}
 
-    public MetadataAttributeConfigurationImpl(String key, FieldTypeEnum fieldType) {
+    public AttributeConfigurationImpl(String key, FieldTypeEnum fieldType) {
         this.key = key;
         this.label = key;
         this.fieldType = fieldType;
     }
 
-    public MetadataAttributeConfigurationImpl(MetadataAttributeConfigurationImpl other) {
+    public AttributeConfigurationImpl(AttributeConfigurationImpl other) {
         if (other != null) {
             key = other.getKey();
             label = other.getLabel();
@@ -60,11 +60,6 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
     }
 
     @Override
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    @Override
     public String getLabel() {
         return label;
     }
@@ -80,18 +75,8 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
     }
 
     @Override
-    public void setFieldType(FieldTypeEnum fieldType) {
-        this.fieldType = fieldType;
-    }
-
-    @Override
     public List<String> getValues() {
         return values;
-    }
-
-    @Override
-    public void setValues(List<String> values) {
-        this.values = values;
     }
 
     @Override
@@ -100,17 +85,7 @@ public class MetadataAttributeConfigurationImpl implements MetadataAttributeConf
     }
 
     @Override
-    public void setTypename(String typename) {
-        this.typename = typename;
-    }
-
-    @Override
     public OccurrenceEnum getOccurrence() {
         return occurrence;
-    }
-
-    @Override
-    public void setOccurrence(OccurrenceEnum occurrence) {
-        this.occurrence = occurrence;
     }
 }

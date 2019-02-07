@@ -17,7 +17,7 @@ import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 import org.geoserver.catalog.LayerInfo;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.service.ComplexAttributeGenerator;
 import org.geoserver.metadata.web.layer.MetadataTabPanel;
@@ -159,7 +159,7 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                             IModel<ComplexMetadataMap> itemModel,
                             GeoServerDataProvider.Property<ComplexMetadataMap> property) {
 
-                        MetadataAttributeConfiguration attributeConfiguration =
+                        AttributeConfiguration attributeConfiguration =
                                 dataProvider.getConfiguration();
 
                         // disable input values from template

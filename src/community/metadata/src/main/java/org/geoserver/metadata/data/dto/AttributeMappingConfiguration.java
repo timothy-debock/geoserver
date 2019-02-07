@@ -4,32 +4,21 @@
  */
 package org.geoserver.metadata.data.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import java.util.List;
+import java.io.Serializable;
 import org.geoserver.metadata.data.dto.impl.AttributeMappingConfigurationImpl;
 
 /**
- * Toplevel Object that matches yaml structure.
+ * Object that matches yaml structure.
  *
- * <p>This part or the yaml contains the configuration that matches fields in the xml (Xpath
- * expressions) to the field configuration of the geoserver metadata GUI.
- *
- * <p>example of the yaml file: metadata-mapping.yaml
+ * <p>The part describes one mapping between the geoserver fields en the xml metadata from
+ * geonetwork. The geonetwork field is described as an xpath expression.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 @JsonDeserialize(as = AttributeMappingConfigurationImpl.class)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public interface AttributeMappingConfiguration {
+public interface AttributeMappingConfiguration extends Serializable {
+    public String getGeoserver();
 
-    public List<AttributeMapping> getGeonetworkmapping();
-
-    public void setGeonetworkmapping(List<AttributeMapping> geonetworkmapping);
-
-    public List<AttributeComplexTypeMapping> getObjectmapping();
-
-    public void setObjectmapping(List<AttributeComplexTypeMapping> objectmapping);
-
-    public AttributeComplexTypeMapping findType(String typename);
+    public String getGeonetwork();
 }

@@ -6,7 +6,7 @@ package org.geoserver.metadata.data.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
-import org.geoserver.metadata.data.dto.impl.MetadataGeonetworkConfigurationImpl;
+import org.geoserver.metadata.data.dto.impl.GeonetworkConfigurationImpl;
 
 /**
  * Object that matches yaml structure.
@@ -15,14 +15,10 @@ import org.geoserver.metadata.data.dto.impl.MetadataGeonetworkConfigurationImpl;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonDeserialize(as = MetadataGeonetworkConfigurationImpl.class)
-public interface MetadataGeonetworkConfiguration extends Serializable {
+@JsonDeserialize(as = GeonetworkConfigurationImpl.class)
+public interface GeonetworkConfiguration extends Serializable {
 
     public String getName();
 
-    public void setName(String name);
-
     public String getUrl();
-
-    public void setUrl(String url);
 }

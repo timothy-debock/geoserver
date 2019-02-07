@@ -7,7 +7,7 @@ package org.geoserver.metadata.data.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
 import java.util.List;
-import org.geoserver.metadata.data.dto.impl.MetadataAttributeConfigurationImpl;
+import org.geoserver.metadata.data.dto.impl.AttributeConfigurationImpl;
 
 /**
  * Object that matches yaml structure.
@@ -16,14 +16,12 @@ import org.geoserver.metadata.data.dto.impl.MetadataAttributeConfigurationImpl;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonDeserialize(as = MetadataAttributeConfigurationImpl.class)
-public interface MetadataAttributeConfiguration extends Serializable {
+@JsonDeserialize(as = AttributeConfigurationImpl.class)
+public interface AttributeConfiguration extends Serializable {
 
     public static final String PREFIX = "metadata.generated.form.";
 
     public String getKey();
-
-    public void setKey(String key);
 
     public String getLabel();
 
@@ -31,17 +29,9 @@ public interface MetadataAttributeConfiguration extends Serializable {
 
     public FieldTypeEnum getFieldType();
 
-    public void setFieldType(FieldTypeEnum fieldType);
-
     public List<String> getValues();
-
-    public void setValues(List<String> values);
 
     public String getTypename();
 
-    public void setTypename(String typename);
-
     public OccurrenceEnum getOccurrence();
-
-    public void setOccurrence(OccurrenceEnum occurrence);
 }

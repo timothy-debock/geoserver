@@ -10,7 +10,7 @@ import java.util.HashMap;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataAttributeModel;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
@@ -33,9 +33,7 @@ public class EditorFactory {
     }
 
     public <T extends Serializable> Component create(
-            MetadataAttributeConfiguration configuration,
-            String id,
-            ComplexMetadataMap metadataMap) {
+            AttributeConfiguration configuration, String id, ComplexMetadataMap metadataMap) {
 
         ComplexMetadataAttribute<T> metadataModel =
                 metadataMap.get(getItemClass(configuration), configuration.getKey());
@@ -46,7 +44,7 @@ public class EditorFactory {
     }
 
     public <T extends Serializable> Component create(
-            MetadataAttributeConfiguration configuration,
+            AttributeConfiguration configuration,
             String id,
             ComplexMetadataAttribute<T> metadataAttribute) {
 
@@ -60,7 +58,7 @@ public class EditorFactory {
 
     @SuppressWarnings("unchecked")
     private Component create(
-            MetadataAttributeConfiguration configuration,
+            AttributeConfiguration configuration,
             String id,
             IModel<?> model,
             ComplexMetadataMap submap) {
@@ -96,7 +94,7 @@ public class EditorFactory {
 
     @SuppressWarnings("unchecked")
     public <T extends Serializable> Class<T> getItemClass(
-            MetadataAttributeConfiguration attributeConfiguration) {
+            AttributeConfiguration attributeConfiguration) {
         switch (attributeConfiguration.getFieldType()) {
             case NUMBER:
                 return (Class<T>) Integer.class;

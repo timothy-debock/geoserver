@@ -4,7 +4,7 @@
  */
 package org.geoserver.metadata.data.dto.impl;
 
-import org.geoserver.metadata.data.dto.MetadataGeonetworkConfiguration;
+import org.geoserver.metadata.data.dto.GeonetworkConfiguration;
 
 /**
  * Object that matches yaml structure.
@@ -13,7 +13,7 @@ import org.geoserver.metadata.data.dto.MetadataGeonetworkConfiguration;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class MetadataGeonetworkConfigurationImpl implements MetadataGeonetworkConfiguration {
+public class GeonetworkConfigurationImpl implements GeonetworkConfiguration {
 
     private static final long serialVersionUID = -652210940618705299L;
 
@@ -21,9 +21,9 @@ public class MetadataGeonetworkConfigurationImpl implements MetadataGeonetworkCo
 
     String url;
 
-    public MetadataGeonetworkConfigurationImpl() {}
+    public GeonetworkConfigurationImpl() {}
 
-    public MetadataGeonetworkConfigurationImpl(String url) {
+    public GeonetworkConfigurationImpl(String url) {
         this.url = url;
     }
 
@@ -33,17 +33,7 @@ public class MetadataGeonetworkConfigurationImpl implements MetadataGeonetworkCo
     }
 
     @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
     public String getUrl() {
         return url;
-    }
-
-    @Override
-    public void setUrl(String url) {
-        this.url = url;
     }
 }

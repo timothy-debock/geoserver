@@ -38,14 +38,14 @@ public class ExternalResourceLoaderTest extends AbstractWicketMetadataTest {
 
         String actual =
                 loader.loadStringResource(
-                        tester.getLastRenderedPage(), "metadata.generated.form.indentifier-single");
-        Assert.assertEquals("Indentifier single field", actual);
+                        tester.getLastRenderedPage(), "metadata.generated.form.identifier-single");
+        Assert.assertEquals("identifier single field", actual);
 
         Session.get().setLocale(new Locale("nl"));
         actual =
                 loader.loadStringResource(
-                        tester.getLastRenderedPage(), "metadata.generated.form.indentifier-single");
-        Assert.assertEquals("Indentifier single field", actual);
+                        tester.getLastRenderedPage(), "metadata.generated.form.identifier-single");
+        Assert.assertEquals("identifier single field", actual);
     }
 
     @Test

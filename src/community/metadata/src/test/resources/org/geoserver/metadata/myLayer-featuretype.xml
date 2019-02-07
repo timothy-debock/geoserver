@@ -89,7 +89,7 @@
           <list/>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <string>template-identifier</string>
         </entry>
         <entry>
@@ -142,7 +142,7 @@
           <list/>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <int>0</int>
           </list>

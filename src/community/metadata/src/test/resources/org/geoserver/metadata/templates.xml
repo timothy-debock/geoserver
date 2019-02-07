@@ -11,7 +11,7 @@
             <string>Or select this row</string>
           </entry>
           <entry>
-            <string>indentifier-single</string>
+            <string>identifier-single</string>
             <string>template-identifier</string>
           </entry>
           <entry>
@@ -34,7 +34,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>
@@ -141,7 +141,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>
@@ -329,7 +329,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>
@@ -417,7 +417,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>
@@ -686,7 +686,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>
@@ -838,8 +838,8 @@
             </list>
           </entry>
           <entry>
-            <string>indentifier-single</string>
-            <string>the-indentifier-single</string>
+            <string>identifier-single</string>
+            <string>the-identifier-single</string>
           </entry>
           <entry>
             <string>referencesystem-object-list/code-space</string>
@@ -1101,7 +1101,7 @@
           </list>
         </entry>
         <entry>
-          <string>indentifier-single</string>
+          <string>identifier-single</string>
           <list>
             <ComplexMetadataIndexReference>
               <index/>

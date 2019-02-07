@@ -1,32 +1,23 @@
 #https://oefen.dov.vlaanderen.be/geonetwork/srv/api/records/024a15a4-a6f9-41ca-b28a-f17e3f5623f9/formatters/xml
 #//book[author="Neal Stephenson"]/title
 geonetworkmapping:
-    -  geoserver: indentifier-single
+    -  geoserver: identifier-single
        geonetwork: //gmd:fileIdentifier//gco:CharacterString/text()
     -  geoserver: refsystem-as-list
        geonetwork: //gmd:referenceSystemInfo//gmd:code//gco:CharacterString/text()
-       occurrence: REPEAT
     -  geoserver: referencesystem-object
        geonetwork: //gmd:referenceSystemInfo
-       fieldType: COMPLEX
-       typename: referencesystem
     -  geoserver: referencesystem-object-list
        geonetwork: //gmd:referenceSystemInfo
-       fieldType: COMPLEX
-       typename: referencesystem
-       occurrence: REPEAT
     -  geoserver: contact
        geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty
-       fieldType: COMPLEX
-       typename: contact
-       occurrence: REPEAT
 
 objectmapping:
     - typename: referencesystem
       mapping:
           - geoserver: code
             geonetwork: .//gmd:code//gco:CharacterString/text()
-          - geoserver: codeSpace
+          - geoserver: code-space
             geonetwork: .//gmd:codeSpace//gco:CharacterString/text()
     - typename: contact
       mapping:
@@ -35,5 +26,4 @@ objectmapping:
           - geoserver: url
             geonetwork: ./gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL/text()
           - geoserver: phone
-            occurrence: REPEAT
             geonetwork: .//gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()

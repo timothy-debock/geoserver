@@ -4,57 +4,40 @@
  */
 package org.geoserver.metadata.data.dto.impl;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.ArrayList;
-import java.util.List;
-import org.geoserver.metadata.data.dto.AttributeComplexTypeMapping;
-import org.geoserver.metadata.data.dto.AttributeMapping;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
 
 /**
- * Toplevel Object that matches yaml structure.
+ * Object that matches yaml structure.
  *
- * <p>This part or the yaml contains the configuration that matches fields in the xml (Xpath
- * expressions) to the field configuration of the geoserver metadata GUI.
- *
- * <p>example of the yaml file: metadata-mapping.yaml
+ * <p>The part describes one mapping between the geoserver fields en the xml metadata from
+ * geonetwork. The geonetwork field is described as an xpath expression.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class AttributeMappingConfigurationImpl implements AttributeMappingConfiguration {
 
-    List<AttributeMapping> geonetworkmapping = new ArrayList<>();
+    private static final long serialVersionUID = -2528238667226248014L;
 
-    List<AttributeComplexTypeMapping> objectmapping = new ArrayList<>();
+    String geoserver;
 
-    @Override
-    public List<AttributeMapping> getGeonetworkmapping() {
-        return geonetworkmapping;
-    }
+    String geonetwork;
 
-    @Override
-    public void setGeonetworkmapping(List<AttributeMapping> geonetworkmapping) {
-        this.geonetworkmapping = geonetworkmapping;
-    }
+    public AttributeMappingConfigurationImpl() {}
 
-    @Override
-    public List<AttributeComplexTypeMapping> getObjectmapping() {
-        return objectmapping;
-    }
-
-    @Override
-    public void setObjectmapping(List<AttributeComplexTypeMapping> objectmapping) {
-        this.objectmapping = objectmapping;
-    }
-
-    @Override
-    public AttributeComplexTypeMapping findType(String typename) {
-        for (AttributeComplexTypeMapping type : objectmapping) {
-            if (typename.equals(type.getTypename())) {
-                return type;
-            }
+    public AttributeMappingConfigurationImpl(AttributeMappingConfiguration other) {
+        if (other != null) {
+            geoserver = other.getGeoserver();
+            geonetwork = other.getGeonetwork();
         }
-        return null;
+    }
+
+    @Override
+    public String getGeoserver() {
+        return geoserver;
+    }
+
+    @Override
+    public String getGeonetwork() {
+        return geonetwork;
     }
 }

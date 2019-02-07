@@ -4,9 +4,8 @@
  */
 package org.geoserver.metadata.data.service;
 
-import java.io.IOException;
-import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
-import org.geoserver.metadata.data.dto.MetadataEditorConfiguration;
+import org.geoserver.metadata.data.dto.MappingConfiguration;
+import org.geoserver.metadata.data.dto.MetadataConfiguration;
 
 /**
  * Service responsible for interaction with yaml files. It will search for all *.yaml files in a
@@ -14,9 +13,9 @@ import org.geoserver.metadata.data.dto.MetadataEditorConfiguration;
  *
  * @author Timothy De Bock
  */
-public interface YamlService {
+public interface ConfigurationService {
 
-    MetadataEditorConfiguration readConfiguration() throws IOException;
+    MetadataConfiguration getMetadataConfiguration();
 
-    AttributeMappingConfiguration readMapping() throws IOException;
+    MappingConfiguration getMappingConfiguration();
 }

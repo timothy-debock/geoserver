@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.wicket.model.IModel;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
@@ -29,12 +29,12 @@ public class RepeatableComplexAttributeDataProvider
 
     private IModel<ComplexMetadataMap> metadataModel;
 
-    private MetadataAttributeConfiguration attributeConfiguration;
+    private AttributeConfiguration attributeConfiguration;
 
     private List<ComplexMetadataMap> items = new ArrayList<>();
 
     public RepeatableComplexAttributeDataProvider(
-            MetadataAttributeConfiguration attributeConfiguration,
+            AttributeConfiguration attributeConfiguration,
             IModel<ComplexMetadataMap> metadataModel) {
         this.metadataModel = metadataModel;
         this.attributeConfiguration = attributeConfiguration;
@@ -71,7 +71,7 @@ public class RepeatableComplexAttributeDataProvider
         items.remove(index);
     }
 
-    public MetadataAttributeConfiguration getConfiguration() {
+    public AttributeConfiguration getConfiguration() {
         return attributeConfiguration;
     }
 }

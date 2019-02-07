@@ -6,8 +6,8 @@ package org.geoserver.metadata.data.dto.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.MetadataAttributeTypeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
 
 /**
  * Object that matches yaml structure.
@@ -17,22 +17,17 @@ import org.geoserver.metadata.data.dto.MetadataAttributeTypeConfiguration;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class MetadataAttributeTypeConfigurationImpl implements MetadataAttributeTypeConfiguration {
+public class AttributeTypeConfigurationImpl implements AttributeTypeConfiguration {
 
     private static final long serialVersionUID = 7617959011871570119L;
 
     String typename;
 
-    List<MetadataAttributeConfiguration> attributes = new ArrayList<>();
+    List<AttributeConfiguration> attributes = new ArrayList<>();
 
     @Override
-    public List<MetadataAttributeConfiguration> getAttributes() {
+    public List<AttributeConfiguration> getAttributes() {
         return attributes;
-    }
-
-    @Override
-    public void setAttributes(List<MetadataAttributeConfiguration> attributes) {
-        this.attributes = attributes;
     }
 
     @Override
@@ -41,7 +36,12 @@ public class MetadataAttributeTypeConfigurationImpl implements MetadataAttribute
     }
 
     @Override
-    public void setTypename(String typename) {
-        this.typename = typename;
+    public AttributeConfiguration findAttribute(String attName) {
+        for (AttributeConfiguration att : attributes) {
+            if (attName.equals(att.getKey())) {
+                return att;
+            }
+        }
+        return null;
     }
 }

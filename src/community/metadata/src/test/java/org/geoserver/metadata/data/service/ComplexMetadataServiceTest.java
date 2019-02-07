@@ -35,8 +35,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         // simple fields orgiginal values
         Assert.assertEquals(
-                "the-indentifier-single",
-                parent.get(String.class, "indentifier-single").getValue());
+                "the-identifier-single", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("Select me", parent.get(String.class, "dropdown-field").getValue());
 
@@ -45,12 +44,12 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         // Should be updated simple fields
         Assert.assertEquals(
-                "template-identifier", parent.get(String.class, "indentifier-single").getValue());
+                "template-identifier", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("77", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals(
                 "Or select this row", parent.get(String.class, "dropdown-field").getValue());
 
-        Assert.assertEquals(0, descriptionMap.get("indentifier-single").get(0).intValue());
+        Assert.assertEquals(0, descriptionMap.get("identifier-single").get(0).intValue());
         Assert.assertEquals(0, descriptionMap.get("number-field").get(0).intValue());
         Assert.assertEquals(0, descriptionMap.get("dropdown-field").get(0).intValue());
         // list simple fields
@@ -101,8 +100,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         // simple fields
         Assert.assertEquals(
-                "the-indentifier-single",
-                parent.get(String.class, "indentifier-single").getValue());
+                "the-identifier-single", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("Select me", parent.get(String.class, "dropdown-field").getValue());
         // list simple fields
@@ -145,8 +143,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         // simple fields
         Assert.assertEquals(
-                "the-indentifier-single",
-                parent.get(String.class, "indentifier-single").getValue());
+                "the-identifier-single", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("Select me", parent.get(String.class, "dropdown-field").getValue());
         // Should be updated list simple fields
@@ -194,8 +191,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         // simple fields
         Assert.assertEquals(
-                "the-indentifier-single",
-                parent.get(String.class, "indentifier-single").getValue());
+                "the-identifier-single", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("Select me", parent.get(String.class, "dropdown-field").getValue());
         // list simple fields
@@ -297,11 +293,11 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         service.merge(parent, children, derivedAtts);
 
         Assert.assertEquals(
-                "template-identifier", parent.get(String.class, "indentifier-single").getValue());
+                "template-identifier", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("77", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals(
                 "Or select this row", parent.get(String.class, "dropdown-field").getValue());
-        Assert.assertEquals(0, derivedAtts.get("indentifier-single").get(0).intValue());
+        Assert.assertEquals(0, derivedAtts.get("identifier-single").get(0).intValue());
         Assert.assertEquals(0, derivedAtts.get("number-field").get(0).intValue());
         Assert.assertEquals(0, derivedAtts.get("dropdown-field").get(0).intValue());
 
@@ -322,10 +318,10 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         // UNLINK
         service.merge(parent, new ArrayList<ComplexMetadataMap>(), derivedAtts);
 
-        Assert.assertEquals("", parent.get(String.class, "indentifier-single").getValue());
+        Assert.assertEquals("", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("", parent.get(String.class, "dropdown-field").getValue());
-        Assert.assertNull(derivedAtts.get("indentifier-single"));
+        Assert.assertNull(derivedAtts.get("identifier-single"));
         Assert.assertNull(derivedAtts.get("number-field"));
         Assert.assertNull(derivedAtts.get("dropdown-field"));
 

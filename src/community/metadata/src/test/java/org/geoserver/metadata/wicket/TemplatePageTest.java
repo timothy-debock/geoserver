@@ -44,7 +44,7 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
 
     @Test
     public void testPage() {
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
 
         Assert.assertEquals(
                 false, tester.getComponentFromLastRenderedPage("form:name").isEnabled());
@@ -75,7 +75,7 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
         Assert.assertEquals("description update", template.getDescription());
         Assert.assertEquals(
                 "new identifier value",
-                template.getMetadata().get(String.class, "indentifier-single").getValue());
+                template.getMetadata().get(String.class, "identifier-single").getValue());
 
         tester.assertRenderedPage(MetadataTemplatesPage.class);
     }

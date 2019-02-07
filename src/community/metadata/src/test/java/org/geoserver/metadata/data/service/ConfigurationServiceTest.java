@@ -7,9 +7,9 @@ package org.geoserver.metadata.data.service;
 import java.io.IOException;
 import java.util.List;
 import org.geoserver.metadata.AbstractMetadataTest;
-import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.MetadataEditorConfiguration;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
+import org.geoserver.metadata.data.dto.MappingConfiguration;
+import org.geoserver.metadata.data.dto.MetadataConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,24 +19,24 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class YamlServiceTest extends AbstractMetadataTest {
+public class ConfigurationServiceTest extends AbstractMetadataTest {
 
-    @Autowired private YamlService yamlService;
+    @Autowired private ConfigurationService yamlService;
 
     @Test
     public void testFileRegistry() throws IOException {
-        MetadataEditorConfiguration configuration = yamlService.readConfiguration();
+        MetadataConfiguration configuration = yamlService.getMetadataConfiguration();
         Assert.assertNotNull(configuration);
-        Assert.assertEquals(8, configuration.getAttributes().size());
+        Assert.assertEquals(13, configuration.getAttributes().size());
         Assert.assertEquals(3, configuration.getGeonetworks().size());
-        Assert.assertEquals(4, configuration.getTypes().size());
+        Assert.assertEquals(5, configuration.getTypes().size());
 
         Assert.assertEquals(
-                "indentifier-single",
-                findAttribute(configuration.getAttributes(), "indentifier-single").getLabel());
+                "identifier-single",
+                findAttribute(configuration.getAttributes(), "identifier-single").getLabel());
         Assert.assertEquals(
-                "indentifier-single",
-                findAttribute(configuration.getAttributes(), "indentifier-single").getLabel());
+                "identifier-single",
+                findAttribute(configuration.getAttributes(), "identifier-single").getLabel());
         Assert.assertEquals(
                 "dropdown-field",
                 findAttribute(configuration.getAttributes(), "dropdown-field").getLabel());
@@ -44,22 +44,22 @@ public class YamlServiceTest extends AbstractMetadataTest {
                 "refsystem as list",
                 findAttribute(configuration.getAttributes(), "refsystem-as-list").getLabel());
 
-        List<MetadataAttributeConfiguration> complexAttributes =
+        List<AttributeConfiguration> complexAttributes =
                 configuration.findType("referencesystem").getAttributes();
         Assert.assertEquals("Code", findAttribute(complexAttributes, "code").getLabel());
     }
 
     @Test
     public void testGeonetworkMappingRegistry() throws IOException {
-        AttributeMappingConfiguration configuration = yamlService.readMapping();
+        MappingConfiguration configuration = yamlService.getMappingConfiguration();
         Assert.assertNotNull(configuration);
         Assert.assertEquals(6, configuration.getGeonetworkmapping().size());
         Assert.assertEquals(2, configuration.getObjectmapping().size());
     }
 
-    private MetadataAttributeConfiguration findAttribute(
-            List<MetadataAttributeConfiguration> configurations, String key) {
-        for (MetadataAttributeConfiguration attribute : configurations) {
+    private AttributeConfiguration findAttribute(
+            List<AttributeConfiguration> configurations, String key) {
+        for (AttributeConfiguration attribute : configurations) {
             if (attribute.getKey().equals(key)) {
                 return attribute;
             }

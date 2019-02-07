@@ -13,16 +13,16 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import org.geoserver.metadata.data.dto.AttributeComplexTypeMapping;
-import org.geoserver.metadata.data.dto.AttributeMapping;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeMappingConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.dto.OccurrenceEnum;
-import org.geoserver.metadata.data.dto.impl.AttributeMappingImpl;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
+import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.metadata.data.service.GeonetworkXmlParser;
-import org.geoserver.metadata.data.service.YamlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.w3c.dom.Document;
@@ -34,37 +34,47 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
 
     private static final long serialVersionUID = -4931070325217885824L;
 
-    @Autowired private YamlService yamlService;
+    @Autowired private ConfigurationService configService;
 
     @Override
     public void parseMetadata(Document doc, ComplexMetadataMap metadataMap) throws IOException {
-        AttributeMappingConfiguration mapping = yamlService.readMapping();
-
-        for (AttributeMapping attributeMapping : mapping.getGeonetworkmapping()) {
-            addAttribute(metadataMap, attributeMapping, doc, null, mapping);
+        for (AttributeMappingConfiguration attributeMapping :
+                configService.getMappingConfiguration().getGeonetworkmapping()) {
+            AttributeConfiguration att =
+                    configService
+                            .getMetadataConfiguration()
+                            .findAttribute(attributeMapping.getGeoserver());
+            if (att == null) {
+                throw new IOException(
+                        "attribute "
+                                + attributeMapping.getGeoserver()
+                                + " not found in configuration");
+            }
+            addAttribute(metadataMap, attributeMapping, att, doc, null);
         }
     }
 
     private void addAttribute(
             ComplexMetadataMap metadataMap,
-            AttributeMapping attributeMapping,
+            AttributeMappingConfiguration attributeMapping,
+            AttributeConfiguration attConfig,
             Document doc,
-            Node node,
-            AttributeMappingConfiguration mapping) {
+            Node node)
+            throws IOException {
         NodeList nodes = findNode(doc, attributeMapping.getGeonetwork(), node);
 
-        switch (attributeMapping.getOccurrence()) {
+        switch (attConfig.getOccurrence()) {
             case SINGLE:
                 if (nodes != null && nodes.getLength() > 0) {
-                    mapNode(metadataMap, attributeMapping, doc, nodes.item(0), mapping);
+                    mapNode(metadataMap, attributeMapping, attConfig, doc, nodes.item(0));
                 } else {
-                    mapNode(metadataMap, attributeMapping, doc, null, mapping);
+                    mapNode(metadataMap, attributeMapping, attConfig, doc, null);
                 }
                 break;
             case REPEAT:
                 if (nodes != null) {
                     for (int count = 0; count < nodes.getLength(); count++) {
-                        mapNode(metadataMap, attributeMapping, doc, nodes.item(count), mapping);
+                        mapNode(metadataMap, attributeMapping, attConfig, doc, nodes.item(count));
                     }
                 }
                 break;
@@ -73,27 +83,41 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
 
     private void mapNode(
             ComplexMetadataMap metadataMap,
-            AttributeMapping attributeMapping,
+            AttributeMappingConfiguration attributeMapping,
+            AttributeConfiguration attConfig,
             Document doc,
-            Node node,
-            AttributeMappingConfiguration mapping) {
-        if (FieldTypeEnum.COMPLEX.equals(attributeMapping.getFieldType())) {
-            AttributeComplexTypeMapping complexTypeMapping =
-                    mapping.findType(attributeMapping.getTypename());
+            Node node)
+            throws IOException {
+        if (FieldTypeEnum.COMPLEX.equals(attConfig.getFieldType())) {
+            AttributeTypeMappingConfiguration typeMapping =
+                    configService.getMappingConfiguration().findType(attConfig.getTypename());
+            AttributeTypeConfiguration type =
+                    configService.getMetadataConfiguration().findType(attConfig.getTypename());
+            if (type == null) {
+                throw new IOException(
+                        "type " + attConfig.getTypename() + " not found in configuration");
+            }
             ComplexMetadataMap submap;
-            if (OccurrenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
+            if (OccurrenceEnum.SINGLE.equals(attConfig.getOccurrence())) {
                 submap = metadataMap.subMap(attributeMapping.getGeoserver());
             } else {
                 int currentSize = metadataMap.size(attributeMapping.getGeoserver());
                 submap = metadataMap.subMap(attributeMapping.getGeoserver(), currentSize);
             }
-            for (AttributeMapping aMapping : complexTypeMapping.getMapping()) {
-                AttributeMapping am = new AttributeMappingImpl(aMapping);
-                addAttribute(submap, am, doc, node, mapping);
+            for (AttributeMappingConfiguration aMapping : typeMapping.getMapping()) {
+                AttributeConfiguration att = type.findAttribute(aMapping.getGeoserver());
+                if (att == null) {
+                    throw new IOException(
+                            "attribute "
+                                    + aMapping.getGeoserver()
+                                    + " not found in type "
+                                    + type.getTypename());
+                }
+                addAttribute(submap, aMapping, att, doc, node);
             }
         } else {
             ComplexMetadataAttribute<String> att;
-            if (OccurrenceEnum.SINGLE.equals(attributeMapping.getOccurrence())) {
+            if (OccurrenceEnum.SINGLE.equals(attConfig.getOccurrence())) {
                 att = metadataMap.get(String.class, attributeMapping.getGeoserver());
             } else {
                 int currentSize = metadataMap.size(attributeMapping.getGeoserver());

@@ -69,7 +69,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         Assert.assertNotNull(actual.getMetadata());
         // Should not result in nullpointers because we read it from the xml
         // Empty sets en list are not stored in the xml file. this could result in nullpointers.
-        actual.getMetadata().size("indentifier-single");
+        actual.getMetadata().size("identifier-single");
     }
 
     @Test
@@ -102,10 +102,10 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         MetadataTemplate initial = service.load("simple fields");
         Assert.assertEquals(
                 "template-identifier",
-                initial.getMetadata().get(String.class, "indentifier-single").getValue());
+                initial.getMetadata().get(String.class, "identifier-single").getValue());
         Assert.assertTrue(initial.getLinkedLayers().contains("mylayerFeatureId"));
 
-        initial.getMetadata().get(String.class, "indentifier-single").setValue("updated value");
+        initial.getMetadata().get(String.class, "identifier-single").setValue("updated value");
 
         // check if the linked metadata is updated.
         LayerInfo initialMyLayer = geoServer.getCatalog().getLayer("myLayerId");
@@ -122,7 +122,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         MetadataTemplate actual = service.load("simple fields");
         Assert.assertEquals(
                 "updated value",
-                actual.getMetadata().get(String.class, "indentifier-single").getValue());
+                actual.getMetadata().get(String.class, "identifier-single").getValue());
 
         // check if the linked metadata is updated.
         LayerInfo myLayer = geoServer.getCatalog().getLayer("myLayerId");
@@ -134,7 +134,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
 
         Assert.assertEquals(
                 "updated value",
-                metadataModel.getObject().get(String.class, "indentifier-single").getValue());
+                metadataModel.getObject().get(String.class, "identifier-single").getValue());
         // only linked data from the linked template should change
         Assert.assertEquals(
                 1, metadataModel.getObject().size("feature-catalog/feature-attribute/type"));

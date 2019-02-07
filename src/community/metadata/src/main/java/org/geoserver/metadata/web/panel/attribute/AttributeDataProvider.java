@@ -7,38 +7,38 @@ package org.geoserver.metadata.web.panel.attribute;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.MetadataAttributeTypeConfiguration;
-import org.geoserver.metadata.data.service.MetadataEditorConfigurationService;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
+import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
-public class AttributeDataProvider extends GeoServerDataProvider<MetadataAttributeConfiguration> {
+public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfiguration> {
 
     private static final long serialVersionUID = -4454769618643460913L;
 
-    public static Property<MetadataAttributeConfiguration> NAME =
-            new BeanProperty<MetadataAttributeConfiguration>("name", "label");
+    public static Property<AttributeConfiguration> NAME =
+            new BeanProperty<AttributeConfiguration>("name", "label");
 
-    public static Property<MetadataAttributeConfiguration> VALUE =
-            new AbstractProperty<MetadataAttributeConfiguration>("value") {
+    public static Property<AttributeConfiguration> VALUE =
+            new AbstractProperty<AttributeConfiguration>("value") {
                 private static final long serialVersionUID = -1889227419206718295L;
 
                 @Override
-                public Object getPropertyValue(MetadataAttributeConfiguration item) {
+                public Object getPropertyValue(AttributeConfiguration item) {
                     return null;
                 }
             };
 
-    private List<MetadataAttributeConfiguration> items = new ArrayList<>();
+    private List<AttributeConfiguration> items = new ArrayList<>();
 
     public AttributeDataProvider() {
-        MetadataEditorConfigurationService metadataConfigurationService =
+        ConfigurationService metadataConfigurationService =
                 GeoServerApplication.get()
                         .getApplicationContext()
-                        .getBean(MetadataEditorConfigurationService.class);
-        for (MetadataAttributeConfiguration config :
-                metadataConfigurationService.readConfiguration().getAttributes()) {
+                        .getBean(ConfigurationService.class);
+        for (AttributeConfiguration config :
+                metadataConfigurationService.getMetadataConfiguration().getAttributes()) {
             items.add(config);
         }
     }
@@ -50,26 +50,26 @@ public class AttributeDataProvider extends GeoServerDataProvider<MetadataAttribu
      */
     public AttributeDataProvider(String typename) {
         super();
-        MetadataEditorConfigurationService metadataConfigurationService =
+        ConfigurationService metadataConfigurationService =
                 GeoServerApplication.get()
                         .getApplicationContext()
-                        .getBean(MetadataEditorConfigurationService.class);
-        MetadataAttributeTypeConfiguration typeConfiguration =
-                metadataConfigurationService.readConfiguration().findType(typename);
+                        .getBean(ConfigurationService.class);
+        AttributeTypeConfiguration typeConfiguration =
+                metadataConfigurationService.getMetadataConfiguration().findType(typename);
         if (typeConfiguration != null) {
-            for (MetadataAttributeConfiguration config : typeConfiguration.getAttributes()) {
+            for (AttributeConfiguration config : typeConfiguration.getAttributes()) {
                 items.add(config);
             }
         }
     }
 
     @Override
-    protected List<Property<MetadataAttributeConfiguration>> getProperties() {
+    protected List<Property<AttributeConfiguration>> getProperties() {
         return Arrays.asList(NAME, VALUE);
     }
 
     @Override
-    protected List<MetadataAttributeConfiguration> getItems() {
+    protected List<AttributeConfiguration> getItems() {
         return items;
     }
 }

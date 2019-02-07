@@ -48,7 +48,7 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
 
         // simple single
         Assert.assertEquals(
-                "1a2c6739-3c62-432b-b2a0-aaa589a9e3a1", metadataMap.get("indentifier-single"));
+                "1a2c6739-3c62-432b-b2a0-aaa589a9e3a1", metadataMap.get("identifier-single"));
         // simple list
         Serializable actualList = metadataMap.get("refsystem-as-list");
         Assert.assertTrue(actualList instanceof List);
@@ -59,13 +59,13 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
                 "http://www.opengis.net/def/crs/EPSG/0/3043", ((List<?>) actualList).get(2));
 
         // complex single
-        Assert.assertEquals("EPSG", metadataMap.get("referencesystem-object/codeSpace"));
+        Assert.assertEquals("EPSG", metadataMap.get("referencesystem-object/code-space"));
         Assert.assertEquals(
                 "Belge_Lambert_1972 (31370)", metadataMap.get("referencesystem-object/code"));
 
         // complex list
         Serializable actualObjectCodeSpaceList =
-                metadataMap.get("referencesystem-object-list/codeSpace");
+                metadataMap.get("referencesystem-object-list/code-space");
         Assert.assertTrue(actualObjectCodeSpaceList instanceof List);
         Assert.assertEquals(3, ((List<?>) actualObjectCodeSpaceList).size());
         Assert.assertEquals("EPSG", ((List<?>) actualObjectCodeSpaceList).get(0));

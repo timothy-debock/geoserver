@@ -57,7 +57,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
     @Test
     public void testPage() {
 
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
 
         tester.assertComponent("addNew", AjaxLink.class);
         tester.assertComponent("removeSelected", AjaxLink.class);
@@ -97,7 +97,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         tester.clickLink("addNew");
 
         tester.assertRenderedPage(MetadataTemplatePage.class);
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
 
         tester.assertComponent("form:name", TextField.class);
         tester.assertComponent("form:description", TextField.class);
@@ -107,7 +107,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
 
     @Test
     public void testEditNavigation() throws Exception {
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
         // Navigate to first template
         tester.clickLink("templatesPanel:listContainer:items:1:itemProperties:1:component:link");
 
@@ -142,7 +142,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         tester.getComponentFromLastRenderedPage("removeSelected").setEnabled(true);
         tester.clickLink("removeSelected");
 
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
         tester.assertComponent("dialog:dialog:content:form:userPanel", MultiLineLabel.class);
         tester.clickLink("dialog:dialog:content:form:submit");
 
@@ -200,7 +200,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
                 "templatesPanel:listContainer:items:11:itemProperties:1:component:link:label",
                 "allData");
 
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
         Assert.assertEquals(1, tester.getMessages(FeedbackMessage.ERROR).size());
         Assert.assertEquals(
                 "Template 'simple fields' is not deleted. Linked to layers: mylayer",
@@ -245,7 +245,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
                 "templatesPanel:listContainer:items:4:itemProperties:0:component:down:link");
         tester.clickLink(
                 "templatesPanel:listContainer:items:11:itemProperties:0:component:down:link");
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
         // Check update content of the table
         tester.assertLabel(
                 "templatesPanel:listContainer:items:13:itemProperties:1:component:link:label",

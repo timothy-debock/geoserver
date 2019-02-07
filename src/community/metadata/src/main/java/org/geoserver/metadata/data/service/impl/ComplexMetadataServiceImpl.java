@@ -4,19 +4,18 @@
  */
 package org.geoserver.metadata.data.service.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
-import org.geoserver.metadata.data.dto.MetadataAttributeConfiguration;
-import org.geoserver.metadata.data.dto.MetadataAttributeTypeConfiguration;
-import org.geoserver.metadata.data.dto.MetadataEditorConfiguration;
+import org.geoserver.metadata.data.dto.MetadataConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
-import org.geoserver.metadata.data.service.YamlService;
+import org.geoserver.metadata.data.service.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ComplexMetadataServiceImpl implements ComplexMetadataService {
 
-    @Autowired YamlService yamlService;
+    @Autowired ConfigurationService yamlService;
 
     @Override
     public void merge(
@@ -39,14 +38,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             List<ComplexMetadataMap> sources,
             HashMap<String, List<Integer>> derivedAtts) {
 
-        MetadataEditorConfiguration config;
-        try {
-            config = yamlService.readConfiguration();
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Metadata could not be merge."
-                            + "The corresponding gui configuration cannot be read.");
-        }
+        MetadataConfiguration config = yamlService.getMetadataConfiguration();
 
         clearTemplateData(destination, derivedAtts);
 
@@ -64,14 +56,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             String typeName,
             HashMap<String, List<Integer>> derivedAtts) {
 
-        MetadataEditorConfiguration config;
-        try {
-            config = yamlService.readConfiguration();
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Metadata could not be merge."
-                            + "The corresponding gui configuration cannot be read.");
-        }
+        MetadataConfiguration config = yamlService.getMetadataConfiguration();
 
         clearTemplateData(destination, derivedAtts);
 
@@ -88,10 +73,10 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     private void mergeAttribute(
             ComplexMetadataMap destination,
             ComplexMetadataMap source,
-            List<MetadataAttributeConfiguration> attributes,
-            MetadataEditorConfiguration config,
+            List<AttributeConfiguration> attributes,
+            MetadataConfiguration config,
             HashMap<String, List<Integer>> derivedAtts) {
-        for (MetadataAttributeConfiguration attribute : attributes) {
+        for (AttributeConfiguration attribute : attributes) {
             if (attribute.getFieldType() == FieldTypeEnum.COMPLEX) {
                 mergeComplexField(
                         attribute,
@@ -107,7 +92,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     }
 
     private void mergeSimpleField(
-            MetadataAttributeConfiguration attribute,
+            AttributeConfiguration attribute,
             ComplexMetadataMap destination,
             ComplexMetadataMap source,
             HashMap<String, List<Integer>> derivedAtts) {
@@ -156,9 +141,9 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     }
 
     private void mergeComplexField(
-            MetadataAttributeConfiguration attribute,
-            MetadataAttributeTypeConfiguration type,
-            MetadataEditorConfiguration config,
+            AttributeConfiguration attribute,
+            AttributeTypeConfiguration type,
+            MetadataConfiguration config,
             ComplexMetadataMap destination,
             ComplexMetadataMap source,
             HashMap<String, List<Integer>> derivedAtts) {

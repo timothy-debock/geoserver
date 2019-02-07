@@ -6,8 +6,8 @@ package org.geoserver.metadata.data.dto.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.geoserver.metadata.data.dto.AttributeComplexTypeMapping;
-import org.geoserver.metadata.data.dto.AttributeMapping;
+import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
+import org.geoserver.metadata.data.dto.AttributeTypeMappingConfiguration;
 
 /**
  * Object that matches yaml structure.
@@ -17,31 +17,29 @@ import org.geoserver.metadata.data.dto.AttributeMapping;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-public class AttributeComplexTypeMappingImpl implements AttributeComplexTypeMapping {
+public class AttributeTypeMappingConfigurationImpl implements AttributeTypeMappingConfiguration {
 
     private static final long serialVersionUID = 8056316409852056776L;
 
     String typename;
 
-    List<AttributeMapping> mapping = new ArrayList<>();
+    List<AttributeMappingConfiguration> mapping = new ArrayList<>();
 
     @Override
     public String getTypename() {
         return typename;
     }
 
-    @Override
     public void setTypename(String typename) {
         this.typename = typename;
     }
 
     @Override
-    public List<AttributeMapping> getMapping() {
+    public List<AttributeMappingConfiguration> getMapping() {
         return mapping;
     }
 
-    @Override
-    public void setMapping(List<AttributeMapping> mapping) {
+    public void setMapping(List<AttributeMappingConfiguration> mapping) {
         this.mapping = mapping;
     }
 }

@@ -7,7 +7,7 @@ package org.geoserver.metadata.data.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
-import org.geoserver.metadata.data.dto.impl.MetadataEditorConfigurationImpl;
+import org.geoserver.metadata.data.dto.impl.MetadataConfigurationImpl;
 
 /**
  * Toplevel Object that matches yaml structure.
@@ -18,21 +18,17 @@ import org.geoserver.metadata.data.dto.impl.MetadataEditorConfigurationImpl;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonDeserialize(as = MetadataEditorConfigurationImpl.class)
+@JsonDeserialize(as = MetadataConfigurationImpl.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public interface MetadataEditorConfiguration {
+public interface MetadataConfiguration {
 
-    public List<MetadataAttributeConfiguration> getAttributes();
+    public List<AttributeConfiguration> getAttributes();
 
-    public void setAttributes(List<MetadataAttributeConfiguration> attributes);
+    public List<GeonetworkConfiguration> getGeonetworks();
 
-    public List<MetadataGeonetworkConfiguration> getGeonetworks();
+    public List<AttributeTypeConfiguration> getTypes();
 
-    public void setGeonetworks(List<MetadataGeonetworkConfiguration> geonetworks);
+    public AttributeTypeConfiguration findType(String typename);
 
-    public List<MetadataAttributeTypeConfiguration> getTypes();
-
-    public void setComplextypes(List<MetadataAttributeTypeConfiguration> types);
-
-    public MetadataAttributeTypeConfiguration findType(String typename);
+    public AttributeConfiguration findAttribute(String attName);
 }
