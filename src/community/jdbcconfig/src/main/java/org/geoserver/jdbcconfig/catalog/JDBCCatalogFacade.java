@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.geoserver.catalog.Catalog;
@@ -38,6 +40,7 @@ import org.geoserver.catalog.util.CloseableIterator;
 import org.geoserver.jdbcconfig.internal.ConfigDatabase;
 import org.geoserver.ows.util.OwsUtils;
 import org.geotools.util.Utilities;
+import org.geotools.util.logging.Logging;
 import org.opengis.filter.Filter;
 import org.opengis.filter.sort.SortBy;
 import org.springframework.util.Assert;
@@ -45,6 +48,8 @@ import org.springframework.util.Assert;
 /** @author groldan */
 @ParametersAreNonnullByDefault
 public class JDBCCatalogFacade implements CatalogFacade {
+
+    public static final Logger LOGGER = Logging.getLogger(JDBCCatalogFacade.class);
 
     private final ConfigDatabase db;
 
@@ -871,9 +876,12 @@ public class JDBCCatalogFacade implements CatalogFacade {
     protected <T extends CatalogInfo> T commitProxy(T object) {
 
         // get the real object
-        T real = db.save(object);
-
-        return real;
+        try {
+            return db.save(object);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to save object " + object.getId(), e);
+            return null;
+        }
     }
 
     protected void afterSaved(
