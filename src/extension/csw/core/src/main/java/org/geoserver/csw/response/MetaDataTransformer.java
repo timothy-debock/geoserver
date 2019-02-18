@@ -144,16 +144,16 @@ public class MetaDataTransformer extends AbstractRecordTransformer {
 
                         start("gmd:EX_GeographicBoundingBox");
                         start("gmd:westBoundLongitude");
-                        element("gco:decimal", minx);
+                        element("gco:Decimal", miny);
                         end("gmd:westBoundLongitude");
-                        start("gmd:southBoundLatitude");
-                        element("gco:decimal", miny);
-                        end("gmd:southBoundLatitude");
                         start("gmd:eastBoundLongitude");
-                        element("gco:decimal", maxx);
+                        element("gco:Decimal", maxy);
                         end("gmd:eastBoundLongitude");
+                        start("gmd:southBoundLatitude");
+                        element("gco:Decimal", minx);
+                        end("gmd:southBoundLatitude");
                         start("gmd:northBoundLatitude");
-                        element("gco:decimal", maxy);
+                        element("gco:Decimal", maxx);
                         end("gmd:northBoundLatitude");
                         end("gmd:EX_GeographicBoundingBox");
                     } catch (Exception e) {
