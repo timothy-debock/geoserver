@@ -82,7 +82,7 @@ public class MetadataTemplateImpl implements Serializable, MetadataTemplate {
             return this == other;
         } else {
             return other instanceof MetadataTemplate
-                    && ((MetadataTemplate) other).getId() == getId();
+                    && ((MetadataTemplate) other).getId().equals(getId());
         }
     }
 
