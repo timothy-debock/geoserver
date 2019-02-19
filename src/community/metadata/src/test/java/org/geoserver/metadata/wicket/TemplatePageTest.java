@@ -8,10 +8,10 @@ import java.io.IOException;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.util.ListModel;
 import org.geoserver.metadata.AbstractWicketMetadataTest;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.web.MetadataTemplatePage;
-import org.geoserver.metadata.web.MetadataTemplatesPage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,7 +28,9 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
     public void before() throws IOException {
         // Load the page
         MetadataTemplate allData = templateService.findByName("allData");
-        MetadataTemplatePage page = new MetadataTemplatePage(new Model<>(allData));
+        MetadataTemplatePage page =
+                new MetadataTemplatePage(
+                        new ListModel<>(templateService.list()), new Model<>(allData));
         tester.startPage(page);
         tester.assertRenderedPage(MetadataTemplatePage.class);
     }
@@ -48,7 +50,7 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void tesPageSave() throws IOException {
+    public void testPageSave() throws IOException {
         tester.assertModelValue("form:description", "All fields");
 
         ((IModel<String>)
@@ -69,13 +71,11 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
         Assert.assertEquals("description update", template.getDescription());
         Assert.assertEquals(
                 "new identifier value", template.getMetadata().get("identifier-single"));
-
-        tester.assertRenderedPage(MetadataTemplatesPage.class);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void tesPageCancel() throws IOException {
+    public void testPageCancel() throws IOException {
         tester.assertModelValue("form:description", "All fields");
 
         ((IModel<String>)
@@ -89,14 +89,13 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
 
         MetadataTemplate template = templateService.findByName("allData");
         Assert.assertEquals("All fields", template.getDescription());
-
-        tester.assertRenderedPage(MetadataTemplatesPage.class);
     }
 
     @Test
-    public void tesPageValidation() throws IOException {
+    public void testPageValidation() throws IOException {
         // Load the page
-        MetadataTemplatePage page = new MetadataTemplatePage();
+        MetadataTemplatePage page =
+                new MetadataTemplatePage(new ListModel<>(templateService.list()));
         tester.startPage(page);
         tester.assertRenderedPage(MetadataTemplatePage.class);
 
@@ -110,7 +109,5 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
                 tester.getMessages(FeedbackMessage.ERROR).get(0).toString());
         tester.assertLabel(
                 "topFeedback:feedbackul:messages:0:message", "Field &#039;Name&#039; is required.");
-
-        tester.assertRenderedPage(MetadataTemplatePage.class);
     }
 }

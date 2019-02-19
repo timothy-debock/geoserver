@@ -6,6 +6,7 @@
 package org.geoserver.metadata.web;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,10 +41,12 @@ public class MetadataTemplatePage extends GeoServerBasePage {
 
     private static final long serialVersionUID = 2273966783474224452L;
 
+    private final IModel<List<MetadataTemplate>> templates;
+
     private final IModel<MetadataTemplate> metadataTemplateModel;
 
-    public MetadataTemplatePage() {
-        this(new Model<>(newTemplate()));
+    public MetadataTemplatePage(IModel<List<MetadataTemplate>> templates) {
+        this(templates, new Model<>(newTemplate()));
     }
 
     private static MetadataTemplate newTemplate() {
@@ -52,7 +55,10 @@ public class MetadataTemplatePage extends GeoServerBasePage {
         return template;
     }
 
-    public MetadataTemplatePage(IModel<MetadataTemplate> metadataTemplateModel) {
+    public MetadataTemplatePage(
+            IModel<List<MetadataTemplate>> templates,
+            IModel<MetadataTemplate> metadataTemplateModel) {
+        this.templates = templates;
         this.metadataTemplateModel = metadataTemplateModel;
     }
 
@@ -114,9 +120,22 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                 .getBean(MetadataTemplateService.class);
                 try {
                     service.save(metadataTemplateModel.getObject(), true);
-                    setResponsePage(new MetadataTemplatesPage());
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                    if (templates.getObject().contains(metadataTemplateModel.getObject())) {
+                        templates
+                                .getObject()
+                                .set(
+                                        templates
+                                                .getObject()
+                                                .indexOf(metadataTemplateModel.getObject()),
+                                        metadataTemplateModel.getObject());
+                    } else {
+                        templates.getObject().add(metadataTemplateModel.getObject());
+                    }
+                    doReturn();
+                } catch (IOException | IllegalArgumentException e) {
+                    if (e instanceof IOException) {
+                        LOGGER.log(Level.WARNING, e.getMessage(), e);
+                    }
                     Throwable rootCause = ExceptionUtils.getRootCause(e);
                     String message =
                             rootCause == null
@@ -142,7 +161,7 @@ public class MetadataTemplatePage extends GeoServerBasePage {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                setResponsePage(new MetadataTemplatesPage());
+                doReturn();
             }
         };
     }

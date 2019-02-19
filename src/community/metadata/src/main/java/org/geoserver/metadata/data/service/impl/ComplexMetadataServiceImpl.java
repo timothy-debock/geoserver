@@ -198,21 +198,23 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
 
     private void clearTemplateData(
             ComplexMetadataMap destination, HashMap<String, List<Integer>> derivedAtts) {
-        for (String key : derivedAtts.keySet()) {
-            List<Integer> indexes = derivedAtts.get(key);
-            ArrayList<Integer> reversed = new ArrayList<Integer>(indexes);
-            Collections.reverse(reversed);
-            for (Integer index : reversed) {
-                ComplexMetadataAttribute<String> attribute = destination.get(String.class, key);
-                if (attribute != null
-                        && attribute.getValue() != null
-                        && !attribute.getValue().startsWith("[")
-                        && !attribute.getValue().startsWith("]")) {
-                    attribute.setValue("");
+        if (derivedAtts != null) {
+            for (String key : derivedAtts.keySet()) {
+                List<Integer> indexes = derivedAtts.get(key);
+                ArrayList<Integer> reversed = new ArrayList<Integer>(indexes);
+                Collections.reverse(reversed);
+                for (Integer index : reversed) {
+                    ComplexMetadataAttribute<String> attribute = destination.get(String.class, key);
+                    if (attribute != null
+                            && attribute.getValue() != null
+                            && !attribute.getValue().startsWith("[")
+                            && !attribute.getValue().startsWith("]")) {
+                        attribute.setValue("");
+                    }
+                    destination.delete(key, index);
                 }
-                destination.delete(key, index);
             }
+            derivedAtts.clear();
         }
-        derivedAtts.clear();
     }
 }

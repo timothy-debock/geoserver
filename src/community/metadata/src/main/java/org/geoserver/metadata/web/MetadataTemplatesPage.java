@@ -9,8 +9,8 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 import java.io.IOException;
 import java.util.List;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -66,8 +66,9 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-
-                        setResponsePage(new MetadataTemplatePage());
+                        setResponsePage(
+                                new MetadataTemplatePage(templates)
+                                        .setReturnPage(MetadataTemplatesPage.this));
                     }
                 });
 
@@ -167,8 +168,10 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                 @Override
                                 protected void onClick(AjaxRequestTarget target) {
                                     IModel<MetadataTemplate> model =
-                                            new Model<>(itemModel.getObject());
-                                    setResponsePage(new MetadataTemplatePage(model));
+                                            new Model<>(itemModel.getObject().clone());
+                                    setResponsePage(
+                                            new MetadataTemplatePage(templates, model)
+                                                    .setReturnPage(MetadataTemplatesPage.this));
                                 }
                             };
                         } else if (property.equals(MetadataTemplateDataProvider.PRIORITY)) {
@@ -192,8 +195,16 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                         .getBean(MetadataTemplateService.class);
                         try {
                             service.saveList(templates.getObject(), true);
+                            doReturn();
                         } catch (IOException e) {
-                            error(e.getMessage());
+                            Throwable rootCause = ExceptionUtils.getRootCause(e);
+                            String message =
+                                    rootCause == null
+                                            ? e.getLocalizedMessage()
+                                            : rootCause.getLocalizedMessage();
+                            if (message != null) {
+                                error(message);
+                            }
                             addFeedbackPanels(target);
                         }
                     }
@@ -204,15 +215,7 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        templates.setObject(service.list());
-                        ((MarkupContainer) templatesPanel.get("listContainer").get("items"))
-                                .removeAll();
-                        templatesPanel.clearSelection();
-                        target.add(templatesPanel);
+                        doReturn();
                     }
                 });
     }

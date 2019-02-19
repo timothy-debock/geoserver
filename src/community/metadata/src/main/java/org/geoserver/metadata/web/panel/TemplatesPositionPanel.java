@@ -54,12 +54,7 @@ public class TemplatesPositionPanel extends Panel {
 
                     @Override
                     protected void onComponentTag(ComponentTag tag) {
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        List<MetadataTemplate> templates = service.list();
-                        if (templates.indexOf(model.getObject()) == 0) {
+                        if (templates.getObject().indexOf(model.getObject()) == 0) {
                             tag.put("style", "visibility:hidden");
                         } else {
                             tag.put("style", "visibility:visible");
@@ -95,12 +90,8 @@ public class TemplatesPositionPanel extends Panel {
 
                     @Override
                     protected void onComponentTag(ComponentTag tag) {
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        List<MetadataTemplate> templates = service.list();
-                        if (templates.indexOf(model.getObject()) == templates.size() - 1) {
+                        if (templates.getObject().indexOf(model.getObject())
+                                == templates.getObject().size() - 1) {
                             tag.put("style", "visibility:hidden");
                         } else {
                             tag.put("style", "visibility:visible");

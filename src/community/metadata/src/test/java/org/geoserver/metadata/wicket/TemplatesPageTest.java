@@ -44,8 +44,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         login();
         new ResourceConfigurationPage(layer, false);
 
-        MetadataTemplatesPage page = new MetadataTemplatesPage();
-        tester.startPage(page);
+        tester.startPage(new MetadataTemplatesPage());
         tester.assertRenderedPage(MetadataTemplatesPage.class);
     }
 
@@ -228,51 +227,55 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
 
         assertEquals("template-nested-object", templateService.list().get(2).getName());
 
+        tester.startPage(new MetadataTemplatesPage());
+
         // template-nested-object again
-        tester.clickLink("templatesPanel:listContainer:items:9:itemProperties:0:component:up:link");
+        tester.clickLink("templatesPanel:listContainer:items:3:itemProperties:0:component:up:link");
 
         // Check update content of the table
         tester.assertLabel(
-                "templatesPanel:listContainer:items:13:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:7:itemProperties:1:component:link:label",
                 "simple fields");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:14:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:8:itemProperties:1:component:link:label",
                 "template-nested-object");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:15:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:9:itemProperties:1:component:link:label",
                 "template-list-simple");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:16:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:10:itemProperties:1:component:link:label",
                 "template-object list");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:17:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:11:itemProperties:1:component:link:label",
                 "object-field");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:18:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:12:itemProperties:1:component:link:label",
                 "allData");
 
         tester.clickLink("cancel");
 
         assertEquals("template-nested-object", templateService.list().get(2).getName());
 
+        tester.startPage(new MetadataTemplatesPage());
+
         // Check cancelled content of the table
         tester.assertLabel(
-                "templatesPanel:listContainer:items:19:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:1:itemProperties:1:component:link:label",
                 "simple fields");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:20:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:2:itemProperties:1:component:link:label",
                 "template-list-simple");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:21:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:3:itemProperties:1:component:link:label",
                 "template-nested-object");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:22:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:4:itemProperties:1:component:link:label",
                 "template-object list");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:23:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:5:itemProperties:1:component:link:label",
                 "object-field");
         tester.assertLabel(
-                "templatesPanel:listContainer:items:24:itemProperties:1:component:link:label",
+                "templatesPanel:listContainer:items:6:itemProperties:1:component:link:label",
                 "allData");
     }
 
