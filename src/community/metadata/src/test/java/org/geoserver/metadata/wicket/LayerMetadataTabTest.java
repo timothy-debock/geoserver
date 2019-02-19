@@ -49,8 +49,6 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
     @Before
     public void before() throws IOException {
         Session.get().setLocale(new Locale("nl"));
-        restoreTemplates();
-        restoreLayers();
 
         layer = geoServer.getCatalog().getLayers().get(0);
         login();
@@ -62,9 +60,10 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
     }
 
     @After
-    public void after() throws IOException {
+    public void after() throws Exception {
         restoreTemplates();
         restoreLayers();
+        logout();
     }
 
     @Test

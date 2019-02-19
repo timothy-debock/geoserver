@@ -6,6 +6,7 @@
 package org.geoserver.metadata.web;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -17,7 +18,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.geoserver.catalog.MetadataMap;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
@@ -42,24 +42,26 @@ public class MetadataTemplatePage extends GeoServerBasePage {
 
     private final IModel<MetadataTemplate> metadataTemplateModel;
 
-    private final boolean isNew;
-
     public MetadataTemplatePage() {
-        this(new Model<MetadataTemplate>(new MetadataTemplateImpl()));
-        metadataTemplateModel
-                .getObject()
-                .setMetadata(new ComplexMetadataMapImpl(new MetadataMap()));
+        this(new Model<>(newTemplate()));
+    }
+
+    private static MetadataTemplate newTemplate() {
+        MetadataTemplateImpl template = new MetadataTemplateImpl();
+        template.setId(UUID.randomUUID().toString());
+        return template;
     }
 
     public MetadataTemplatePage(IModel<MetadataTemplate> metadataTemplateModel) {
         this.metadataTemplateModel = metadataTemplateModel;
-        isNew = metadataTemplateModel.getObject().getName() == null;
     }
 
     public void onInitialize() {
         super.onInitialize();
         IModel<ComplexMetadataMap> metadataModel =
-                new Model<ComplexMetadataMap>(metadataTemplateModel.getObject().getMetadata());
+                new Model<ComplexMetadataMap>(
+                        new ComplexMetadataMapImpl(
+                                metadataTemplateModel.getObject().getMetadata()));
 
         Form<?> form = new Form<Object>("form");
 
@@ -69,7 +71,6 @@ public class MetadataTemplatePage extends GeoServerBasePage {
         form.add(createCancelButton());
 
         TextField<String> nameField = createNameField(form, saveButton);
-        nameField.setEnabled(isNew);
         form.add(nameField);
 
         TextField<String> desicription =
@@ -112,11 +113,7 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                 .getApplicationContext()
                                 .getBean(MetadataTemplateService.class);
                 try {
-                    if (isNew) {
-                        service.add(metadataTemplateModel.getObject());
-                    } else {
-                        service.save(metadataTemplateModel.getObject(), true);
-                    }
+                    service.save(metadataTemplateModel.getObject(), true);
                     setResponsePage(new MetadataTemplatesPage());
                 } catch (IOException e) {
                     LOGGER.log(Level.WARNING, e.getMessage(), e);

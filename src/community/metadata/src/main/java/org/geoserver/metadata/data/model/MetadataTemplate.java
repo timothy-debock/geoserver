@@ -1,9 +1,12 @@
 package org.geoserver.metadata.data.model;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 public interface MetadataTemplate extends Serializable {
+
+    String getId();
 
     String getName();
 
@@ -13,20 +16,9 @@ public interface MetadataTemplate extends Serializable {
 
     void setDescription(String description);
 
-    ComplexMetadataMap getMetadata();
-
-    void setMetadata(ComplexMetadataMap metadata);
+    Map<String, Serializable> getMetadata();
 
     Set<String> getLinkedLayers();
 
-    void setLinkedLayers(Set<String> linkedLayers);
-
-    /**
-     * Lowest value has highest priority.
-     *
-     * @return int
-     */
-    int getOrder();
-
-    void setOrder(int order);
+    MetadataTemplate clone();
 }

@@ -10,14 +10,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.metadata.AbstractWicketMetadataTest;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.web.MetadataTemplatePage;
 import org.geoserver.metadata.web.MetadataTemplatesPage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Test template page.
@@ -26,12 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class TemplatePageTest extends AbstractWicketMetadataTest {
 
-    @Autowired private MetadataTemplateService service;
-
     @Before
     public void before() throws IOException {
         // Load the page
-        MetadataTemplate allData = service.load("allData");
+        MetadataTemplate allData = templateService.findByName("allData");
         MetadataTemplatePage page = new MetadataTemplatePage(new Model<>(allData));
         tester.startPage(page);
         tester.assertRenderedPage(MetadataTemplatePage.class);
@@ -46,8 +42,6 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
     public void testPage() {
         // print(tester.getLastRenderedPage(), true, true);
 
-        Assert.assertEquals(
-                false, tester.getComponentFromLastRenderedPage("form:name").isEnabled());
         tester.assertModelValue("form:name", "allData");
         tester.assertModelValue("form:description", "All fields");
     }
@@ -71,11 +65,10 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
 
         tester.clickLink("form:save");
 
-        MetadataTemplate template = service.load("allData");
+        MetadataTemplate template = templateService.findByName("allData");
         Assert.assertEquals("description update", template.getDescription());
         Assert.assertEquals(
-                "new identifier value",
-                template.getMetadata().get(String.class, "identifier-single").getValue());
+                "new identifier value", template.getMetadata().get("identifier-single"));
 
         tester.assertRenderedPage(MetadataTemplatesPage.class);
     }
@@ -94,7 +87,7 @@ public class TemplatePageTest extends AbstractWicketMetadataTest {
 
         tester.clickLink("form:cancel");
 
-        MetadataTemplate template = service.load("allData");
+        MetadataTemplate template = templateService.findByName("allData");
         Assert.assertEquals("All fields", template.getDescription());
 
         tester.assertRenderedPage(MetadataTemplatesPage.class);

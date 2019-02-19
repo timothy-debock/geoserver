@@ -4,7 +4,6 @@
  */
 package org.geoserver.metadata.data.model.impl;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 
-@XStreamAlias("ComplexMetadataMap")
 public class ComplexMetadataMapImpl implements ComplexMetadataMap {
 
     private static final long serialVersionUID = 1857277796433431947L;
@@ -50,6 +48,13 @@ public class ComplexMetadataMapImpl implements ComplexMetadataMap {
         this.indexes = parent.getIndexes();
         this.basePath = basePath;
         this.baseIndexRef = baseIndexRef;
+    }
+
+    public ComplexMetadataMapImpl(ComplexMetadataMapImpl other) {
+        this.delegate = other.getDelegate();
+        this.indexes = other.getIndexes();
+        this.basePath = other.basePath;
+        this.baseIndexRef = other.baseIndexRef;
     }
 
     @Override
@@ -217,27 +222,11 @@ public class ComplexMetadataMapImpl implements ComplexMetadataMap {
         return ArrayUtils.addAll(first, second);
     }
 
-    /**
-     * When unmarshalling the xml these values can be null.
-     *
-     * @return
-     */
     private Map<String, Serializable> getDelegate() {
-        if (delegate == null) {
-            delegate = new HashMap<>();
-        }
         return delegate;
     }
 
-    /**
-     * When unmarshalling the xml these values can be null.
-     *
-     * @return
-     */
     private HashMap<String, ArrayList<ComplexMetadataIndexReference>> getIndexes() {
-        if (indexes == null) {
-            indexes = new HashMap<>();
-        }
         return indexes;
     }
 }

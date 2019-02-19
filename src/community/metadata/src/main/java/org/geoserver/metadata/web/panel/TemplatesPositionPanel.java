@@ -28,6 +28,7 @@ public class TemplatesPositionPanel extends Panel {
 
     public TemplatesPositionPanel(
             String id,
+            IModel<List<MetadataTemplate>> templates,
             IModel<MetadataTemplate> model,
             GeoServerTablePanel<MetadataTemplate> tablePanel) {
         super(id, model);
@@ -44,7 +45,7 @@ public class TemplatesPositionPanel extends Panel {
                                 GeoServerApplication.get()
                                         .getApplicationContext()
                                         .getBean(MetadataTemplateService.class);
-                        service.increasePriority(model.getObject());
+                        service.increasePriority(templates.getObject(), model.getObject());
                         ((MarkupContainer) tablePanel.get("listContainer").get("items"))
                                 .removeAll();
                         tablePanel.clearSelection();
@@ -58,7 +59,7 @@ public class TemplatesPositionPanel extends Panel {
                                         .getApplicationContext()
                                         .getBean(MetadataTemplateService.class);
                         List<MetadataTemplate> templates = service.list();
-                        if (getIndex(model.getObject(), templates) == 0) {
+                        if (templates.indexOf(model.getObject()) == 0) {
                             tag.put("style", "visibility:hidden");
                         } else {
                             tag.put("style", "visibility:visible");
@@ -84,7 +85,7 @@ public class TemplatesPositionPanel extends Panel {
                                 GeoServerApplication.get()
                                         .getApplicationContext()
                                         .getBean(MetadataTemplateService.class);
-                        service.decreasePriority(model.getObject());
+                        service.decreasePriority(templates.getObject(), model.getObject());
 
                         ((MarkupContainer) tablePanel.get("listContainer").get("items"))
                                 .removeAll();
@@ -99,7 +100,7 @@ public class TemplatesPositionPanel extends Panel {
                                         .getApplicationContext()
                                         .getBean(MetadataTemplateService.class);
                         List<MetadataTemplate> templates = service.list();
-                        if (getIndex(model.getObject(), templates) == templates.size() - 1) {
+                        if (templates.indexOf(model.getObject()) == templates.size() - 1) {
                             tag.put("style", "visibility:hidden");
                         } else {
                             tag.put("style", "visibility:visible");
@@ -112,15 +113,5 @@ public class TemplatesPositionPanel extends Panel {
                                 "alt",
                                 new ParamResourceModel("down", TemplatesPositionPanel.this)));
         add(downLink);
-    }
-
-    private int getIndex(MetadataTemplate template, List<MetadataTemplate> templates) {
-        for (int i = 0; i < templates.size(); i++) {
-            MetadataTemplate current = templates.get(i);
-            if (template.getName().equals(current.getName())) {
-                return i;
-            }
-        }
-        return -1;
     }
 }

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.geoserver.metadata.AbstractMetadataTest;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
+import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,16 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testMergeSimpleFields() throws IOException {
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("simple fields").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("simple fields").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
 
-        // simple fields orgiginal values
+        // simple fields original values
         Assert.assertEquals(
                 "the-identifier-single", parent.get(String.class, "identifier-single").getValue());
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
@@ -90,8 +94,11 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testMergeObject() throws IOException {
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("object-field").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("object-field").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
@@ -133,8 +140,11 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testMergeListFields() throws IOException {
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("template-list-simple").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-list-simple").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
@@ -181,8 +191,11 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testMergeListObjects() throws IOException {
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("template-object list").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-object list").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
@@ -241,8 +254,11 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testMergeListNestedObjects() throws IOException {
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("template-nested-object").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-nested-object").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
@@ -280,9 +296,14 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
     @Test
     public void testUnlink() throws IOException {
 
-        ComplexMetadataMap parent = templateService.load("allData").getMetadata();
-        ComplexMetadataMap child = templateService.load("template-list-simple").getMetadata();
-        ComplexMetadataMap child01 = templateService.load("simple fields").getMetadata();
+        ComplexMetadataMap parent =
+                new ComplexMetadataMapImpl(templateService.findByName("allData").getMetadata());
+        ComplexMetadataMap child =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-list-simple").getMetadata());
+        ComplexMetadataMap child01 =
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("simple fields").getMetadata());
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);

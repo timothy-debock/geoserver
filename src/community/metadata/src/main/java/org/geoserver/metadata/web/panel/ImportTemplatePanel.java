@@ -27,7 +27,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
+import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
+import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerDialog;
@@ -298,7 +300,7 @@ public abstract class ImportTemplatePanel extends Panel {
         ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
         List<MetadataTemplate> templates = linkedTemplatesDataProvider.getItems();
         for (MetadataTemplate template : templates) {
-            maps.add(template.getMetadata());
+            maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
         }
 
         service.merge(model.getObject(), maps, derivedAtts);
@@ -320,6 +322,16 @@ public abstract class ImportTemplatePanel extends Panel {
             target.add(templatesPanel);
             target.add(getDropDown());
             target.add(ImportTemplatePanel.this);
+        }
+    }
+
+    public void save() throws IOException {
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        for (MetadataTemplate template : linkedTemplatesDataProvider.getItems()) {
+            service.save(template, false);
         }
     }
 }

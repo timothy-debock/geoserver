@@ -6,9 +6,8 @@ package org.geoserver.metadata.web;
 
 import java.util.Arrays;
 import java.util.List;
+import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.service.MetadataTemplateService;
-import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 public class MetadataTemplateDataProvider extends GeoServerDataProvider<MetadataTemplate> {
@@ -24,7 +23,11 @@ public class MetadataTemplateDataProvider extends GeoServerDataProvider<Metadata
     public static final Property<MetadataTemplate> DESCRIPTION =
             new BeanProperty<MetadataTemplate>("description", "description");
 
-    public MetadataTemplateDataProvider() {}
+    private IModel<List<MetadataTemplate>> templates;
+
+    public MetadataTemplateDataProvider(IModel<List<MetadataTemplate>> templates) {
+        this.templates = templates;
+    }
 
     @Override
     protected List<Property<MetadataTemplate>> getProperties() {
@@ -33,11 +36,6 @@ public class MetadataTemplateDataProvider extends GeoServerDataProvider<Metadata
 
     @Override
     protected List<MetadataTemplate> getItems() {
-        MetadataTemplateService service =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(MetadataTemplateService.class);
-        List<MetadataTemplate> list = service.list();
-        return list;
+        return templates.getObject();
     }
 }

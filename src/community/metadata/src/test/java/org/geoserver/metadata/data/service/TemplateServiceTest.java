@@ -4,18 +4,24 @@
  */
 package org.geoserver.metadata.data.service;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.metadata.AbstractMetadataTest;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
+import org.geoserver.metadata.data.service.impl.MetadataConstants;
+import org.geoserver.platform.resource.Resource;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class TemplateServiceTest extends AbstractMetadataTest {
 
-    @Autowired private MetadataTemplateService service;
+    @Autowired private GeoServerDataDirectory dataDirectory;
 
     @After
     public void after() throws IOException {
@@ -37,18 +43,15 @@ public class TemplateServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testList() throws IOException {
-        List<MetadataTemplate> actual = service.list();
+        List<MetadataTemplate> actual = templateService.list();
         Assert.assertEquals(6, actual.size());
         Assert.assertEquals("simple fields", actual.get(0).getName());
         Assert.assertNotNull(actual.get(0).getMetadata());
-        Assert.assertEquals(0, actual.get(0).getOrder());
-        Assert.assertEquals(1, actual.get(1).getOrder());
-        Assert.assertEquals(2, actual.get(2).getOrder());
     }
 
     @Test
     public void testLoad() throws IOException {
-        MetadataTemplate actual = service.load("allData");
+        MetadataTemplate actual = templateService.findByName("allData");
 
         Assert.assertNotNull(actual.getName());
         Assert.assertEquals("allData", actual.getName());
@@ -57,38 +60,49 @@ public class TemplateServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testSave() throws IOException {
+        Resource dir = dataDirectory.get(MetadataConstants.TEMPLATES_DIRECTORY);
+        int nof = dir.list().size();
 
-        MetadataTemplate metadataTemplate = new MetadataTemplateImpl();
+        MetadataTemplateImpl metadataTemplate = new MetadataTemplateImpl();
+        metadataTemplate.setId(UUID.randomUUID().toString());
         metadataTemplate.setName("new-record");
-        metadataTemplate.setMetadata(new ComplexMetadataMapImpl(new HashMap<>()));
 
-        service.add(metadataTemplate);
+        templateService.save(metadataTemplate, false);
 
-        MetadataTemplate actual = service.load("new-record");
+        MetadataTemplate actual = templateService.findByName("new-record");
         Assert.assertEquals("new-record", actual.getName());
         Assert.assertNotNull(actual.getMetadata());
-        // Should not result in nullpointers because we read it from the xml
-        // Empty sets en list are not stored in the xml file. this could result in nullpointers.
-        actual.getMetadata().size("identifier-single");
+
+        // assert was stored in dir
+        assertEquals(nof + 1, dir.list().size());
     }
 
     @Test
     public void testSaveErrorFlow() throws IOException {
 
-        MetadataTemplate metadataTemplate = new MetadataTemplateImpl();
+        MetadataTemplateImpl metadataTemplate = new MetadataTemplateImpl();
+        // id required
+        try {
+            templateService.save(metadataTemplate, false);
+            Assert.fail("Should throw error");
+        } catch (IllegalArgumentException ignored) {
+
+        }
+        metadataTemplate.setId("newTemplate");
+
         // name required
         try {
-            service.add(metadataTemplate);
-            Assert.fail("Should trow error");
-        } catch (IOException ignored) {
+            templateService.save(metadataTemplate, false);
+            Assert.fail("Should throw error");
+        } catch (IllegalArgumentException ignored) {
 
         }
         // no duplicate names
         metadataTemplate.setName("allData");
         try {
-            service.add(metadataTemplate);
-            Assert.fail("Should trow error");
-        } catch (IOException ignored) {
+            templateService.save(metadataTemplate, false);
+            Assert.fail("Should throw error");
+        } catch (IllegalArgumentException ignored) {
         }
     }
 
@@ -99,13 +113,11 @@ public class TemplateServiceTest extends AbstractMetadataTest {
      */
     @Test
     public void testUpdate() throws IOException {
-        MetadataTemplate initial = service.load("simple fields");
-        Assert.assertEquals(
-                "template-identifier",
-                initial.getMetadata().get(String.class, "identifier-single").getValue());
+        MetadataTemplate initial = templateService.findByName("simple fields");
+        Assert.assertEquals("template-identifier", initial.getMetadata().get("identifier-single"));
         Assert.assertTrue(initial.getLinkedLayers().contains("mylayerFeatureId"));
 
-        initial.getMetadata().get(String.class, "identifier-single").setValue("updated value");
+        initial.getMetadata().put("identifier-single", "updated value");
 
         // check if the linked metadata is updated.
         LayerInfo initialMyLayer = geoServer.getCatalog().getLayer("myLayerId");
@@ -117,12 +129,10 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 1, initialMetadataModel.getObject().size("feature-catalog/feature-attribute/type"));
 
-        service.save(initial, true);
+        templateService.save(initial, true);
 
-        MetadataTemplate actual = service.load("simple fields");
-        Assert.assertEquals(
-                "updated value",
-                actual.getMetadata().get(String.class, "identifier-single").getValue());
+        MetadataTemplate actual = templateService.findByName("simple fields");
+        Assert.assertEquals("updated value", actual.getMetadata().get("identifier-single"));
 
         // check if the linked metadata is updated.
         LayerInfo myLayer = geoServer.getCatalog().getLayer("myLayerId");
@@ -142,56 +152,88 @@ public class TemplateServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testDelete() throws IOException {
-        int initial = service.list().size();
+        List<MetadataTemplate> list = templateService.list();
+        int initial = list.size();
+        Resource dir = dataDirectory.get(MetadataConstants.TEMPLATES_DIRECTORY);
+        int nof = dir.list().size();
 
-        MetadataTemplate actual = service.load("allData");
-        service.delete(actual);
+        MetadataTemplate actual = templateService.findByName("allData");
+        templateService.delete(list, actual);
 
-        Assert.assertEquals(initial - 1, service.list().size());
+        Assert.assertEquals(initial - 1, list.size());
+
+        // store
+        templateService.saveList(list, false);
+
+        Assert.assertEquals(initial - 1, templateService.list().size());
+
+        templateService.reload();
+
+        Assert.assertEquals(initial - 1, templateService.list().size());
+        Assert.assertEquals(nof - 1, dir.list().size());
     }
 
     @Test
-    public void testDeleteWarning() throws IOException {
-        int initial = service.list().size();
+    public void testDeleteException() throws IOException {
+        List<MetadataTemplate> list = templateService.list();
+        int initial = list.size();
 
-        MetadataTemplate actual = service.load("simple fields");
+        MetadataTemplate actual = templateService.findByName("simple fields");
         try {
-            service.delete(actual);
+            templateService.delete(list, actual);
             Assert.fail("should throw error for linked templates");
-        } catch (IOException e) {
-
+        } catch (IllegalArgumentException e) {
         }
-
-        Assert.assertEquals(initial, service.list().size());
+        Assert.assertEquals(initial, templateService.list().size());
     }
 
     @Test
     public void testUpdateShouldRemoveDeletedLayers() throws IOException {
-        MetadataTemplate template = service.load("template-nested-object");
+        MetadataTemplate template = templateService.findByName("template-nested-object");
         Assert.assertEquals(2, template.getLinkedLayers().size());
-        service.save(template, true);
+        templateService.save(template, true);
         Assert.assertEquals(0, template.getLinkedLayers().size());
     }
 
     @Test
     public void testIncreasePriority() throws IOException {
-        MetadataTemplate initial = service.load("allData");
-        Assert.assertEquals("allData", service.list().get(5).getName());
+        List<MetadataTemplate> list = templateService.list();
+        MetadataTemplate initial = templateService.findByName("allData");
+        Assert.assertEquals("allData", list.get(5).getName());
 
-        service.increasePriority(initial);
-        service.increasePriority(initial);
+        templateService.increasePriority(list, initial);
+        templateService.increasePriority(list, initial);
 
-        Assert.assertEquals("allData", service.list().get(3).getName());
+        Assert.assertEquals("allData", list.get(3).getName());
+
+        // store
+        templateService.saveList(list, false);
+
+        Assert.assertEquals("allData", templateService.list().get(3).getName());
+
+        // on disk
+        templateService.reload();
+
+        Assert.assertEquals("allData", templateService.list().get(3).getName());
     }
 
     @Test
     public void testDecreasePriority() throws IOException {
-        MetadataTemplate initial = service.load("simple fields");
-        Assert.assertEquals("simple fields", service.list().get(0).getName());
+        List<MetadataTemplate> list = templateService.list();
+        MetadataTemplate initial = templateService.findByName("simple fields");
+        Assert.assertEquals("simple fields", list.get(0).getName());
 
-        service.decreasePriority(initial);
-        service.decreasePriority(initial);
+        templateService.decreasePriority(list, initial);
+        templateService.decreasePriority(list, initial);
 
-        Assert.assertEquals("simple fields", service.list().get(2).getName());
+        Assert.assertEquals("simple fields", list.get(2).getName());
+
+        // store
+        templateService.saveList(list, false);
+        Assert.assertEquals("simple fields", templateService.list().get(2).getName());
+
+        // on disk
+        templateService.reload();
+        Assert.assertEquals("simple fields", templateService.list().get(2).getName());
     }
 }

@@ -7,13 +7,11 @@ package org.geoserver.metadata.web.panel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.model.comparator.MetadataTemplateComparator;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 /**
@@ -63,9 +61,6 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
     }
 
     public void addLink(MetadataTemplate modelObject) throws IOException {
-        if (modelObject.getLinkedLayers() == null) {
-            modelObject.setLinkedLayers(new HashSet<>());
-        }
         modelObject.getLinkedLayers().add(resourceId);
         linkedTemplates.add(modelObject);
     }
@@ -75,9 +70,6 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
         while (iterator.hasNext()) {
             MetadataTemplate modelObject = iterator.next();
 
-            if (modelObject.getLinkedLayers() == null) {
-                modelObject.setLinkedLayers(new HashSet<>());
-            }
             modelObject.getLinkedLayers().remove(resourceId);
             linkedTemplates.remove(modelObject);
         }
@@ -91,7 +83,21 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
     public List<MetadataTemplate> getUnlinkedItems() {
         List<MetadataTemplate> result = new ArrayList<>(allTemplates);
         result.removeAll(linkedTemplates);
-        Collections.sort(result, new MetadataTemplateComparator());
         return result;
+    }
+
+    private class MetadataTemplateComparator implements Comparator<MetadataTemplate> {
+
+        public int compare(MetadataTemplate obj1, MetadataTemplate obj2) {
+            int priority1 = Integer.MAX_VALUE;
+            if (obj1 != null) {
+                priority1 = allTemplates.indexOf(obj1);
+            }
+            int priority2 = Integer.MAX_VALUE;
+            if (obj2 != null) {
+                priority2 = allTemplates.indexOf(obj2);
+            }
+            return Integer.compare(priority1, priority2);
+        }
     }
 }

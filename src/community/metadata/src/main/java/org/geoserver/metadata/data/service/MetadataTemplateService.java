@@ -13,22 +13,15 @@ public interface MetadataTemplateService {
 
     List<MetadataTemplate> list();
 
-    void add(MetadataTemplate metadataTemplate) throws IOException;
-
-    MetadataTemplate load(String templateName);
-
-    void delete(MetadataTemplate metadataTemplate) throws IOException;
-
-    void increasePriority(MetadataTemplate metadataTemplate);
-
-    void decreasePriority(MetadataTemplate metadataTemplate);
-
-    /**
-     * Update the template and linked layers. Without or with cascading the changes.
-     *
-     * @param metadataTemplate
-     * @param updateLayers cascade changes to layers
-     * @throws IOException
-     */
     void save(MetadataTemplate metadataTemplate, boolean updateLayers) throws IOException;
+
+    void delete(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
+
+    void increasePriority(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
+
+    void decreasePriority(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
+
+    void saveList(List<MetadataTemplate> newList, boolean updateLayers) throws IOException;
+
+    MetadataTemplate findByName(String string);
 }

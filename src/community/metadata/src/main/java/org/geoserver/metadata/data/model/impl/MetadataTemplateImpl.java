@@ -6,9 +6,13 @@ package org.geoserver.metadata.data.model.impl;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 
 /** @author Timothy De Bock - timothy.debock.github@gmail.com */
@@ -17,86 +21,99 @@ public class MetadataTemplateImpl implements Serializable, MetadataTemplate {
 
     private static final long serialVersionUID = -1907518678061997394L;
 
-    private int order;
+    private String id;
 
     private String name;
 
     private String description;
 
-    private ComplexMetadataMap metadata;
+    private Map<String, Serializable> metadata;
 
-    private Set<String> linkedLayers = new HashSet<>();
+    private Set<String> linkedLayers;
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#getName()
-     */
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#setName(java.lang.String)
-     */
     @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#getDescription()
-     */
     @Override
     public String getDescription() {
         return description;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#setDescription(java.lang.String)
-     */
     @Override
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#getMetadata()
-     */
     @Override
-    public ComplexMetadataMap getMetadata() {
+    public Map<String, Serializable> getMetadata() {
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
         return metadata;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#setMetadata(org.geoserver.metadata.data.model.ComplexMetadataMap)
-     */
-    @Override
-    public void setMetadata(ComplexMetadataMap metadata) {
-        this.metadata = metadata;
-    }
-
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#getLinkedLayers()
-     */
     @Override
     public Set<String> getLinkedLayers() {
+        if (linkedLayers == null) {
+            linkedLayers = new HashSet<>();
+        }
         return linkedLayers;
     }
 
-    /* (non-Javadoc)
-     * @see org.geoserver.metadata.data.model.impl.MetadataTemplate#setLinkedLayers(java.util.Set)
-     */
     @Override
-    public void setLinkedLayers(Set<String> linkedLayers) {
-        this.linkedLayers = linkedLayers;
+    public boolean equals(Object other) {
+        if (getId() == null) {
+            return this == other;
+        } else {
+            return other instanceof MetadataTemplate
+                    && ((MetadataTemplate) other).getId() == getId();
+        }
     }
 
     @Override
-    public int getOrder() {
-        return order;
+    public int hashCode() {
+        return id == null ? super.hashCode() : id.hashCode();
     }
 
-    public void setOrder(int order) {
-        this.order = order;
+    @Override
+    public MetadataTemplate clone() {
+        MetadataTemplateImpl clone = new MetadataTemplateImpl();
+        clone.setId(getId());
+        clone.setName(getName());
+        clone.setDescription(getDescription());
+        clone.linkedLayers = new HashSet<>(getLinkedLayers());
+        clone.metadata = new HashMap<>();
+        for (Entry<String, Serializable> entry : getMetadata().entrySet()) {
+            clone.metadata.put(entry.getKey(), dimCopy(entry.getValue()));
+        }
+        return clone;
+    }
+
+    private static Serializable dimCopy(Serializable source) {
+        if (source instanceof List) {
+            ArrayList<Serializable> list = new ArrayList<>();
+            for (Object item : ((List<?>) source)) {
+                list.add(dimCopy((Serializable) item));
+            }
+            return list;
+        } else {
+            return source;
+        }
     }
 }

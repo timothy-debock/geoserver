@@ -7,7 +7,6 @@ package org.geoserver.metadata;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -16,6 +15,7 @@ import org.apache.wicket.util.file.File;
 import org.geoserver.config.GeoServer;
 import org.geoserver.data.test.MockData;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
+import org.geoserver.metadata.data.service.impl.MetadataTemplateServiceImpl;
 import org.geoserver.util.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,6 +51,8 @@ public abstract class AbstractMetadataTest {
 
     @Autowired protected GeoServer geoServer;
 
+    @Autowired protected MetadataTemplateServiceImpl templateService;
+
     @BeforeClass
     public static void init() throws Exception {
         if (DATA_DIRECTORY == null) {
@@ -85,14 +87,15 @@ public abstract class AbstractMetadataTest {
             IOUtils.copy(
                     AbstractMetadataTest.class.getResourceAsStream("metadata_nl.properties"),
                     new File(metadata, "metadata_nl.properties"));
-
-            IOUtils.copy(
-                    AbstractMetadataTest.class.getResourceAsStream("templates.xml"),
-                    new File(metadataTemplates, "templates.xml"));
             IOUtils.copy(
                     AbstractMetadataTest.class.getResourceAsStream(
                             "geonetwork-1a2c6739-3c62-432b-b2a0-aaa589a9e3a1.xml"),
                     new File(metadata, "geonetwork-1a2c6739-3c62-432b-b2a0-aaa589a9e3a1.xml"));
+            unzip(
+                    AbstractMetadataTest.class.getResourceAsStream("templates.zip"),
+                    new File(
+                            DATA_DIRECTORY.getDataDirectoryRoot(),
+                            MetadataConstants.TEMPLATES_DIRECTORY));
 
             // All files for the layer
             unzip(
@@ -139,7 +142,7 @@ public abstract class AbstractMetadataTest {
                 .setAuthentication(new UsernamePasswordAuthenticationToken(username, password, l));
     }
 
-    public static void unzip(InputStream fis, File target) throws IOException {
+    private static void unzip(InputStream fis, File target) throws IOException {
         ZipInputStream zis = new ZipInputStream(fis);
         try {
             ZipEntry entry;
@@ -173,27 +176,24 @@ public abstract class AbstractMetadataTest {
     }
 
     protected void restoreTemplates() throws IOException {
-        IOUtils.copy(
-                AbstractMetadataTest.class.getResourceAsStream("templates.xml"),
-                new File(metadataTemplates, "templates.xml"));
+        unzip(
+                AbstractMetadataTest.class.getResourceAsStream("templates.zip"),
+                new File(
+                        DATA_DIRECTORY.getDataDirectoryRoot(),
+                        MetadataConstants.TEMPLATES_DIRECTORY));
+        templateService.reload();
     }
 
-    protected void restoreLayers() throws IOException {
-        try {
-            // All files for the layer
-            unzip(
-                    AbstractMetadataTest.class.getResourceAsStream("myLayer.zip"),
-                    new File(DATA_DIRECTORY.getDataDirectoryRoot()));
-            IOUtils.copy(
-                    AbstractMetadataTest.class.getResourceAsStream("myLayer-featuretype.xml"),
-                    new File(
-                            DATA_DIRECTORY.getDataDirectoryRoot(),
-                            "workspaces/topp/datastore/mylayer/featuretype.xml"));
-            geoServer.reload();
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
+    protected void restoreLayers() throws Exception {
+        // All files for the layer
+        unzip(
+                AbstractMetadataTest.class.getResourceAsStream("myLayer.zip"),
+                new File(DATA_DIRECTORY.getDataDirectoryRoot()));
+        IOUtils.copy(
+                AbstractMetadataTest.class.getResourceAsStream("myLayer-featuretype.xml"),
+                new File(
+                        DATA_DIRECTORY.getDataDirectoryRoot(),
+                        "workspaces/topp/datastore/mylayer/featuretype.xml"));
+        geoServer.reload();
     }
 }

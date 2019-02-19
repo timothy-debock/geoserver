@@ -20,7 +20,6 @@ import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.GeonetworkXmlParser;
-import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.data.service.RemoteDocumentReader;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
@@ -43,16 +42,14 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     private static final Logger LOGGER = Logging.getLogger(MetadataTabPanel.class);
 
-    private IModel<List<MetadataTemplate>> linkedTemplatesModel;
+    private IModel<List<MetadataTemplate>> templatesModel;
 
     private HashMap<String, List<Integer>> derivedAtts;
 
     public MetadataTabPanel(
-            String id,
-            IModel<LayerInfo> model,
-            IModel<List<MetadataTemplate>> linkedTemplatesModel) {
+            String id, IModel<LayerInfo> model, IModel<List<MetadataTemplate>> templatesModel) {
         super(id, model);
-        this.linkedTemplatesModel = linkedTemplatesModel;
+        this.templatesModel = templatesModel;
     }
 
     @Override
@@ -86,7 +83,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         "importTemplatePanel",
                         resourceId,
                         metadataModel,
-                        (IModel<List<MetadataTemplate>>) linkedTemplatesModel,
+                        (IModel<List<MetadataTemplate>>) templatesModel,
                         derivedAtts) {
                     private static final long serialVersionUID = -8056914656580115202L;
 
@@ -156,16 +153,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     @Override
     public void save() throws IOException {
-        MetadataTemplateService service =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(MetadataTemplateService.class);
-        try {
-            for (MetadataTemplate template : linkedTemplatesModel.getObject()) {
-                service.save(template, false);
-            }
-        } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
-        }
+        importTemplatePanel().save();
     }
 }

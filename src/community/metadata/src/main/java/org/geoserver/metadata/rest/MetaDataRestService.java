@@ -1,10 +1,10 @@
 package org.geoserver.metadata.rest;
 
 import java.io.IOException;
+import java.util.Collections;
 import javax.servlet.http.HttpServletResponse;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.ResourceInfo;
-import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +34,7 @@ public class MetaDataRestService {
                 info.getMetadata().remove(MetadataConstants.DERIVED_KEY);
                 catalog.save(info);
             }
-            for (MetadataTemplate template : templateService.list()) {
-                try {
-                    template.getLinkedLayers().clear();
-                    templateService.save(template, false);
-                    templateService.delete(template);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            templateService.saveList(Collections.emptyList(), false);
         }
     }
 }

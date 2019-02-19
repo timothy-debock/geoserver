@@ -10,13 +10,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
@@ -30,6 +31,9 @@ import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.platform.resource.Resource;
+import org.geoserver.platform.resource.ResourceListener;
+import org.geoserver.platform.resource.ResourceNotification;
+import org.geoserver.platform.resource.Resources;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -47,13 +51,15 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
 
     private XStreamPersister persister;
 
-    private static String FILE_NAME = "templates.xml";
+    private static String LIST_FILE = "templates.xml";
 
     @Autowired private GeoServerDataDirectory dataDirectory;
 
     @Autowired private ComplexMetadataService metadataService;
 
-    @Autowired protected GeoServer geoServer;
+    @Autowired private GeoServer geoServer;
+
+    private List<MetadataTemplate> templates = new ArrayList<>();
 
     public MetadataTemplateServiceImpl() {
         this.persister = new XStreamPersisterFactory().createXMLPersister();
@@ -69,192 +75,205 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
         return dataDirectory.get(MetadataConstants.TEMPLATES_DIRECTORY);
     }
 
-    @Override
-    public List<MetadataTemplate> list() {
-        try {
-            return readTemplates();
-        } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
-        }
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void add(MetadataTemplate metadataTemplate) throws IOException {
-        if (metadataTemplate.getName() == null) {
-            throw new IOException("Template with name required.");
-        }
-
-        List<MetadataTemplate> templates = list();
-        for (MetadataTemplate tempate : templates) {
-            if (tempate.getName().equals(metadataTemplate.getName())) {
-                throw new IOException(
-                        "Template with name " + metadataTemplate.getName() + "already exists");
-            }
-        }
-        templates.add(metadataTemplate);
-        persistTemplates(templates);
-    }
-
-    @Override
-    public void save(MetadataTemplate metadataTemplate, boolean updateLayers) throws IOException {
-        List<MetadataTemplate> templates = list();
-        int index = getIndex(metadataTemplate, templates);
-        if (index != -1) {
-            templates.remove(index);
-            templates.add(index, metadataTemplate);
-
-            // update layers
-            if (updateLayers) {
-                Set<String> deletedLayers = new HashSet<>();
-                if (metadataTemplate.getLinkedLayers() != null) {
-                    for (String key : metadataTemplate.getLinkedLayers()) {
-                        ResourceInfo resource =
-                                geoServer.getCatalog().getResource(key, ResourceInfo.class);
-
-                        if (resource != null) {
-                            @SuppressWarnings("unchecked")
-                            HashMap<String, List<Integer>> derivedAtts =
-                                    (HashMap<String, List<Integer>>)
-                                            resource.getMetadata()
-                                                    .get(MetadataConstants.DERIVED_KEY);
-
-                            Serializable custom =
-                                    resource.getMetadata()
-                                            .get(MetadataConstants.CUSTOM_METADATA_KEY);
-                            @SuppressWarnings("unchecked")
-                            ComplexMetadataMapImpl model =
-                                    new ComplexMetadataMapImpl(
-                                            (HashMap<String, Serializable>) custom);
-
-                            ArrayList<ComplexMetadataMap> sources = new ArrayList<>();
-                            for (MetadataTemplate template : templates) {
-                                if (template.getLinkedLayers() != null
-                                        && template.getLinkedLayers().contains(key)) {
-                                    sources.add(template.getMetadata());
-                                }
+    @PostConstruct
+    public void init() {
+        reload();
+        getFolder()
+                .addListener(
+                        new ResourceListener() {
+                            @Override
+                            public void changed(ResourceNotification notify) {
+                                reload();
                             }
-
-                            metadataService.merge(model, sources, derivedAtts);
-
-                            geoServer.getCatalog().save(resource);
-                        } else {
-                            // remove the link because the layer cannot be found.
-                            deletedLayers.add(key);
-                            LOGGER.log(
-                                    Level.INFO,
-                                    "Link to resource "
-                                            + key
-                                            + " link removed from template "
-                                            + metadataTemplate.getName()
-                                            + " because it doesn't exist anymore.");
-                        }
-                    }
-                    metadataTemplate.getLinkedLayers().removeAll(deletedLayers);
-                }
-            }
-
-            persistTemplates(templates);
-        } else {
-            throw new IOException(
-                    "The template "
-                            + metadataTemplate.getName()
-                            + " was not found and could not be saved.");
-        }
-    }
-
-    @Override
-    public MetadataTemplate load(String templateName) {
-        List<MetadataTemplate> tempates = list();
-        for (MetadataTemplate tempate : tempates) {
-            if (tempate.getName().equals(templateName)) {
-                return tempate;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public void delete(MetadataTemplate metadataTemplate) throws IOException {
-        List<MetadataTemplate> templates = list();
-        MetadataTemplate toDelete = null;
-        for (MetadataTemplate tempate : templates) {
-            if (tempate.getName().equals(metadataTemplate.getName())) {
-                toDelete = tempate;
-                break;
-            }
-        }
-        if (toDelete != null) {
-            if (toDelete.getLinkedLayers() == null || toDelete.getLinkedLayers().isEmpty()) {
-                templates.remove(toDelete);
-                persistTemplates(templates);
-            } else {
-                throw new IOException("The template is still linked.");
-            }
-        }
-    }
-
-    @Override
-    public void increasePriority(MetadataTemplate template) {
-        try {
-            List<MetadataTemplate> templates = list();
-            int index = getIndex(template, templates);
-            templates.remove(index);
-            templates.add(index - 1, template);
-            persistTemplates(templates);
-        } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
-        }
-    }
-
-    @Override
-    public void decreasePriority(MetadataTemplate template) {
-        try {
-            List<MetadataTemplate> templates = list();
-            int index = getIndex(template, templates);
-            templates.remove(index);
-            templates.add(index + 1, template);
-            persistTemplates(templates);
-        } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
-        }
+                        });
     }
 
     @SuppressWarnings("unchecked")
-    private List<MetadataTemplate> readTemplates() throws IOException {
+    public void reload() {
+        templates.clear();
+
         Resource folder = getFolder();
-        Resource file = folder.get(FILE_NAME);
+        Resource listFile = folder.get(LIST_FILE);
 
-        if (file != null) {
-            try (InputStream in = file.in()) {
-                List<MetadataTemplate> list = persister.load(in, List.class);
-                for (int i = 0; i < list.size(); i++) {
-                    MetadataTemplate template = list.get(i);
-                    template.setOrder(i);
+        if (Resources.exists(listFile)) {
+            try (InputStream inPriorities = listFile.in()) {
+                List<String> priorities = persister.load(inPriorities, List.class);
+
+                for (String id : priorities) {
+                    Resource templateFile = folder.get(id + ".xml");
+                    try (InputStream inTemplate = templateFile.in()) {
+                        MetadataTemplate template =
+                                persister.load(inTemplate, MetadataTemplate.class);
+                        templates.add(template);
+                    } catch (StreamException | IOException e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
                 }
-                return list;
-            } catch (StreamException exception) {
-                LOGGER.warning("File is empty");
+            } catch (StreamException e) {
+                LOGGER.warning("Priorities file is empty.");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
-        }
-        return new ArrayList<>();
-    }
-
-    private void persistTemplates(List<MetadataTemplate> templates) throws IOException {
-        Resource file = getFolder().get(FILE_NAME);
-
-        try (OutputStream out = file.out()) {
-            persister.save(templates, out);
         }
     }
 
-    private int getIndex(MetadataTemplate template, List<MetadataTemplate> templates) {
-        for (int i = 0; i < templates.size(); i++) {
-            MetadataTemplate current = templates.get(i);
-            if (template.getName().equals(current.getName())) {
-                return i;
+    @Override
+    public void save(MetadataTemplate template, boolean updateLayers) throws IOException {
+        // validate
+        if (template.getId() == null) {
+            throw new IllegalArgumentException("template without id not allowed.");
+        }
+        if (template.getName() == null) {
+            throw new IllegalArgumentException("template without name not allowed.");
+        }
+        for (MetadataTemplate other : templates) {
+            if (!other.equals(template) && other.getName().equals(template.getName())) {
+                throw new IllegalArgumentException(
+                        "template name " + template.getName() + " not unique.");
             }
         }
-        return -1;
+
+        // add or replace in list
+        boolean isNew = !templates.contains(template);
+        if (isNew) {
+            templates.add(template);
+        } else {
+            templates.set(templates.indexOf(template), template);
+        }
+
+        // update layers
+        if (updateLayers) {
+            Set<String> deletedLayers = new HashSet<>();
+            for (String key : template.getLinkedLayers()) {
+                ResourceInfo resource = geoServer.getCatalog().getResource(key, ResourceInfo.class);
+
+                if (resource != null) {
+                    updateLayer(resource);
+                } else {
+                    // remove the link because the layer cannot be found.
+                    deletedLayers.add(key);
+                    LOGGER.log(
+                            Level.INFO,
+                            "Link to resource "
+                                    + key
+                                    + " link removed from template "
+                                    + template.getName()
+                                    + " because it doesn't exist anymore.");
+                }
+            }
+            template.getLinkedLayers().removeAll(deletedLayers);
+        }
+
+        // persist
+        try (OutputStream out = getFolder().get(template.getId() + ".xml").out()) {
+            persister.save(template, out);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw e;
+        }
+
+        if (isNew) {
+            persistList();
+        }
+    }
+
+    @Override
+    public void delete(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate) {
+        if (!metadataTemplate.getLinkedLayers().isEmpty()) {
+            throw new IllegalArgumentException("template is still linked!");
+        }
+        newList.remove(metadataTemplate);
+    }
+
+    @Override
+    public void saveList(List<MetadataTemplate> newList, boolean updateLayers) throws IOException {
+        if (!templates.containsAll(newList)) {
+            throw new IllegalArgumentException("Use save to add new templates.");
+        }
+        List<MetadataTemplate> deleted = new ArrayList<>(templates);
+        deleted.removeAll(newList);
+
+        templates.clear();
+        templates.addAll(newList);
+
+        // update layers
+        if (updateLayers) {
+            for (ResourceInfo resource : geoServer.getCatalog().getResources(ResourceInfo.class)) {
+                updateLayer(resource);
+            }
+        }
+
+        // persist
+        persistList();
+
+        // remove deleted
+        for (MetadataTemplate item : deleted) {
+            if (!getFolder().get(item.getId() + ".xml").delete()) {
+                LOGGER.warning("Failed to delete template " + item + " from hard drive.");
+            }
+        }
+        deleted.clear();
+    }
+
+    private void persistList() throws IOException {
+        List<String> priorities =
+                templates.stream().map(template -> template.getId()).collect(Collectors.toList());
+        try (OutputStream out = getFolder().get(LIST_FILE).out()) {
+            persister.save(priorities, out);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public List<MetadataTemplate> list() {
+        return templates.stream().map(template -> template.clone()).collect(Collectors.toList());
+    }
+
+    @Override
+    public void increasePriority(List<MetadataTemplate> newList, MetadataTemplate template) {
+        int index = newList.indexOf(template);
+        newList.add(index - 1, newList.remove(index));
+    }
+
+    @Override
+    public void decreasePriority(List<MetadataTemplate> newList, MetadataTemplate template) {
+        int index = newList.indexOf(template);
+        newList.add(index + 1, newList.remove(index));
+    }
+
+    private void updateLayer(ResourceInfo resource) {
+        @SuppressWarnings("unchecked")
+        HashMap<String, List<Integer>> derivedAtts =
+                (HashMap<String, List<Integer>>)
+                        resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
+
+        Serializable custom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+        @SuppressWarnings("unchecked")
+        ComplexMetadataMapImpl model =
+                new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom);
+
+        ArrayList<ComplexMetadataMap> sources = new ArrayList<>();
+        for (MetadataTemplate template : templates) {
+            if (template.getLinkedLayers() != null
+                    && template.getLinkedLayers().contains(resource.getId())) {
+                sources.add(new ComplexMetadataMapImpl(template.getMetadata()));
+            }
+        }
+
+        metadataService.merge(model, sources, derivedAtts);
+
+        geoServer.getCatalog().save(resource);
+    }
+
+    @Override
+    public MetadataTemplate findByName(String name) {
+        for (MetadataTemplate template : templates) {
+            if (template.getName().equals(name)) {
+                return template.clone();
+            }
+        }
+        return null;
     }
 }
