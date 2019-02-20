@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 @Component
-public class MetadataTemplateServiceImpl implements MetadataTemplateService {
+public class MetadataTemplateServiceImpl implements MetadataTemplateService, ResourceListener {
 
     private static final Logger LOGGER = Logging.getLogger(MetadataTemplateServiceImpl.class);
 
@@ -78,14 +78,12 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
     @PostConstruct
     public void init() {
         reload();
-        getFolder()
-                .addListener(
-                        new ResourceListener() {
-                            @Override
-                            public void changed(ResourceNotification notify) {
-                                reload();
-                            }
-                        });
+        getFolder().addListener(this);
+    }
+
+    @Override
+    public void changed(ResourceNotification notify) {
+        reload();
     }
 
     @SuppressWarnings("unchecked")
@@ -164,6 +162,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
             template.getLinkedLayers().removeAll(deletedLayers);
         }
 
+        getFolder().removeListener(this);
+
         // persist
         try (OutputStream out = getFolder().get(template.getId() + ".xml").out()) {
             persister.save(template, out);
@@ -175,6 +175,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
         if (isNew) {
             persistList();
         }
+
+        getFolder().addListener(this);
     }
 
     @Override
@@ -203,6 +205,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
             }
         }
 
+        getFolder().removeListener(this);
+
         // persist
         persistList();
 
@@ -213,6 +217,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService {
             }
         }
         deleted.clear();
+
+        getFolder().addListener(this);
     }
 
     private void persistList() throws IOException {
