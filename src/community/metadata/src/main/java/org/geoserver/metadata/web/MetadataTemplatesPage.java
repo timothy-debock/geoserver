@@ -8,7 +8,9 @@ package org.geoserver.metadata.web;
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Executors;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -17,12 +19,14 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
+import org.geoserver.metadata.web.panel.ProgressPanel;
 import org.geoserver.metadata.web.panel.TemplatesPositionPanel;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerApplication;
@@ -34,6 +38,7 @@ import org.geoserver.web.wicket.*;
  * templates.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
+ * @author Niels Charlier
  */
 public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
@@ -42,6 +47,10 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
     private GeoServerTablePanel<MetadataTemplate> templatesPanel;
 
     private IModel<List<MetadataTemplate>> templates;
+
+    private MetadataTemplateTracker tracker = new MetadataTemplateTracker();
+
+    private ProgressPanel progressPanel;
 
     public MetadataTemplatesPage() {
         MetadataTemplateService service =
@@ -59,6 +68,12 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
         add(dialog = new GeoServerDialog("dialog"));
         dialog.setInitialHeight(150);
         ((ModalWindow) dialog.get("dialog")).showUnloadConfirmation(false);
+
+        add(
+                progressPanel =
+                        new ProgressPanel(
+                                "progress",
+                                new ResourceModel("MetadataTemplatesPage.updatingMetadata")));
 
         add(
                 new AjaxLink<Object>("addNew") {
@@ -122,14 +137,10 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                         @Override
                                         protected boolean onSubmit(
                                                 AjaxRequestTarget target, Component contents) {
-                                            MetadataTemplateService service =
-                                                    GeoServerApplication.get()
-                                                            .getApplicationContext()
-                                                            .getBean(MetadataTemplateService.class);
-                                            for (MetadataTemplate template :
-                                                    templatesPanel.getSelection()) {
-                                                service.delete(templates.getObject(), template);
-                                            }
+                                            templates
+                                                    .getObject()
+                                                    .removeAll(templatesPanel.getSelection());
+                                            tracker.removeTemplates(templatesPanel.getSelection());
                                             target.add(templatesPanel);
                                             return true;
                                         }
@@ -175,7 +186,8 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                 }
                             };
                         } else if (property.equals(MetadataTemplateDataProvider.PRIORITY)) {
-                            return new TemplatesPositionPanel(id, templates, itemModel, this);
+                            return new TemplatesPositionPanel(
+                                    id, templates, tracker, itemModel, this);
                         }
                         return null;
                     }
@@ -189,13 +201,13 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
                     @Override
                     public void onClick(AjaxRequestTarget target) {
+
                         MetadataTemplateService service =
                                 GeoServerApplication.get()
                                         .getApplicationContext()
                                         .getBean(MetadataTemplateService.class);
                         try {
-                            service.saveList(templates.getObject(), true);
-                            doReturn();
+                            service.saveList(templates.getObject());
                         } catch (IOException e) {
                             Throwable rootCause = ExceptionUtils.getRootCause(e);
                             String message =
@@ -207,6 +219,37 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                             }
                             addFeedbackPanels(target);
                         }
+
+                        IModel<Float> progressModel = new Model<Float>(0.0f);
+
+                        Collection<String> affectedResources = tracker.getAffectedResources();
+
+                        Executors.newSingleThreadExecutor()
+                                .execute(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                service.update(affectedResources, progressModel);
+                                            }
+                                        });
+
+                        progressPanel.start(
+                                target,
+                                progressModel,
+                                new ProgressPanel.EventHandler() {
+                                    private static final long serialVersionUID =
+                                            8967087707332457974L;
+
+                                    @Override
+                                    public void onFinished(AjaxRequestTarget target) {
+                                        doReturn();
+                                    }
+
+                                    @Override
+                                    public void onCanceled(AjaxRequestTarget target) {
+                                        doReturn();
+                                    }
+                                });
                     }
                 });
         add(

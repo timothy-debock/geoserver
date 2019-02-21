@@ -8,6 +8,7 @@ package org.geoserver.metadata.web;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -19,12 +20,14 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.web.panel.MetadataPanel;
+import org.geoserver.metadata.web.panel.ProgressPanel;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerBasePage;
@@ -44,6 +47,8 @@ public class MetadataTemplatePage extends GeoServerBasePage {
     private final IModel<List<MetadataTemplate>> templates;
 
     private final IModel<MetadataTemplate> metadataTemplateModel;
+
+    private ProgressPanel progressPanel;
 
     public MetadataTemplatePage(IModel<List<MetadataTemplate>> templates) {
         this(templates, new Model<>(newTemplate()));
@@ -68,6 +73,12 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                 new Model<ComplexMetadataMap>(
                         new ComplexMetadataMapImpl(
                                 metadataTemplateModel.getObject().getMetadata()));
+
+        add(
+                progressPanel =
+                        new ProgressPanel(
+                                "progress",
+                                new ResourceModel("MetadataTemplatesPage.updatingMetadata")));
 
         Form<?> form = new Form<Object>("form");
 
@@ -119,7 +130,7 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                 .getApplicationContext()
                                 .getBean(MetadataTemplateService.class);
                 try {
-                    service.save(metadataTemplateModel.getObject(), true);
+                    service.save(metadataTemplateModel.getObject());
                     if (templates.getObject().contains(metadataTemplateModel.getObject())) {
                         templates
                                 .getObject()
@@ -131,7 +142,36 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                     } else {
                         templates.getObject().add(metadataTemplateModel.getObject());
                     }
-                    doReturn();
+
+                    IModel<Float> progressModel = new Model<Float>(0.0f);
+
+                    Executors.newSingleThreadExecutor()
+                            .execute(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            service.update(
+                                                    metadataTemplateModel.getObject(),
+                                                    progressModel);
+                                        }
+                                    });
+
+                    progressPanel.start(
+                            target,
+                            progressModel,
+                            new ProgressPanel.EventHandler() {
+                                private static final long serialVersionUID = 8967087707332457974L;
+
+                                @Override
+                                public void onFinished(AjaxRequestTarget target) {
+                                    doReturn();
+                                }
+
+                                @Override
+                                public void onCanceled(AjaxRequestTarget target) {
+                                    doReturn();
+                                }
+                            });
                 } catch (IOException | IllegalArgumentException e) {
                     if (e instanceof IOException) {
                         LOGGER.log(Level.WARNING, e.getMessage(), e);

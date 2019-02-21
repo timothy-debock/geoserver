@@ -34,7 +34,7 @@ public class MetaDataRestService {
                 info.getMetadata().remove(MetadataConstants.DERIVED_KEY);
                 catalog.save(info);
             }
-            templateService.saveList(Collections.emptyList(), false);
+            templateService.saveList(Collections.emptyList());
         }
     }
 }

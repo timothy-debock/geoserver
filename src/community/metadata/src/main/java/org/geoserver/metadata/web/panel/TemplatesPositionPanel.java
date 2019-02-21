@@ -13,8 +13,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.service.MetadataTemplateService;
-import org.geoserver.web.GeoServerApplication;
+import org.geoserver.metadata.web.MetadataTemplateTracker;
 import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ImageAjaxLink;
@@ -29,6 +28,7 @@ public class TemplatesPositionPanel extends Panel {
     public TemplatesPositionPanel(
             String id,
             IModel<List<MetadataTemplate>> templates,
+            MetadataTemplateTracker tracker,
             IModel<MetadataTemplate> model,
             GeoServerTablePanel<MetadataTemplate> tablePanel) {
         super(id, model);
@@ -41,11 +41,10 @@ public class TemplatesPositionPanel extends Panel {
 
                     @Override
                     protected void onClick(AjaxRequestTarget target) {
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        service.increasePriority(templates.getObject(), model.getObject());
+                        int index = templates.getObject().indexOf(model.getObject());
+                        tracker.switchTemplates(
+                                model.getObject(), templates.getObject().get(index - 1));
+                        templates.getObject().add(index - 1, templates.getObject().remove(index));
                         ((MarkupContainer) tablePanel.get("listContainer").get("items"))
                                 .removeAll();
                         tablePanel.clearSelection();
@@ -76,11 +75,10 @@ public class TemplatesPositionPanel extends Panel {
 
                     @Override
                     protected void onClick(AjaxRequestTarget target) {
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        service.decreasePriority(templates.getObject(), model.getObject());
+                        int index = templates.getObject().indexOf(model.getObject());
+                        templates.getObject().add(index + 1, templates.getObject().remove(index));
+                        tracker.switchTemplates(
+                                model.getObject(), templates.getObject().get(index + 1));
 
                         ((MarkupContainer) tablePanel.get("listContainer").get("items"))
                                 .removeAll();

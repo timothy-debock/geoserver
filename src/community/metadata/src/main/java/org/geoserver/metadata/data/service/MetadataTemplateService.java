@@ -5,7 +5,9 @@
 package org.geoserver.metadata.data.service;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 
 /** @author Timothy De Bock */
@@ -13,15 +15,17 @@ public interface MetadataTemplateService {
 
     List<MetadataTemplate> list();
 
-    void save(MetadataTemplate metadataTemplate, boolean updateLayers) throws IOException;
+    void save(MetadataTemplate metadataTemplate) throws IOException;
 
-    void delete(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
+    void saveList(List<MetadataTemplate> newList) throws IOException;
 
-    void increasePriority(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
+    void update(Collection<String> resourceIds, IModel<Float> progress);
 
-    void decreasePriority(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate);
-
-    void saveList(List<MetadataTemplate> newList, boolean updateLayers) throws IOException;
+    default void update(MetadataTemplate template, IModel<Float> progress) {
+        update(template.getLinkedLayers(), progress);
+    }
 
     MetadataTemplate findByName(String string);
+
+    MetadataTemplate getById(String id);
 }

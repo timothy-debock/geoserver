@@ -292,6 +292,10 @@ public abstract class ImportTemplatePanel extends Panel {
     private void updateModel() {
         @SuppressWarnings("unchecked")
         IModel<ComplexMetadataMap> model = (IModel<ComplexMetadataMap>) getDefaultModel();
+        MetadataTemplateService templateService =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
         ComplexMetadataService service =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -300,7 +304,10 @@ public abstract class ImportTemplatePanel extends Panel {
         ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
         List<MetadataTemplate> templates = linkedTemplatesDataProvider.getItems();
         for (MetadataTemplate template : templates) {
-            maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
+            template = templateService.getById(template.getId());
+            if (template != null) {
+                maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
+            }
         }
 
         service.merge(model.getObject(), maps, derivedAtts);
@@ -330,8 +337,9 @@ public abstract class ImportTemplatePanel extends Panel {
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(MetadataTemplateService.class);
+        updateModel();
         for (MetadataTemplate template : linkedTemplatesDataProvider.getItems()) {
-            service.save(template, false);
+            service.save(template);
         }
     }
 }

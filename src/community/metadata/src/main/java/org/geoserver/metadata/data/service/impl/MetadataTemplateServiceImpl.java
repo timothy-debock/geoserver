@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import org.apache.wicket.model.IModel;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
@@ -116,7 +118,7 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     @Override
-    public void save(MetadataTemplate template, boolean updateLayers) throws IOException {
+    public void save(MetadataTemplate template) throws IOException {
         // validate
         if (template.getId() == null) {
             throw new IllegalArgumentException("template without id not allowed.");
@@ -140,27 +142,23 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
         }
 
         // update layers
-        if (updateLayers) {
-            Set<String> deletedLayers = new HashSet<>();
-            for (String key : template.getLinkedLayers()) {
-                ResourceInfo resource = geoServer.getCatalog().getResource(key, ResourceInfo.class);
+        Set<String> deletedLayers = new HashSet<>();
+        for (String key : template.getLinkedLayers()) {
+            ResourceInfo resource = geoServer.getCatalog().getResource(key, ResourceInfo.class);
 
-                if (resource != null) {
-                    updateLayer(resource);
-                } else {
-                    // remove the link because the layer cannot be found.
-                    deletedLayers.add(key);
-                    LOGGER.log(
-                            Level.INFO,
-                            "Link to resource "
-                                    + key
-                                    + " link removed from template "
-                                    + template.getName()
-                                    + " because it doesn't exist anymore.");
-                }
+            if (resource == null) {
+                // remove the link because the layer cannot be found.
+                deletedLayers.add(key);
+                LOGGER.log(
+                        Level.INFO,
+                        "Link to resource "
+                                + key
+                                + " link removed from template "
+                                + template.getName()
+                                + " because it doesn't exist anymore.");
             }
-            template.getLinkedLayers().removeAll(deletedLayers);
         }
+        template.getLinkedLayers().removeAll(deletedLayers);
 
         getFolder().removeListener(this);
 
@@ -180,15 +178,7 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     @Override
-    public void delete(List<MetadataTemplate> newList, MetadataTemplate metadataTemplate) {
-        if (!metadataTemplate.getLinkedLayers().isEmpty()) {
-            throw new IllegalArgumentException("template is still linked!");
-        }
-        newList.remove(metadataTemplate);
-    }
-
-    @Override
-    public void saveList(List<MetadataTemplate> newList, boolean updateLayers) throws IOException {
+    public void saveList(List<MetadataTemplate> newList) throws IOException {
         if (!templates.containsAll(newList)) {
             throw new IllegalArgumentException("Use save to add new templates.");
         }
@@ -197,13 +187,6 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
         templates.clear();
         templates.addAll(newList);
-
-        // update layers
-        if (updateLayers) {
-            for (ResourceInfo resource : geoServer.getCatalog().getResources(ResourceInfo.class)) {
-                updateLayer(resource);
-            }
-        }
 
         getFolder().removeListener(this);
 
@@ -238,18 +221,28 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     @Override
-    public void increasePriority(List<MetadataTemplate> newList, MetadataTemplate template) {
-        int index = newList.indexOf(template);
-        newList.add(index - 1, newList.remove(index));
+    public void update(Collection<String> resourceIds, IModel<Float> progress) {
+        int counter = 0;
+        List<ResourceInfo> resources = geoServer.getCatalog().getResources(ResourceInfo.class);
+        for (ResourceInfo resource : resources) {
+            // for (String resourceId : resourceIds) {
+            if (progress != null) {
+                // progress.setObject(((float) counter++) / resourceIds.size());
+                progress.setObject(((float) counter++) / resources.size());
+            }
+            // ResourceInfo resource =
+            // geoServer.getCatalog().getResource(resourceId, ResourceInfo.class);
+
+            if (resource != null) {
+                update(resource);
+            }
+        }
+        if (progress != null) {
+            progress.setObject(1.0f);
+        }
     }
 
-    @Override
-    public void decreasePriority(List<MetadataTemplate> newList, MetadataTemplate template) {
-        int index = newList.indexOf(template);
-        newList.add(index + 1, newList.remove(index));
-    }
-
-    private void updateLayer(ResourceInfo resource) {
+    private void update(ResourceInfo resource) {
         @SuppressWarnings("unchecked")
         HashMap<String, List<Integer>> derivedAtts =
                 (HashMap<String, List<Integer>>)
@@ -268,15 +261,26 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
             }
         }
 
-        metadataService.merge(model, sources, derivedAtts);
-
-        geoServer.getCatalog().save(resource);
+        if (sources.size() > 0) {
+            metadataService.merge(model, sources, derivedAtts);
+            geoServer.getCatalog().save(resource);
+        }
     }
 
     @Override
     public MetadataTemplate findByName(String name) {
         for (MetadataTemplate template : templates) {
             if (template.getName().equals(name)) {
+                return template.clone();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public MetadataTemplate getById(String id) {
+        for (MetadataTemplate template : templates) {
+            if (template.getId().equals(id)) {
                 return template.clone();
             }
         }

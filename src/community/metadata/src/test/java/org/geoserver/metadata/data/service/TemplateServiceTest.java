@@ -67,7 +67,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         metadataTemplate.setId(UUID.randomUUID().toString());
         metadataTemplate.setName("new-record");
 
-        templateService.save(metadataTemplate, false);
+        templateService.save(metadataTemplate);
 
         MetadataTemplate actual = templateService.findByName("new-record");
         Assert.assertEquals("new-record", actual.getName());
@@ -83,7 +83,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         MetadataTemplateImpl metadataTemplate = new MetadataTemplateImpl();
         // id required
         try {
-            templateService.save(metadataTemplate, false);
+            templateService.save(metadataTemplate);
             Assert.fail("Should throw error");
         } catch (IllegalArgumentException ignored) {
 
@@ -92,7 +92,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
 
         // name required
         try {
-            templateService.save(metadataTemplate, false);
+            templateService.save(metadataTemplate);
             Assert.fail("Should throw error");
         } catch (IllegalArgumentException ignored) {
 
@@ -100,7 +100,7 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         // no duplicate names
         metadataTemplate.setName("allData");
         try {
-            templateService.save(metadataTemplate, false);
+            templateService.save(metadataTemplate);
             Assert.fail("Should throw error");
         } catch (IllegalArgumentException ignored) {
         }
@@ -129,7 +129,8 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 1, initialMetadataModel.getObject().size("feature-catalog/feature-attribute/type"));
 
-        templateService.save(initial, true);
+        templateService.save(initial);
+        templateService.update(initial, null);
 
         MetadataTemplate actual = templateService.findByName("simple fields");
         Assert.assertEquals("updated value", actual.getMetadata().get("identifier-single"));
@@ -148,92 +149,5 @@ public class TemplateServiceTest extends AbstractMetadataTest {
         // only linked data from the linked template should change
         Assert.assertEquals(
                 1, metadataModel.getObject().size("feature-catalog/feature-attribute/type"));
-    }
-
-    @Test
-    public void testDelete() throws IOException {
-        List<MetadataTemplate> list = templateService.list();
-        int initial = list.size();
-        Resource dir = dataDirectory.get(MetadataConstants.TEMPLATES_DIRECTORY);
-        int nof = dir.list().size();
-
-        MetadataTemplate actual = templateService.findByName("allData");
-        templateService.delete(list, actual);
-
-        Assert.assertEquals(initial - 1, list.size());
-
-        // store
-        templateService.saveList(list, false);
-
-        Assert.assertEquals(initial - 1, templateService.list().size());
-
-        templateService.reload();
-
-        Assert.assertEquals(initial - 1, templateService.list().size());
-        Assert.assertEquals(nof - 1, dir.list().size());
-    }
-
-    @Test
-    public void testDeleteException() throws IOException {
-        List<MetadataTemplate> list = templateService.list();
-        int initial = list.size();
-
-        MetadataTemplate actual = templateService.findByName("simple fields");
-        try {
-            templateService.delete(list, actual);
-            Assert.fail("should throw error for linked templates");
-        } catch (IllegalArgumentException e) {
-        }
-        Assert.assertEquals(initial, templateService.list().size());
-    }
-
-    @Test
-    public void testUpdateShouldRemoveDeletedLayers() throws IOException {
-        MetadataTemplate template = templateService.findByName("template-nested-object");
-        Assert.assertEquals(2, template.getLinkedLayers().size());
-        templateService.save(template, true);
-        Assert.assertEquals(0, template.getLinkedLayers().size());
-    }
-
-    @Test
-    public void testIncreasePriority() throws IOException {
-        List<MetadataTemplate> list = templateService.list();
-        MetadataTemplate initial = templateService.findByName("allData");
-        Assert.assertEquals("allData", list.get(5).getName());
-
-        templateService.increasePriority(list, initial);
-        templateService.increasePriority(list, initial);
-
-        Assert.assertEquals("allData", list.get(3).getName());
-
-        // store
-        templateService.saveList(list, false);
-
-        Assert.assertEquals("allData", templateService.list().get(3).getName());
-
-        // on disk
-        templateService.reload();
-
-        Assert.assertEquals("allData", templateService.list().get(3).getName());
-    }
-
-    @Test
-    public void testDecreasePriority() throws IOException {
-        List<MetadataTemplate> list = templateService.list();
-        MetadataTemplate initial = templateService.findByName("simple fields");
-        Assert.assertEquals("simple fields", list.get(0).getName());
-
-        templateService.decreasePriority(list, initial);
-        templateService.decreasePriority(list, initial);
-
-        Assert.assertEquals("simple fields", list.get(2).getName());
-
-        // store
-        templateService.saveList(list, false);
-        Assert.assertEquals("simple fields", templateService.list().get(2).getName());
-
-        // on disk
-        templateService.reload();
-        Assert.assertEquals("simple fields", templateService.list().get(2).getName());
     }
 }
