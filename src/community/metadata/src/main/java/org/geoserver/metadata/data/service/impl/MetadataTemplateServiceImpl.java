@@ -246,13 +246,6 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     private void update(ResourceInfo resource) {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
         @SuppressWarnings("unchecked")
         HashMap<String, List<Integer>> derivedAtts =
                 (HashMap<String, List<Integer>>)
