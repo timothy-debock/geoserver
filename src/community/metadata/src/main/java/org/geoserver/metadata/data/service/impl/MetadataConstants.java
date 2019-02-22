@@ -19,8 +19,6 @@ public final class MetadataConstants {
 
     public static final String FEATURE_CATALOG_CONFIG_FILE = "featureCatalog.yaml";
 
-    public static final String FEATURE_ATTRIBUTE = "feature-attribute";
-
     public static final String FEATURE_ATTRIBUTE_TYPENAME = "featureAttribute";
 
     public static final String FEATURE_ATTRIBUTE_NAME = "name";

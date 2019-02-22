@@ -1,20 +1,4 @@
-attributes:  
-  - label: Feature catalog
-    key: feature-catalog
-    fieldType: COMPLEX
-    typename: featureCatalog
-
 types:
-  - typename: featureCatalog
-    attributes:
-        - label: Unique identifier
-          key: feature-catalog-identifier
-          fieldType: UUID
-        - label: Feature attribute
-          key: feature-attribute
-          fieldType: COMPLEX
-          typename: featureAttribute
-          occurrence: REPEAT
   - typename: featureAttribute
     attributes:
         - label: Name

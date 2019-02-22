@@ -45,10 +45,13 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
 
     private ComplexAttributeGenerator generator;
 
+    private AttributeConfiguration attributeConfiguration;
+
     public RepeatableComplexAttributesTablePanel(
             String id,
             RepeatableComplexAttributeDataProvider dataProvider,
             IModel<ComplexMetadataMap> metadataModel,
+            AttributeConfiguration attributeConfiguration,
             ComplexAttributeGenerator generator,
             HashMap<String, List<Integer>> derivedAtts) {
         super(id, metadataModel);
@@ -56,6 +59,7 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
         this.dataProvider = dataProvider;
         this.derivedAtts = derivedAtts;
         this.generator = generator;
+        this.attributeConfiguration = attributeConfiguration;
     }
 
     @Override
@@ -117,6 +121,7 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                                     protected boolean onSubmit(
                                             AjaxRequestTarget target, Component contents) {
                                         generator.generate(
+                                                attributeConfiguration,
                                                 getMetadataModel().getObject(),
                                                 (LayerInfo) tabPanel.getDefaultModelObject());
                                         dataProvider.reset();

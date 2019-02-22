@@ -124,6 +124,7 @@ public class AttributesTablePanel extends Panel {
                                 id,
                                 repeatableDataProvider,
                                 getMetadataModel(),
+                                attributeConfiguration,
                                 GeoServerApplication.get()
                                         .getBeanOfType(GeneratorService.class)
                                         .findGeneratorByType(attributeConfiguration.getTypename()),

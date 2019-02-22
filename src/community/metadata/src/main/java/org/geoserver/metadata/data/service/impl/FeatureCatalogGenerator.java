@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.geoserver.catalog.AttributeTypeInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.service.ComplexAttributeGenerator;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
@@ -34,7 +35,10 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
     }
 
     @Override
-    public void generate(ComplexMetadataMap metadata, LayerInfo layerInfo) {
+    public void generate(
+            AttributeConfiguration attributeConfiguration,
+            ComplexMetadataMap metadata,
+            LayerInfo layerInfo) {
         ComplexMetadataService service =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -49,20 +53,20 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
         // we will save the old details for attributes that still exist
         Map<String, ComplexMetadataMap> old = new HashMap<>();
-        for (int i = 0; i < metadata.size(MetadataConstants.FEATURE_ATTRIBUTE); i++) {
-            ComplexMetadataMap attMap = metadata.subMap(MetadataConstants.FEATURE_ATTRIBUTE, i);
+        for (int i = 0; i < metadata.size(attributeConfiguration.getKey()); i++) {
+            ComplexMetadataMap attMap = metadata.subMap(attributeConfiguration.getKey(), i);
             old.put(
                     attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME).getValue(),
                     attMap.clone());
         }
 
         // clear everything and build again
-        metadata.delete(MetadataConstants.FEATURE_ATTRIBUTE);
+        metadata.delete(attributeConfiguration.getKey());
         int index = 0;
         try {
             for (AttributeTypeInfo att : fti.attributes()) {
                 ComplexMetadataMap attMap =
-                        metadata.subMap(MetadataConstants.FEATURE_ATTRIBUTE, index++);
+                        metadata.subMap(attributeConfiguration.getKey(), index++);
 
                 ComplexMetadataMap oldMap = old.get(att.getName());
                 if (oldMap != null) {

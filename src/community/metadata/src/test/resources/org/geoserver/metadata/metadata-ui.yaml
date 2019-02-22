@@ -42,6 +42,10 @@ attributes:
     occurrence: REPEAT
   - key: identifier-other
     fieldType: TEXT
+  - label: Feature catalog
+    key: feature-catalog
+    fieldType: COMPLEX
+    typename: featureCatalog
 
 types:
   - typename: referencesystem
@@ -60,6 +64,16 @@ types:
           fieldType: TEXT
         - key: phone
           fieldType: TEXT
+          occurrence: REPEAT          
+  - typename: featureCatalog
+    attributes:
+        - label: Unique identifier
+          key: feature-catalog-identifier
+          fieldType: UUID
+        - label: Feature attribute
+          key: feature-attribute
+          fieldType: COMPLEX
+          typename: featureAttribute
           occurrence: REPEAT
 
 

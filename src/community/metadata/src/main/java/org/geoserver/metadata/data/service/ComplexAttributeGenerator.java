@@ -6,13 +6,17 @@ package org.geoserver.metadata.data.service;
 
 import java.io.Serializable;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 
 public interface ComplexAttributeGenerator extends Serializable {
 
     String getType();
 
-    void generate(ComplexMetadataMap metadata, LayerInfo layerInfo);
+    void generate(
+            AttributeConfiguration attributeConfiguration,
+            ComplexMetadataMap metadata,
+            LayerInfo layerInfo);
 
     default boolean supports(ComplexMetadataMap metadata, LayerInfo layerInfo) {
         return true;
