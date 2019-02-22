@@ -7,7 +7,7 @@ package org.geoserver.metadata.data.service;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import org.apache.wicket.model.IModel;
+import java.util.UUID;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 
 /** @author Timothy De Bock */
@@ -19,10 +19,10 @@ public interface MetadataTemplateService {
 
     void saveList(List<MetadataTemplate> newList) throws IOException;
 
-    void update(Collection<String> resourceIds, IModel<Float> progress);
+    void update(Collection<String> resourceIds, UUID progressKey);
 
-    default void update(MetadataTemplate template, IModel<Float> progress) {
-        update(template.getLinkedLayers(), progress);
+    default void update(MetadataTemplate template, UUID progressKey) {
+        update(template.getLinkedLayers(), progressKey);
     }
 
     MetadataTemplate findByName(String string);

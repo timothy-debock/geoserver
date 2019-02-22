@@ -15,11 +15,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import org.apache.wicket.model.IModel;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
@@ -31,6 +31,7 @@ import org.geoserver.metadata.data.model.impl.ComplexMetadataIndexReference;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
+import org.geoserver.metadata.data.service.GlobalModelService;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.ResourceListener;
@@ -58,6 +59,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     @Autowired private GeoServerDataDirectory dataDirectory;
 
     @Autowired private ComplexMetadataService metadataService;
+
+    @Autowired private GlobalModelService globalModelService;
 
     @Autowired private GeoServer geoServer;
 
@@ -221,14 +224,14 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     @Override
-    public void update(Collection<String> resourceIds, IModel<Float> progress) {
+    public void update(Collection<String> resourceIds, UUID progressKey) {
         int counter = 0;
         List<ResourceInfo> resources = geoServer.getCatalog().getResources(ResourceInfo.class);
         for (ResourceInfo resource : resources) {
             // for (String resourceId : resourceIds) {
-            if (progress != null) {
-                // progress.setObject(((float) counter++) / resourceIds.size());
-                progress.setObject(((float) counter++) / resources.size());
+            if (progressKey != null) {
+                // globalModelService.put(progressKey, ((float) counter++) / resourceIds.size());
+                globalModelService.put(progressKey, ((float) counter++) / resources.size());
             }
             // ResourceInfo resource =
             // geoServer.getCatalog().getResource(resourceId, ResourceInfo.class);
@@ -237,12 +240,19 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
                 update(resource);
             }
         }
-        if (progress != null) {
-            progress.setObject(1.0f);
+        if (progressKey != null) {
+            globalModelService.put(progressKey, 1.0f);
         }
     }
 
     private void update(ResourceInfo resource) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         @SuppressWarnings("unchecked")
         HashMap<String, List<Integer>> derivedAtts =
                 (HashMap<String, List<Integer>>)
@@ -255,16 +265,15 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
         ArrayList<ComplexMetadataMap> sources = new ArrayList<>();
         for (MetadataTemplate template : templates) {
-            if (template.getLinkedLayers() != null
-                    && template.getLinkedLayers().contains(resource.getId())) {
+            if (template.getLinkedLayers().contains(resource.getId())) {
                 sources.add(new ComplexMetadataMapImpl(template.getMetadata()));
             }
         }
 
-        if (sources.size() > 0) {
-            metadataService.merge(model, sources, derivedAtts);
-            geoServer.getCatalog().save(resource);
-        }
+        // if (sources.size() > 0) {
+        metadataService.merge(model, sources, derivedAtts);
+        geoServer.getCatalog().save(resource);
+        // }
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.apache.wicket.model.util.ListModel;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.metadata.data.model.MetadataTemplate;
+import org.geoserver.metadata.data.model.impl.GlobalModel;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.web.panel.ProgressPanel;
 import org.geoserver.metadata.web.panel.TemplatesPositionPanel;
@@ -220,7 +221,7 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                             addFeedbackPanels(target);
                         }
 
-                        IModel<Float> progressModel = new Model<Float>(0.0f);
+                        GlobalModel<Float> progressModel = new GlobalModel<Float>(0.0f);
 
                         Collection<String> affectedResources = tracker.getAffectedResources();
 
@@ -229,7 +230,8 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                         new Runnable() {
                                             @Override
                                             public void run() {
-                                                service.update(affectedResources, progressModel);
+                                                service.update(
+                                                        affectedResources, progressModel.getKey());
                                             }
                                         });
 
@@ -243,11 +245,13 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                                     @Override
                                     public void onFinished(AjaxRequestTarget target) {
                                         doReturn();
+                                        progressModel.cleanUp();
                                     }
 
                                     @Override
                                     public void onCanceled(AjaxRequestTarget target) {
                                         doReturn();
+                                        progressModel.cleanUp();
                                     }
                                 });
                     }

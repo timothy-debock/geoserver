@@ -24,6 +24,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
+import org.geoserver.metadata.data.model.impl.GlobalModel;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.web.panel.MetadataPanel;
@@ -143,7 +144,7 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                         templates.getObject().add(metadataTemplateModel.getObject());
                     }
 
-                    IModel<Float> progressModel = new Model<Float>(0.0f);
+                    GlobalModel<Float> progressModel = new GlobalModel<Float>(0.0f);
 
                     Executors.newSingleThreadExecutor()
                             .execute(
@@ -152,7 +153,7 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                         public void run() {
                                             service.update(
                                                     metadataTemplateModel.getObject(),
-                                                    progressModel);
+                                                    progressModel.getKey());
                                         }
                                     });
 
@@ -165,11 +166,13 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                                 @Override
                                 public void onFinished(AjaxRequestTarget target) {
                                     doReturn();
+                                    progressModel.cleanUp();
                                 }
 
                                 @Override
                                 public void onCanceled(AjaxRequestTarget target) {
                                     doReturn();
+                                    progressModel.cleanUp();
                                 }
                             });
                 } catch (IOException | IllegalArgumentException e) {
