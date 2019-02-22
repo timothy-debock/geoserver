@@ -226,15 +226,12 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     @Override
     public void update(Collection<String> resourceIds, UUID progressKey) {
         int counter = 0;
-        List<ResourceInfo> resources = geoServer.getCatalog().getResources(ResourceInfo.class);
-        for (ResourceInfo resource : resources) {
-            // for (String resourceId : resourceIds) {
+        for (String resourceId : resourceIds) {
             if (progressKey != null) {
-                // globalModelService.put(progressKey, ((float) counter++) / resourceIds.size());
-                globalModelService.put(progressKey, ((float) counter++) / resources.size());
+                globalModelService.put(progressKey, ((float) counter++) / resourceIds.size());
             }
-            // ResourceInfo resource =
-            // geoServer.getCatalog().getResource(resourceId, ResourceInfo.class);
+            ResourceInfo resource =
+                    geoServer.getCatalog().getResource(resourceId, ResourceInfo.class);
 
             if (resource != null) {
                 update(resource);
@@ -263,10 +260,10 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
             }
         }
 
-        // if (sources.size() > 0) {
-        metadataService.merge(model, sources, derivedAtts);
-        geoServer.getCatalog().save(resource);
-        // }
+        if (sources.size() > 0) {
+            metadataService.merge(model, sources, derivedAtts);
+            geoServer.getCatalog().save(resource);
+        }
     }
 
     @Override
