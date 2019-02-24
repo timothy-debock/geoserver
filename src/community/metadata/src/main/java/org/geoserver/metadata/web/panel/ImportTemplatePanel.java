@@ -4,9 +4,6 @@
  */
 package org.geoserver.metadata.web.panel;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -25,12 +22,7 @@ import org.apache.wicket.markup.repeater.DefaultItemReuseStrategy;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
-import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
-import org.geoserver.metadata.data.service.ComplexMetadataService;
-import org.geoserver.metadata.data.service.MetadataTemplateService;
-import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -49,20 +41,13 @@ public abstract class ImportTemplatePanel extends Panel {
 
     private ImportTemplateDataProvider linkedTemplatesDataProvider;
 
-    private final HashMap<String, List<Integer>> derivedAtts;
-
     private Label noData;
 
     private AjaxLink<Object> remove;
 
     public ImportTemplatePanel(
-            String id,
-            String resourceId,
-            IModel<ComplexMetadataMap> metadataModel,
-            IModel<List<MetadataTemplate>> templatesModel,
-            HashMap<String, List<Integer>> derivedAtts) {
-        super(id, metadataModel);
-        this.derivedAtts = derivedAtts;
+            String id, String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
+        super(id);
         linkedTemplatesDataProvider = new ImportTemplateDataProvider(resourceId, templatesModel);
     }
 
@@ -181,30 +166,13 @@ public abstract class ImportTemplatePanel extends Panel {
                                 @Override
                                 protected boolean onSubmit(
                                         AjaxRequestTarget target, Component contents) {
-                                    performLink(target);
+                                    linkTemplate(target, dropDown.getModelObject());
                                     return true;
                                 }
                             });
                 }
                 target.add(ImportTemplatePanel.this);
                 target.add(getFeedbackPanel());
-            }
-
-            private void performLink(AjaxRequestTarget target) {
-                try {
-                    linkTemplate(dropDown.getModelObject());
-                    dropDown.setModelObject(null);
-                    dropDown.setChoices(linkedTemplatesDataProvider.getUnlinkedItems());
-                } catch (IOException e) {
-                    error(
-                            new ParamResourceModel(
-                                            "errorSelectGeonetwork", ImportTemplatePanel.this)
-                                    .getString());
-                }
-                updateTableState(target, linkedTemplatesDataProvider);
-                target.add(templatesPanel);
-                target.add(dropDown);
-                handleUpdate(target);
             }
         };
     }
@@ -215,14 +183,7 @@ public abstract class ImportTemplatePanel extends Panel {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
-                try {
-                    unlinkTemplate(target, templatesPanel.getSelection());
-                } catch (IOException e) {
-                    error(
-                            new ParamResourceModel(
-                                            "errorSelectGeonetwork", ImportTemplatePanel.this)
-                                    .getString());
-                }
+                unlinkTemplate(target, templatesPanel.getSelection());
             }
         };
     }
@@ -259,58 +220,33 @@ public abstract class ImportTemplatePanel extends Panel {
      *
      * @param selected
      */
-    private void linkTemplate(MetadataTemplate selected) throws IOException {
+    private void linkTemplate(AjaxRequestTarget target, MetadataTemplate selected) {
         // add template link to metadata
         linkedTemplatesDataProvider.addLink(selected);
-        updateModel();
+        getDropDown().setModelObject(null);
+        getDropDown().setChoices(linkedTemplatesDataProvider.getUnlinkedItems());
+        updateTableState(target, linkedTemplatesDataProvider);
+        handleUpdate(target);
+        target.add(templatesPanel);
+        target.add(getDropDown());
     }
 
     /** Link the template and the selected metadata */
-    public void unlinkTemplate(AjaxRequestTarget target, List<MetadataTemplate> templates)
-            throws IOException {
+    public void unlinkTemplate(AjaxRequestTarget target, List<MetadataTemplate> templates) {
 
         linkedTemplatesDataProvider.removeLinks(templates);
-        updateModel();
-
         templatesPanel.clearSelection();
-
         getDropDown().setChoices(linkedTemplatesDataProvider.getUnlinkedItems());
         updateTableState(target, linkedTemplatesDataProvider);
-
+        handleUpdate(target);
         target.add(getFeedbackPanel());
         target.add(templatesPanel);
         target.add(getDropDown());
         target.add(ImportTemplatePanel.this);
-        handleUpdate(target);
     }
 
     public List<MetadataTemplate> getLinkedTemplates() {
         return linkedTemplatesDataProvider.getItems();
-    }
-
-    /** Merge the model and the linked templates. */
-    private void updateModel() {
-        @SuppressWarnings("unchecked")
-        IModel<ComplexMetadataMap> model = (IModel<ComplexMetadataMap>) getDefaultModel();
-        MetadataTemplateService templateService =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(MetadataTemplateService.class);
-        ComplexMetadataService service =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(ComplexMetadataService.class);
-
-        ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
-        List<MetadataTemplate> templates = linkedTemplatesDataProvider.getItems();
-        for (MetadataTemplate template : templates) {
-            template = templateService.getById(template.getId());
-            if (template != null) {
-                maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
-            }
-        }
-
-        service.merge(model.getObject(), maps, derivedAtts);
     }
 
     protected abstract void handleUpdate(AjaxRequestTarget target);
@@ -329,17 +265,6 @@ public abstract class ImportTemplatePanel extends Panel {
             target.add(templatesPanel);
             target.add(getDropDown());
             target.add(ImportTemplatePanel.this);
-        }
-    }
-
-    public void save() throws IOException {
-        MetadataTemplateService service =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(MetadataTemplateService.class);
-        updateModel();
-        for (MetadataTemplate template : linkedTemplatesDataProvider.getItems()) {
-            service.save(template);
         }
     }
 }

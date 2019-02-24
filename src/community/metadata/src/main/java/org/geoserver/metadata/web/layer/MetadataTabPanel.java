@@ -7,6 +7,7 @@ package org.geoserver.metadata.web.layer;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
@@ -19,7 +20,9 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
+import org.geoserver.metadata.data.service.ComplexMetadataService;
 import org.geoserver.metadata.data.service.GeonetworkXmlParser;
+import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.data.service.RemoteDocumentReader;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
@@ -46,17 +49,14 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     private HashMap<String, List<Integer>> derivedAtts;
 
+    private IModel<ComplexMetadataMap> metadataModel;
+
+    @SuppressWarnings("unchecked")
     public MetadataTabPanel(
             String id, IModel<LayerInfo> model, IModel<List<MetadataTemplate>> templatesModel) {
         super(id, model);
         this.templatesModel = templatesModel;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected void onInitialize() {
-        super.onInitialize();
-        ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
+        ResourceInfo resource = model.getObject().getResource();
         derivedAtts =
                 (HashMap<String, List<Integer>>)
                         resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
@@ -71,24 +71,28 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
             resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
         }
 
-        IModel<ComplexMetadataMap> metadataModel =
+        metadataModel =
                 new Model<ComplexMetadataMap>(
                         new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom));
+    }
 
-        String resourceId = resource.getId();
+    @Override
+    protected void onInitialize() {
+        super.onInitialize();
+
+        ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
 
         // Link with templates panel
         this.add(
                 new ImportTemplatePanel(
                         "importTemplatePanel",
-                        resourceId,
-                        metadataModel,
-                        (IModel<List<MetadataTemplate>>) templatesModel,
-                        derivedAtts) {
+                        resource.getId(),
+                        (IModel<List<MetadataTemplate>>) templatesModel) {
                     private static final long serialVersionUID = -8056914656580115202L;
 
                     @Override
                     protected void handleUpdate(AjaxRequestTarget target) {
+                        updateModel();
                         target.add(
                                 metadataPanel()
                                         .replaceWith(
@@ -151,8 +155,36 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
         return (ImportTemplatePanel) get("importTemplatePanel");
     }
 
+    /** Merge the model and the linked templates. */
+    private void updateModel() {
+        MetadataTemplateService templateService =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        ComplexMetadataService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(ComplexMetadataService.class);
+        ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
+        for (MetadataTemplate template : templatesModel.getObject()) {
+            template = templateService.getById(template.getId());
+            if (template != null) {
+                maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
+            }
+        }
+
+        service.merge(metadataModel.getObject(), maps, derivedAtts);
+    }
+
     @Override
     public void save() throws IOException {
-        importTemplatePanel().save();
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        updateModel();
+        for (MetadataTemplate template : templatesModel.getObject()) {
+            service.save(template);
+        }
     }
 }

@@ -4,7 +4,6 @@
  */
 package org.geoserver.metadata.web.panel;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -12,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
+import org.geoserver.metadata.data.service.MetadataTemplateService;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 /**
@@ -33,20 +34,18 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
 
     private List<MetadataTemplate> allTemplates = new ArrayList<>();
 
-    private List<MetadataTemplate> linkedTemplates = new ArrayList<>();
+    private IModel<List<MetadataTemplate>> linkedTemplatesModel;
 
     public ImportTemplateDataProvider(
-            String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
+            String resourceId, IModel<List<MetadataTemplate>> linkedTemplatesModel) {
         this.resourceId = resourceId;
 
-        allTemplates = templatesModel.getObject();
-
-        for (MetadataTemplate template : allTemplates) {
-            if (template.getLinkedLayers() != null
-                    && template.getLinkedLayers().contains(this.resourceId)) {
-                linkedTemplates.add(template);
-            }
-        }
+        this.linkedTemplatesModel = linkedTemplatesModel;
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        allTemplates = service.list();
     }
 
     @Override
@@ -56,22 +55,22 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
 
     @Override
     protected List<MetadataTemplate> getItems() {
-        linkedTemplates.sort(new MetadataTemplateComparator());
-        return linkedTemplates;
+        return linkedTemplatesModel.getObject();
     }
 
-    public void addLink(MetadataTemplate modelObject) throws IOException {
+    public void addLink(MetadataTemplate modelObject) {
         modelObject.getLinkedLayers().add(resourceId);
-        linkedTemplates.add(modelObject);
+        linkedTemplatesModel.getObject().add(modelObject);
+        linkedTemplatesModel.getObject().sort(new MetadataTemplateComparator());
     }
 
-    public void removeLinks(List<MetadataTemplate> templates) throws IOException {
+    public void removeLinks(List<MetadataTemplate> templates) {
         Iterator<MetadataTemplate> iterator = new ArrayList<>(templates).iterator();
         while (iterator.hasNext()) {
             MetadataTemplate modelObject = iterator.next();
 
             modelObject.getLinkedLayers().remove(resourceId);
-            linkedTemplates.remove(modelObject);
+            linkedTemplatesModel.getObject().remove(modelObject);
         }
     }
 
@@ -82,7 +81,7 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
      */
     public List<MetadataTemplate> getUnlinkedItems() {
         List<MetadataTemplate> result = new ArrayList<>(allTemplates);
-        result.removeAll(linkedTemplates);
+        result.removeAll(linkedTemplatesModel.getObject());
         return result;
     }
 
