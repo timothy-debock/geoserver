@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.validation.IFormValidator;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -51,12 +54,18 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     private IModel<ComplexMetadataMap> metadataModel;
 
-    @SuppressWarnings("unchecked")
     public MetadataTabPanel(
             String id, IModel<LayerInfo> model, IModel<List<MetadataTemplate>> templatesModel) {
         super(id, model);
         this.templatesModel = templatesModel;
-        ResourceInfo resource = model.getObject().getResource();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void onInitialize() {
+        super.onInitialize();
+
+        ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
         derivedAtts =
                 (HashMap<String, List<Integer>>)
                         resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
@@ -74,13 +83,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
         metadataModel =
                 new Model<ComplexMetadataMap>(
                         new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom));
-    }
-
-    @Override
-    protected void onInitialize() {
-        super.onInitialize();
-
-        ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
 
         // Link with templates panel
         this.add(
@@ -145,6 +147,24 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                     }
                 };
         add(geonetworkPanel);
+
+        // bit of a hack - no other hook to do something before save
+        findParent(Form.class)
+                .add(
+                        new IFormValidator() {
+                            private static final long serialVersionUID = 2524175705938882253L;
+
+                            @Override
+                            public FormComponent<?>[] getDependentFormComponents() {
+                                // TODO Auto-generated method stub
+                                return null;
+                            }
+
+                            @Override
+                            public void validate(Form<?> form) {
+                                updateModel();
+                            }
+                        });
     }
 
     protected MetadataPanel metadataPanel() {
@@ -182,7 +202,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(MetadataTemplateService.class);
-        updateModel();
         for (MetadataTemplate template : templatesModel.getObject()) {
             service.save(template);
         }
