@@ -4,6 +4,7 @@
  */
 package org.geoserver.metadata.data.service.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ComplexMetadataServiceImpl implements ComplexMetadataService {
 
-    @Autowired ConfigurationService yamlService;
+    @Autowired ConfigurationService configService;
 
     @Override
     public void merge(
@@ -38,7 +39,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             List<ComplexMetadataMap> sources,
             HashMap<String, List<Integer>> derivedAtts) {
 
-        MetadataConfiguration config = yamlService.getMetadataConfiguration();
+        MetadataConfiguration config = configService.getMetadataConfiguration();
 
         clearTemplateData(destination, derivedAtts);
 
@@ -56,7 +57,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             String typeName,
             HashMap<String, List<Integer>> derivedAtts) {
 
-        MetadataConfiguration config = yamlService.getMetadataConfiguration();
+        MetadataConfiguration config = configService.getMetadataConfiguration();
 
         clearTemplateData(destination, derivedAtts);
 
@@ -215,6 +216,43 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                 }
             }
             derivedAtts.clear();
+        }
+    }
+
+    @Override
+    public void init(ComplexMetadataMap map) {
+        init(map, configService.getMetadataConfiguration().getAttributes());
+    }
+
+    @Override
+    public void init(ComplexMetadataMap subMap, AttributeConfiguration attributeConfiguration) {
+        AttributeTypeConfiguration typeConfiguration =
+                configService
+                        .getMetadataConfiguration()
+                        .findType(attributeConfiguration.getTypename());
+        if (typeConfiguration != null) {
+            init(subMap, typeConfiguration.getAttributes());
+        }
+    }
+
+    private void init(ComplexMetadataMap map, List<AttributeConfiguration> attributes) {
+        for (AttributeConfiguration config : attributes) {
+            if (config.getFieldType() != FieldTypeEnum.COMPLEX) {
+                map.get(Serializable.class, config.getKey()).init();
+            } else {
+                AttributeTypeConfiguration typeConfiguration =
+                        configService.getMetadataConfiguration().findType(config.getTypename());
+                if (typeConfiguration != null) {
+                    int size = map.size(config.getKey());
+                    if (size > 0) {
+                        for (int i = 0; i < size; i++) {
+                            init(map.subMap(config.getKey(), i), typeConfiguration.getAttributes());
+                        }
+                    } else {
+                        init(map.subMap(config.getKey()), typeConfiguration.getAttributes());
+                    }
+                }
+            }
         }
     }
 }

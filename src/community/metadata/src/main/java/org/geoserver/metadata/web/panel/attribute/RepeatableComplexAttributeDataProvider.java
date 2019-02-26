@@ -10,6 +10,8 @@ import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
+import org.geoserver.metadata.data.service.ComplexMetadataService;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 public class RepeatableComplexAttributeDataProvider
@@ -60,7 +62,14 @@ public class RepeatableComplexAttributeDataProvider
     }
 
     public void addField() {
-        items.add(metadataModel.getObject().subMap(attributeConfiguration.getKey(), items.size()));
+        ComplexMetadataMap item =
+                metadataModel.getObject().subMap(attributeConfiguration.getKey(), items.size());
+        ComplexMetadataService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(ComplexMetadataService.class);
+        service.init(item, attributeConfiguration);
+        items.add(item);
     }
 
     public void removeField(ComplexMetadataMap attribute) {

@@ -84,6 +84,12 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                 new Model<ComplexMetadataMap>(
                         new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom));
 
+        ComplexMetadataService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(ComplexMetadataService.class);
+        service.init(metadataModel.getObject());
+
         // Link with templates panel
         this.add(
                 new ImportTemplatePanel(

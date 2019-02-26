@@ -34,12 +34,9 @@ public class EditorFactory {
 
     public <T extends Serializable> Component create(
             AttributeConfiguration configuration, String id, ComplexMetadataMap metadataMap) {
-
-        ComplexMetadataAttribute<T> metadataModel =
-                metadataMap.get(getItemClass(configuration), configuration.getKey());
-        metadataModel.init();
-        IModel<T> model = new ComplexMetadataAttributeModel<T>(metadataModel);
-
+        IModel<T> model =
+                new ComplexMetadataAttributeModel<T>(
+                        metadataMap.get(getItemClass(configuration), configuration.getKey()));
         return create(configuration, id, model, metadataMap.subMap(configuration.getKey()));
     }
 
@@ -47,7 +44,6 @@ public class EditorFactory {
             AttributeConfiguration configuration,
             String id,
             ComplexMetadataAttribute<T> metadataAttribute) {
-
         IModel<T> model = new ComplexMetadataAttributeModel<T>(metadataAttribute);
         return create(
                 configuration,

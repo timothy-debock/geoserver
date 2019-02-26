@@ -6,6 +6,7 @@ package org.geoserver.metadata.data.service;
 
 import java.util.HashMap;
 import java.util.List;
+import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 
 /**
@@ -14,6 +15,18 @@ import org.geoserver.metadata.data.model.ComplexMetadataMap;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public interface ComplexMetadataService {
+
+    /**
+     * Initialize a new map, making sure that there are null values to make multi-valued complex
+     * attributes match sizes
+     */
+    void init(ComplexMetadataMap map);
+
+    /**
+     * Initialize a new submap, making sure that there are null values to make multi-valued complex
+     * attributes match sizes
+     */
+    void init(ComplexMetadataMap subMap, AttributeConfiguration attributeConfiguration);
 
     /**
      * The values in the template are applied in reverse order, i.e. the first child has the highest
