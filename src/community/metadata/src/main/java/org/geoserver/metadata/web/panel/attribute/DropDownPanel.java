@@ -21,6 +21,8 @@ public class DropDownPanel extends Panel {
     }
 
     private DropDownChoice<String> createDropDown(IModel<String> model, List<String> values) {
-        return new DropDownChoice<String>("dropdown", model, values);
+        DropDownChoice<String> choice = new DropDownChoice<String>("dropdown", model, values);
+        choice.setNullValid(true);
+        return choice;
     }
 }
