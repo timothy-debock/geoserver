@@ -610,33 +610,27 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         tester.clickLink(
                 "publishedinfo:tabs:panel:geonetworkPanel:importDialog:dialog:content:form:submit");
 
+        print(tester.getLastRenderedPage(), true, true);
+
         // Check content
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:5:itemProperties:0:component:textfield",
-                "http://www.opengis.net/def/crs/EPSG/0/3043");
-        tester.assertModelValue(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:3:itemProperties:0:component:textfield",
-                "Belge_Lambert_1972 (31370)");
-        tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:4:itemProperties:0:component:textfield",
-                "TAW");
-        tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:4:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
                 "http://www.opengis.net/def/crs/EPSG/0/3043");
-
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:6:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:textfield",
                 "Belge_Lambert_1972 (31370)");
-
         tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
-                "Belge_Lambert_1972 (31370)");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:textfield",
+                "TAW");
         tester.assertModelValue(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:3:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
-                "TAW");
-        tester.assertModelValue(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:4:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
                 "http://www.opengis.net/def/crs/EPSG/0/3043");
+        tester.assertModelValue(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
+                "Belge_Lambert_1972 (31370)");
+        tester.assertModelValue(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:0:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component:textfield",
+                "TAW");
 
         // should remove all links
         tester.assertComponent("publishedinfo:tabs:panel:importTemplatePanel:noData", Label.class);

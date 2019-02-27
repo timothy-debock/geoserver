@@ -119,6 +119,7 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
                 }
                 break;
             case REPEAT:
+                metadataMap.delete(attributeMapping.getGeoserver());
                 if (nodes != null) {
                     for (int count = 0; count < nodes.getLength(); count++) {
                         mapNode(metadataMap, attributeMapping, attConfig, doc, nodes.item(count));

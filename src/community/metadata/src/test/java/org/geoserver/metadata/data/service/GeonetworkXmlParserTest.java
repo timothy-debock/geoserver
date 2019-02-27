@@ -43,6 +43,8 @@ public class GeonetworkXmlParserTest extends AbstractMetadataTest {
         MetadataMap metadataMap = new MetadataMap();
         ComplexMetadataMapImpl complexMetadataMap = new ComplexMetadataMapImpl(metadataMap);
 
+        complexMetadataMap.get(String.class, "refsystem-as-list", 0).setValue("old-value");
+
         ResourceInfo rInfo = new FeatureTypeInfoImpl(null);
 
         Document fileAsResource =
