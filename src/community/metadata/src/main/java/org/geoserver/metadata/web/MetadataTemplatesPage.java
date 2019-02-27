@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -179,6 +180,11 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
 
                                 @Override
                                 protected void onClick(AjaxRequestTarget target) {
+                                    ((MarkupContainer)
+                                                    templatesPanel
+                                                            .get("listContainer")
+                                                            .get("items"))
+                                            .removeAll();
                                     IModel<MetadataTemplate> model =
                                             new Model<>(itemModel.getObject().clone());
                                     setResponsePage(
