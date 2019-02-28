@@ -4,10 +4,6 @@ import static org.custommonkey.xmlunit.XMLAssert.assertXpathEvaluatesTo;
 import static org.custommonkey.xmlunit.XMLAssert.assertXpathExists;
 import static org.custommonkey.xmlunit.XMLAssert.assertXpathNotExists;
 
-import com.google.common.collect.Lists;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 import org.geoserver.catalog.Keyword;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.data.test.SystemTestData;
@@ -23,12 +19,7 @@ public class GetRecordsTest extends MDTestSupport {
     protected void onSetUp(SystemTestData testData) throws Exception {
         // insert extra metadata
         ResourceInfo forestInfo = getCatalog().getLayerByName("Forests").getResource();
-        forestInfo.getMetadata().put("date", createDate(2012, 10, 9));
-        forestInfo
-                .getMetadata()
-                .put(
-                        "citation-date",
-                        Lists.newArrayList(createDate(2013, 10, 10), createDate(2013, 11, 11)));
+        forestInfo.getMetadata().put("date", "09/10/2012");
         forestInfo.setLatLonBoundingBox(
                 new ReferencedEnvelope(-200, -180, -100, -90, CRS.decode("EPSG:4326")));
         forestInfo.getKeywords().add(new Keyword("CustomKeyWord-1"));
@@ -37,13 +28,6 @@ public class GetRecordsTest extends MDTestSupport {
         forestInfo.getAlias().add("Bush");
         forestInfo.getAlias().add("Woods");
         getCatalog().save(forestInfo);
-    }
-
-    private static Date createDate(int year, int month, int day) {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        cal.clear();
-        cal.set(year, month - 1, day);
-        return cal.getTime();
     }
 
     @Test
@@ -74,7 +58,7 @@ public class GetRecordsTest extends MDTestSupport {
                         + "&resultType=results&elementSetName=full&outputSchema=http://www.isotc211.org/2005/gmd"
                         + "&maxRecords=100";
         Document d = getAsDOM(request);
-        print(d);
+        // print(d);
         // validateSchema(d.getElementsByTagName("//gmd:MD_MetaData"));
 
         // we have the right kind of document
@@ -97,7 +81,7 @@ public class GetRecordsTest extends MDTestSupport {
                 "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords/gmd:keyword/gco:CharacterString",
                 d);
         assertXpathEvaluatesTo(
-                "2012-10-09",
+                "09/10/2012",
                 "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:dateStamp/gco:Date",
                 d);
         assertXpathEvaluatesTo(
@@ -119,14 +103,6 @@ public class GetRecordsTest extends MDTestSupport {
         assertXpathEvaluatesTo(
                 "-90.0",
                 "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude/gco:Decimal",
-                d);
-        assertXpathEvaluatesTo(
-                "2013-10-10",
-                "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:date/gco:Date",
-                d);
-        assertXpathEvaluatesTo(
-                "2013-11-11",
-                "//gmd:MD_Metadata[gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString='Forests']/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[2]/gmd:CI_Date/gmd:date/gco:Date",
                 d);
 
         // check the multi-valued field alternate title
