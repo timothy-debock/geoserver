@@ -197,9 +197,6 @@ public abstract class ImportTemplatePanel extends Panel {
 
             @Override
             protected void onSelectionUpdate(AjaxRequestTarget target) {
-                for (MetadataTemplate template : templatesPanel.getSelection()) {
-                    System.out.println(template.getName());
-                }
                 remove.setEnabled(templatesPanel.getSelection().size() > 0);
                 target.add(remove);
             }

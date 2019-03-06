@@ -35,11 +35,11 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
     private List<MetadataTemplate> selectedTemplates = new ArrayList<>();
 
     public ImportTemplateDataProvider(
-            String resourceId, IModel<List<MetadataTemplate>> linkedTemplatesModel) {
+            String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
         this.resourceId = resourceId;
 
-        this.templatesModel = linkedTemplatesModel;
-        for (MetadataTemplate template : linkedTemplatesModel.getObject()) {
+        this.templatesModel = templatesModel;
+        for (MetadataTemplate template : templatesModel.getObject()) {
             if (template.getLinkedLayers().contains(resourceId)) {
                 selectedTemplates.add(template);
             }
@@ -57,6 +57,8 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
     }
 
     public void addLink(MetadataTemplate modelObject) {
+        modelObject =
+                templatesModel.getObject().get(templatesModel.getObject().indexOf(modelObject));
         modelObject.getLinkedLayers().add(resourceId);
         selectedTemplates.add(modelObject);
         selectedTemplates.sort(new MetadataTemplateComparator());

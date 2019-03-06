@@ -14,7 +14,6 @@ import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.dto.MetadataConfiguration;
 import org.geoserver.metadata.data.dto.OccurrenceEnum;
-import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
@@ -198,18 +197,13 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             ComplexMetadataMap destination, HashMap<String, List<Integer>> derivedAtts) {
         if (derivedAtts != null) {
             for (String key : derivedAtts.keySet()) {
-                List<Integer> indexes = derivedAtts.get(key);
-                ArrayList<Integer> reversed = new ArrayList<Integer>(indexes);
-                Collections.reverse(reversed);
-                for (Integer index : reversed) {
-                    ComplexMetadataAttribute<String> attribute = destination.get(String.class, key);
-                    if (attribute != null
-                            && attribute.getValue() != null
-                            && !attribute.getValue().startsWith("[")
-                            && !attribute.getValue().startsWith("]")) {
-                        attribute.setValue("");
+                if (configService.getMetadataConfiguration().findAttribute(key).getOccurrence()
+                        == OccurrenceEnum.REPEAT) {
+                    for (Integer index : derivedAtts.get(key)) {
+                        destination.delete(key, index);
                     }
-                    destination.delete(key, index);
+                } else {
+                    destination.delete(key);
                 }
             }
             derivedAtts.clear();

@@ -93,29 +93,31 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
     @SuppressWarnings("unchecked")
     public void reload() {
-        templates.clear();
+        synchronized (templates) {
+            templates.clear();
 
-        Resource folder = getFolder();
-        Resource listFile = folder.get(LIST_FILE);
+            Resource folder = getFolder();
+            Resource listFile = folder.get(LIST_FILE);
 
-        if (Resources.exists(listFile)) {
-            try (InputStream inPriorities = listFile.in()) {
-                List<String> priorities = persister.load(inPriorities, List.class);
+            if (Resources.exists(listFile)) {
+                try (InputStream inPriorities = listFile.in()) {
+                    List<String> priorities = persister.load(inPriorities, List.class);
 
-                for (String id : priorities) {
-                    Resource templateFile = folder.get(id + ".xml");
-                    try (InputStream inTemplate = templateFile.in()) {
-                        MetadataTemplate template =
-                                persister.load(inTemplate, MetadataTemplate.class);
-                        templates.add(template);
-                    } catch (StreamException | IOException e) {
-                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    for (String id : priorities) {
+                        Resource templateFile = folder.get(id + ".xml");
+                        try (InputStream inTemplate = templateFile.in()) {
+                            MetadataTemplate template =
+                                    persister.load(inTemplate, MetadataTemplate.class);
+                            templates.add(template);
+                        } catch (StreamException | IOException e) {
+                            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                        }
                     }
+                } catch (StreamException e) {
+                    LOGGER.warning("Priorities file is empty.");
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
-            } catch (StreamException e) {
-                LOGGER.warning("Priorities file is empty.");
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
     }
@@ -129,19 +131,24 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
         if (template.getName() == null) {
             throw new IllegalArgumentException("template without name not allowed.");
         }
-        for (MetadataTemplate other : templates) {
-            if (!other.equals(template) && other.getName().equals(template.getName())) {
-                throw new IllegalArgumentException(
-                        "template name " + template.getName() + " not unique.");
-            }
-        }
 
-        // add or replace in list
-        boolean isNew = !templates.contains(template);
-        if (isNew) {
-            templates.add(template);
-        } else {
-            templates.set(templates.indexOf(template), template);
+        boolean isNew;
+        synchronized (templates) {
+            for (MetadataTemplate other : templates) {
+                if (!other.equals(template) && other.getName().equals(template.getName())) {
+                    throw new IllegalArgumentException(
+                            "template name " + template.getName() + " not unique.");
+                }
+            }
+
+            // add or replace in list
+            int index = templates.indexOf(template);
+            isNew = index < 0;
+            if (isNew) {
+                templates.add(template);
+            } else {
+                templates.set(index, template);
+            }
         }
 
         // update layers
@@ -182,14 +189,17 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
     @Override
     public void saveList(List<MetadataTemplate> newList) throws IOException {
-        if (!templates.containsAll(newList)) {
-            throw new IllegalArgumentException("Use save to add new templates.");
-        }
-        List<MetadataTemplate> deleted = new ArrayList<>(templates);
-        deleted.removeAll(newList);
+        List<MetadataTemplate> deleted;
+        synchronized (templates) {
+            if (!templates.containsAll(newList)) {
+                throw new IllegalArgumentException("Use save to add new templates.");
+            }
+            deleted = new ArrayList<>(templates);
+            deleted.removeAll(newList);
 
-        templates.clear();
-        templates.addAll(newList);
+            templates.clear();
+            templates.addAll(newList);
+        }
 
         getFolder().removeListener(this);
 
@@ -202,25 +212,34 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
                 LOGGER.warning("Failed to delete template " + item + " from hard drive.");
             }
         }
-        deleted.clear();
 
         getFolder().addListener(this);
     }
 
     private void persistList() throws IOException {
-        List<String> priorities =
-                templates.stream().map(template -> template.getId()).collect(Collectors.toList());
-        try (OutputStream out = getFolder().get(LIST_FILE).out()) {
-            persister.save(priorities, out);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw e;
+        synchronized (templates) {
+            List<String> priorities =
+                    templates
+                            .stream()
+                            .map(template -> template.getId())
+                            .collect(Collectors.toList());
+            try (OutputStream out = getFolder().get(LIST_FILE).out()) {
+                persister.save(priorities, out);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                throw e;
+            }
         }
     }
 
     @Override
     public List<MetadataTemplate> list() {
-        return templates.stream().map(template -> template.clone()).collect(Collectors.toList());
+        synchronized (templates) {
+            return templates
+                    .stream()
+                    .map(template -> template.clone())
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override
@@ -254,9 +273,11 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
                 new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom);
 
         ArrayList<ComplexMetadataMap> sources = new ArrayList<>();
-        for (MetadataTemplate template : templates) {
-            if (template.getLinkedLayers().contains(resource.getId())) {
-                sources.add(new ComplexMetadataMapImpl(template.getMetadata()));
+        synchronized (templates) {
+            for (MetadataTemplate template : templates) {
+                if (template.getLinkedLayers().contains(resource.getId())) {
+                    sources.add(new ComplexMetadataMapImpl(template.getMetadata()));
+                }
             }
         }
 
@@ -268,21 +289,25 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
     @Override
     public MetadataTemplate findByName(String name) {
-        for (MetadataTemplate template : templates) {
-            if (template.getName().equals(name)) {
-                return template.clone();
+        synchronized (templates) {
+            for (MetadataTemplate template : templates) {
+                if (template.getName().equals(name)) {
+                    return template.clone();
+                }
             }
+            return null;
         }
-        return null;
     }
 
     @Override
     public MetadataTemplate getById(String id) {
-        for (MetadataTemplate template : templates) {
-            if (template.getId().equals(id)) {
-                return template.clone();
+        synchronized (templates) {
+            for (MetadataTemplate template : templates) {
+                if (template.getId().equals(id)) {
+                    return template.clone();
+                }
             }
+            return null;
         }
-        return null;
     }
 }
