@@ -165,7 +165,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                     @Override
                     protected void onSubmit() {
                         Form<?> form = findParent(Form.class);
-                        if (form.findSubmittingButton() == form.get("save")) {
+                        if (form != null && form.findSubmittingButton() == form.get("save")) {
                             updateModel(resource.getId());
                         }
                     }
