@@ -58,4 +58,14 @@ public interface ComplexMetadataService {
      * @param typeConfiguration the configuration of the type
      */
     void copy(ComplexMetadataMap source, ComplexMetadataMap dest, String typeName);
+
+    /**
+     * Tests if two submaps are equal to each other
+     *
+     * @param map the map
+     * @param other the other map
+     * @param typeName the type
+     * @return whether they are equal
+     */
+    boolean equals(ComplexMetadataMap map, ComplexMetadataMap other, String typeName);
 }

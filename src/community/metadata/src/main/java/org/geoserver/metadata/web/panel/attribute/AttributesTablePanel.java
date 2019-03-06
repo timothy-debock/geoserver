@@ -132,7 +132,10 @@ public class AttributesTablePanel extends Panel {
                     } else {
                         RepeatableAttributeDataProvider<String> repeatableDataProvider =
                                 new RepeatableAttributeDataProvider<String>(
-                                        String.class, attributeConfiguration, getMetadataModel());
+                                        EditorFactory.getInstance()
+                                                .getItemClass(attributeConfiguration),
+                                        attributeConfiguration,
+                                        getMetadataModel());
                         return new RepeatableAttributesTablePanel(
                                 id, repeatableDataProvider, getMetadataModel(), derivedAtts);
                     }

@@ -4,6 +4,8 @@
  */
 package org.geoserver.metadata.data.service;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -359,5 +361,85 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
     private HashMap<String, List<Integer>> createDerivedAtts() {
         return new HashMap<>();
+    }
+
+    @Test
+    public void testDuplicatedRemoved() {
+        ComplexMetadataMap map = new ComplexMetadataMapImpl(new HashMap<>());
+
+        map.get(String.class, "refsystem-as-list", 0).setValue("value-1");
+        map.get(String.class, "refsystem-as-list", 1).setValue("value-2");
+        map.get(String.class, "refsystem-as-list", 2).setValue("template-value01");
+        map.get(String.class, "refsystem-as-list", 3).setValue("value-3");
+
+        map.subMap("referencesystem-object-list", 0)
+                .get(String.class, "code")
+                .setValue("template-code02");
+        map.subMap("referencesystem-object-list", 0)
+                .get(String.class, "code-space")
+                .setValue("template-codespace02");
+        map.subMap("referencesystem-object-list", 1)
+                .get(String.class, "code")
+                .setValue("template-code01");
+        map.subMap("referencesystem-object-list", 1)
+                .get(String.class, "code-space")
+                .setValue("template-codespace03");
+        map.subMap("referencesystem-object-list", 2)
+                .get(String.class, "code")
+                .setValue("template-code04");
+        map.subMap("referencesystem-object-list", 2)
+                .get(String.class, "code-space")
+                .setValue("template-codespace01");
+
+        ArrayList<ComplexMetadataMap> templates = new ArrayList<>();
+        templates.add(
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-list-simple").getMetadata()));
+        templates.add(
+                new ComplexMetadataMapImpl(
+                        templateService.findByName("template-object list").getMetadata()));
+
+        service.merge(map, templates, null);
+
+        assertEquals(5, map.size("refsystem-as-list"));
+        assertEquals("template-value01", map.get(String.class, "refsystem-as-list", 0).getValue());
+        assertEquals("template--value02", map.get(String.class, "refsystem-as-list", 1).getValue());
+        assertEquals("value-1", map.get(String.class, "refsystem-as-list", 2).getValue());
+        assertEquals("value-2", map.get(String.class, "refsystem-as-list", 3).getValue());
+        assertEquals("value-3", map.get(String.class, "refsystem-as-list", 4).getValue());
+
+        assertEquals(4, map.size("referencesystem-object-list"));
+        assertEquals(
+                "template-code01",
+                map.subMap("referencesystem-object-list", 0).get(String.class, "code").getValue());
+        assertEquals(
+                "template-codespace01",
+                map.subMap("referencesystem-object-list", 0)
+                        .get(String.class, "code-space")
+                        .getValue());
+        assertEquals(
+                "template-code02",
+                map.subMap("referencesystem-object-list", 1).get(String.class, "code").getValue());
+        assertEquals(
+                "template-codespace02",
+                map.subMap("referencesystem-object-list", 1)
+                        .get(String.class, "code-space")
+                        .getValue());
+        assertEquals(
+                "template-code01",
+                map.subMap("referencesystem-object-list", 2).get(String.class, "code").getValue());
+        assertEquals(
+                "template-codespace03",
+                map.subMap("referencesystem-object-list", 2)
+                        .get(String.class, "code-space")
+                        .getValue());
+        assertEquals(
+                "template-code04",
+                map.subMap("referencesystem-object-list", 3).get(String.class, "code").getValue());
+        assertEquals(
+                "template-codespace01",
+                map.subMap("referencesystem-object-list", 3)
+                        .get(String.class, "code-space")
+                        .getValue());
     }
 }
