@@ -197,12 +197,16 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             ComplexMetadataMap destination, HashMap<String, List<Integer>> derivedAtts) {
         if (derivedAtts != null) {
             for (String key : derivedAtts.keySet()) {
-                if (configService.getMetadataConfiguration().findAttribute(key).getOccurrence()
-                        == OccurrenceEnum.REPEAT) {
-                    for (Integer index : derivedAtts.get(key)) {
+                AttributeConfiguration attConfig =
+                        configService.getMetadataConfiguration().findAttribute(key);
+                if (attConfig != null && attConfig.getOccurrence() == OccurrenceEnum.REPEAT) {
+                    ArrayList<Integer> reversed = new ArrayList<Integer>(derivedAtts.get(key));
+                    Collections.sort(reversed);
+                    Collections.reverse(reversed);
+                    for (Integer index : reversed) {
                         destination.delete(key, index);
                     }
-                } else {
+                } else if (derivedAtts.get(key).size() > 0) {
                     destination.delete(key);
                 }
             }
