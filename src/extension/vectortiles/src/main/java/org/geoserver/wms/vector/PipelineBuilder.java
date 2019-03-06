@@ -54,7 +54,7 @@ class PipelineBuilder {
 
         ReferencedEnvelope
                 renderingArea; // WMS request; bounding box - in final map (target) CRS (BBOX from
-                               // WMS)
+        // WMS)
 
         Rectangle paintArea; // WMS request; rectangle of the image (width and height from WMS)
 

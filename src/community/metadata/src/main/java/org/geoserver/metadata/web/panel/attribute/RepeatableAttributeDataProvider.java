@@ -19,15 +19,20 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
 
     private static final long serialVersionUID = -255037580716257623L;
 
-    public static String KEY_VALUE = " ";
+    public static String KEY_VALUE = "value";
 
-    public static String KEY_REMOVE_ROW = "";
+    public static String KEY_REMOVE_ROW = "remove";
+
+    public static String KEY_UPDOWN_ROW = "updown";
 
     private final Property<ComplexMetadataAttribute<T>> VALUE =
             new BeanProperty<ComplexMetadataAttribute<T>>(KEY_VALUE, "value");
 
     private final Property<ComplexMetadataAttribute<T>> REMOVE_ROW =
-            new BeanProperty<ComplexMetadataAttribute<T>>(KEY_REMOVE_ROW, "value");
+            new BeanProperty<ComplexMetadataAttribute<T>>(KEY_REMOVE_ROW, "");
+
+    private final Property<ComplexMetadataAttribute<T>> UPDOWN_ROW =
+            new BeanProperty<ComplexMetadataAttribute<T>>(KEY_UPDOWN_ROW, "");
 
     private final AttributeConfiguration attributeConfiguration;
 
@@ -53,7 +58,7 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
 
     @Override
     protected List<Property<ComplexMetadataAttribute<T>>> getProperties() {
-        return Arrays.asList(VALUE, REMOVE_ROW);
+        return Arrays.asList(VALUE, UPDOWN_ROW, REMOVE_ROW);
     }
 
     @Override
@@ -63,10 +68,12 @@ public class RepeatableAttributeDataProvider<T extends Serializable>
 
     public void addField() {
         Class<T> itemClass = EditorFactory.getInstance().getItemClass(attributeConfiguration);
-        items.add(
+        ComplexMetadataAttribute<T> item =
                 metadataModel
                         .getObject()
-                        .get(itemClass, attributeConfiguration.getKey(), items.size()));
+                        .get(itemClass, attributeConfiguration.getKey(), items.size());
+        item.init();
+        items.add(item);
     }
 
     public void removeField(ComplexMetadataAttribute<T> attribute) {

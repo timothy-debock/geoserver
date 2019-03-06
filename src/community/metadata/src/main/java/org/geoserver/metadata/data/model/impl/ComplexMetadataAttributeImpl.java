@@ -99,4 +99,9 @@ public class ComplexMetadataAttributeImpl<T extends Serializable>
             return list;
         }
     }
+
+    @Override
+    public Integer getIndex() {
+        return indexRef.getIndex()[indexRef.getIndex().length - 1];
+    }
 }

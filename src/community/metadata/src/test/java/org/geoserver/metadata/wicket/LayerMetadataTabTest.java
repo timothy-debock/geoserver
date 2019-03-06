@@ -203,13 +203,25 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:3:itemProperties:0:component:textfield",
                 TextField.class);
 
+        // move row up and down
+        tester.clickLink(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:4:itemProperties:1:component:up");
+        tester.assertModelValue(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:6:itemProperties:0:component:textfield",
+                "reflist-second");
+        tester.clickLink(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:6:itemProperties:1:component:down");
+        tester.assertModelValue(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:10:itemProperties:0:component:textfield",
+                "reflist-second");
+
         // delete row
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:3:itemProperties:1:component");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:9:itemProperties:2:component");
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:2:itemProperties:1:component");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:10:itemProperties:2:component");
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:1:itemProperties:1:component");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:11:itemProperties:2:component");
         tester.assertComponent(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:noData",
                 Label.class);
@@ -242,6 +254,22 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 (ArrayList<?>) underlying.get("referencesystem-object-list/code-space");
         assertEquals(2, list1.size());
         assertEquals(2, list2.size());
+
+        assertEquals("First object :code", list1.get(0));
+        assertEquals(null, list1.get(1));
+
+        // move row up and down
+        tester.clickLink(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:3:itemProperties:1:component:up");
+
+        assertEquals(null, list1.get(0));
+        assertEquals("First object :code", list1.get(1));
+
+        tester.clickLink(
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:7:itemProperties:1:component:attributesTablePanel:listContainer:items:4:itemProperties:1:component:down");
+
+        assertEquals("First object :code", list1.get(0));
+        assertEquals(null, list1.get(1));
     }
 
     /** Test if we can add links with a template. */
@@ -610,7 +638,7 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         tester.clickLink(
                 "publishedinfo:tabs:panel:geonetworkPanel:importDialog:dialog:content:form:submit");
 
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
 
         // Check content
         tester.assertModelValue(

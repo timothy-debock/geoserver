@@ -22,9 +22,6 @@ import org.geoserver.web.wicket.ParamResourceModel;
 public class TemplatesPositionPanel extends Panel {
     private static final long serialVersionUID = -4645368967597125299L;
 
-    private ImageAjaxLink<Object> upLink;
-    private ImageAjaxLink<Object> downLink;
-
     public TemplatesPositionPanel(
             String id,
             IModel<List<MetadataTemplate>> templates,
@@ -32,7 +29,7 @@ public class TemplatesPositionPanel extends Panel {
             IModel<MetadataTemplate> model,
             GeoServerTablePanel<MetadataTemplate> tablePanel) {
         super(id, model);
-        upLink =
+        ImageAjaxLink<Object> upLink =
                 new ImageAjaxLink<Object>(
                         "up",
                         new PackageResourceReference(
@@ -66,7 +63,7 @@ public class TemplatesPositionPanel extends Panel {
                                 "alt", new ParamResourceModel("up", TemplatesPositionPanel.this)));
         add(upLink);
 
-        downLink =
+        ImageAjaxLink<Object> downLink =
                 new ImageAjaxLink<Object>(
                         "down",
                         new PackageResourceReference(

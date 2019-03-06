@@ -13,8 +13,10 @@ import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
 import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.dto.MetadataConfiguration;
+import org.geoserver.metadata.data.dto.OccurrenceEnum;
 import org.geoserver.metadata.data.model.ComplexMetadataAttribute;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
+import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
 import org.geoserver.metadata.data.service.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Repository;
  * order to keep the indexes in the description map constant even when the user modifies the list.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
+ * @author Niels Charlier
  */
 @Repository
 public class ComplexMetadataServiceImpl implements ComplexMetadataService {
@@ -46,32 +49,26 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
         ArrayList<ComplexMetadataMap> reversed = new ArrayList<ComplexMetadataMap>(sources);
         Collections.reverse(reversed);
         for (ComplexMetadataMap source : reversed) {
-            mergeAttribute(destination, source, config.getAttributes(), config, derivedAtts);
+            mergeAttributes(destination, source, config.getAttributes(), config, derivedAtts);
         }
     }
 
     @Override
-    public void merge(
-            ComplexMetadataMap destination,
-            ComplexMetadataMap source,
-            String typeName,
-            HashMap<String, List<Integer>> derivedAtts) {
+    public void merge(ComplexMetadataMap destination, ComplexMetadataMap source, String typeName) {
 
         MetadataConfiguration config = configService.getMetadataConfiguration();
 
-        clearTemplateData(destination, derivedAtts);
-
-        mergeAttribute(
+        mergeAttributes(
                 destination,
                 source,
                 typeName == null
                         ? config.getAttributes()
                         : config.findType(typeName).getAttributes(),
                 config,
-                new HashMap<>());
+                null);
     }
 
-    private void mergeAttribute(
+    private void mergeAttributes(
             ComplexMetadataMap destination,
             ComplexMetadataMap source,
             List<AttributeConfiguration> attributes,
@@ -159,10 +156,10 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
         switch (attribute.getOccurrence()) {
             case SINGLE:
                 if (source.size(attribute.getKey()) > 0) {
+                    destination.delete(attribute.getKey());
                     ComplexMetadataMap sourceMap = source.subMap(attribute.getKey());
                     ComplexMetadataMap destinationMap = destination.subMap(attribute.getKey());
-                    mergeAttribute(
-                            destinationMap, sourceMap, type.getAttributes(), config, derivedAtts);
+                    mergeAttributes(destinationMap, sourceMap, type.getAttributes(), config, null);
                     indexes.add(0);
                 }
                 break;
@@ -177,7 +174,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                             ComplexMetadataMap orig = destination.subMap(attribute.getKey(), i);
                             ComplexMetadataMap shifted =
                                     destination.subMap(attribute.getKey(), i + sourceSize);
-                            mergeAttribute(shifted, orig, type.getAttributes(), config, null);
+                            mergeAttributes(shifted, orig, type.getAttributes(), config, null);
                         }
                     }
                 }
@@ -188,7 +185,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                     ComplexMetadataMap destinationMap =
                             destination.subMap(attribute.getKey(), index);
                     indexes.add(index);
-                    mergeAttribute(destinationMap, sourceMap, type.getAttributes(), config, null);
+                    mergeAttributes(destinationMap, sourceMap, type.getAttributes(), config, null);
                 }
         }
         // keep track of the values that are from the template
@@ -243,8 +240,9 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                 AttributeTypeConfiguration typeConfiguration =
                         configService.getMetadataConfiguration().findType(config.getTypename());
                 if (typeConfiguration != null) {
-                    int size = map.size(config.getKey());
-                    if (size > 0) {
+                    int size;
+                    if (config.getOccurrence() == OccurrenceEnum.REPEAT
+                            && (size = map.size(config.getKey())) > 0) {
                         for (int i = 0; i < size; i++) {
                             init(map.subMap(config.getKey(), i), typeConfiguration.getAttributes());
                         }
@@ -252,6 +250,27 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
                         init(map.subMap(config.getKey()), typeConfiguration.getAttributes());
                     }
                 }
+            }
+        }
+    }
+
+    @Override
+    public void copy(ComplexMetadataMap source, ComplexMetadataMap dest, String typeName) {
+        AttributeTypeConfiguration typeConfiguration =
+                configService.getMetadataConfiguration().findType(typeName);
+
+        for (AttributeConfiguration config : typeConfiguration.getAttributes()) {
+            if (config.getFieldType() != FieldTypeEnum.COMPLEX) {
+                dest.get(Serializable.class, config.getKey())
+                        .setValue(
+                                ComplexMetadataMapImpl.dimCopy(
+                                        source.get(Serializable.class, config.getKey())
+                                                .getValue()));
+            } else {
+                copy(
+                        source.subMap(config.getKey()),
+                        dest.subMap(config.getKey()),
+                        config.getTypename());
             }
         }
     }

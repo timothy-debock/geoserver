@@ -10,11 +10,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponent;
-import org.apache.wicket.markup.html.form.validation.IFormValidator;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -65,24 +65,27 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
     protected void onInitialize() {
         super.onInitialize();
 
+        // we must always copy the data, to avoid references escaping the modification proxy commit
+        HashMap<String, Serializable> custom = new HashMap<>();
+        derivedAtts = new HashMap<>();
+
         ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
-        derivedAtts =
-                (HashMap<String, List<Integer>>)
-                        resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
-
-        Serializable custom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
-        if (!(custom instanceof HashMap<?, ?>)) {
-            custom = new HashMap<String, Serializable>();
-            resource.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, custom);
+        Serializable oldCustom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+        if (oldCustom instanceof HashMap<?, ?>) {
+            for (Entry<? extends String, ? extends Serializable> entry :
+                    ((Map<? extends String, ? extends Serializable>) oldCustom).entrySet()) {
+                custom.put(entry.getKey(), ComplexMetadataMapImpl.dimCopy(entry.getValue()));
+            }
         }
-        if (!(derivedAtts instanceof HashMap<?, ?>)) {
-            derivedAtts = new HashMap<String, List<Integer>>();
-            resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
+        Serializable oldDerivedAtts = resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
+        if (oldDerivedAtts instanceof HashMap<?, ?>) {
+            derivedAtts.putAll((Map<? extends String, ? extends List<Integer>>) oldDerivedAtts);
         }
 
-        metadataModel =
-                new Model<ComplexMetadataMap>(
-                        new ComplexMetadataMapImpl((HashMap<String, Serializable>) custom));
+        resource.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, custom);
+        resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
+
+        metadataModel = new Model<ComplexMetadataMap>(new ComplexMetadataMapImpl(custom));
 
         ComplexMetadataService service =
                 GeoServerApplication.get()
@@ -100,7 +103,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
                     @Override
                     protected void handleUpdate(AjaxRequestTarget target) {
-                        updateModel();
+                        updateModel(resource.getId());
                         target.add(
                                 metadataPanel()
                                         .replaceWith(
@@ -155,22 +158,18 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
         add(geonetworkPanel);
 
         // bit of a hack - no other hook to do something before save
-        findParent(Form.class)
-                .add(
-                        new IFormValidator() {
-                            private static final long serialVersionUID = 2524175705938882253L;
+        add(
+                new Form<Object>("dummyForm") {
+                    private static final long serialVersionUID = -1130841705471835763L;
 
-                            @Override
-                            public FormComponent<?>[] getDependentFormComponents() {
-                                // TODO Auto-generated method stub
-                                return null;
-                            }
-
-                            @Override
-                            public void validate(Form<?> form) {
-                                updateModel();
-                            }
-                        });
+                    @Override
+                    protected void onSubmit() {
+                        Form<?> form = findParent(Form.class);
+                        if (form.findSubmittingButton() == form.get("save")) {
+                            updateModel(resource.getId());
+                        }
+                    }
+                });
     }
 
     protected MetadataPanel metadataPanel() {
@@ -182,7 +181,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
     }
 
     /** Merge the model and the linked templates. */
-    private void updateModel() {
+    private void updateModel(String resourceId) {
         MetadataTemplateService templateService =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -193,9 +192,11 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         .getBean(ComplexMetadataService.class);
         ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
         for (MetadataTemplate template : templatesModel.getObject()) {
-            template = templateService.getById(template.getId());
-            if (template != null) {
-                maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
+            if (template.getLinkedLayers().contains(resourceId)) {
+                template = templateService.getById(template.getId());
+                if (template != null) {
+                    maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
+                }
             }
         }
 

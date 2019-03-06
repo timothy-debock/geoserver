@@ -165,7 +165,8 @@ public class ComplexMetadataMapImpl implements ComplexMetadataMap {
         for (String key : getDelegate().keySet()) {
             if (key.startsWith(strPath + PATH_SEPARATOR)) {
                 String strippedKey = key.substring(strPath.length() + 1);
-                newDelegate.put(strippedKey, get(Serializable.class, strippedKey).getValue());
+                newDelegate.put(
+                        strippedKey, dimCopy(get(Serializable.class, strippedKey).getValue()));
             }
         }
         return new ComplexMetadataMapImpl(newDelegate);
@@ -228,5 +229,22 @@ public class ComplexMetadataMapImpl implements ComplexMetadataMap {
 
     private HashMap<String, ArrayList<ComplexMetadataIndexReference>> getIndexes() {
         return indexes;
+    }
+
+    @Override
+    public int getIndex() {
+        return baseIndexRef.getIndex()[baseIndexRef.getIndex().length - 1];
+    }
+
+    public static Serializable dimCopy(Serializable source) {
+        if (source instanceof List) {
+            ArrayList<Serializable> list = new ArrayList<>();
+            for (Object item : ((List<?>) source)) {
+                list.add(dimCopy((Serializable) item));
+            }
+            return list;
+        } else {
+            return source;
+        }
     }
 }

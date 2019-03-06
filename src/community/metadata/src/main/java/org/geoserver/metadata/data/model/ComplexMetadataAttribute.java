@@ -12,6 +12,8 @@ public interface ComplexMetadataAttribute<T extends Serializable> extends Serial
 
     public void setValue(T value);
 
+    public Integer getIndex();
+
     public default void init() {
         if (getValue() == null) {
             // make sure that the null value is explicit

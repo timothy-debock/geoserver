@@ -48,9 +48,14 @@ public interface ComplexMetadataService {
      * @param source
      * @param derivedAtts
      */
-    void merge(
-            ComplexMetadataMap destination,
-            ComplexMetadataMap source,
-            String typeName,
-            HashMap<String, List<Integer>> derivedAtts);
+    void merge(ComplexMetadataMap destination, ComplexMetadataMap source, String typeName);
+
+    /**
+     * Copy from one submap to another
+     *
+     * @param source source submap
+     * @param dest target submap
+     * @param typeConfiguration the configuration of the type
+     */
+    void copy(ComplexMetadataMap source, ComplexMetadataMap dest, String typeName);
 }

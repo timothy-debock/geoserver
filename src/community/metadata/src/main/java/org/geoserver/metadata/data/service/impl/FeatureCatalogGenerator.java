@@ -6,7 +6,6 @@ package org.geoserver.metadata.data.service.impl;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,11 +45,6 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
         FeatureTypeInfo fti = (FeatureTypeInfo) layerInfo.getResource();
 
-        @SuppressWarnings("unchecked")
-        HashMap<String, List<Integer>> derivedAtts =
-                (HashMap<String, List<Integer>>)
-                        fti.getMetadata().get(MetadataConstants.DERIVED_KEY);
-
         // we will save the old details for attributes that still exist
         Map<String, ComplexMetadataMap> old = new HashMap<>();
         for (int i = 0; i < metadata.size(attributeConfiguration.getKey()); i++) {
@@ -70,11 +64,7 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
                 ComplexMetadataMap oldMap = old.get(att.getName());
                 if (oldMap != null) {
-                    service.merge(
-                            attMap,
-                            oldMap,
-                            MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME,
-                            derivedAtts);
+                    service.merge(attMap, oldMap, MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME);
                 }
 
                 attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME)

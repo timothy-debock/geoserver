@@ -7,6 +7,7 @@ package org.geoserver.metadata.web.panel.attribute;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -83,6 +84,8 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                     public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                         dataProvider.addField();
                         updateTable();
+                        ((MarkupContainer) tablePanel.get("listContainer").get("items"))
+                                .removeAll();
                         target.add(tablePanel);
                         target.add(noData);
                     }
@@ -154,10 +157,9 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                 new GeoServerTablePanel<ComplexMetadataMap>("attributesTablePanel", dataProvider) {
                     private static final long serialVersionUID = 4333335931795175790L;
 
-                    private int count = 0;
-
                     private IModel<ComplexMetadataMap> disabledValue = null;
 
+                    @SuppressWarnings("unchecked")
                     @Override
                     protected Component getComponentForProperty(
                             String id,
@@ -174,12 +176,9 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                                 && derivedAtts.containsKey(attributeConfiguration.getKey())) {
                             List<Integer> indexes =
                                     derivedAtts.get(attributeConfiguration.getKey());
-                            for (Integer index : indexes) {
-                                if (index.equals(count)) {
-                                    enableInput = false;
-                                    disabledValue = itemModel;
-                                    break;
-                                }
+                            if (indexes.contains(itemModel.getObject().getIndex())) {
+                                enableInput = false;
+                                disabledValue = itemModel;
                             }
                         }
 
@@ -199,7 +198,6 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
 
                         } else if (property.getName()
                                 .equals(RepeatableComplexAttributeDataProvider.KEY_REMOVE_ROW)) {
-                            count++;
                             if (itemModel.equals(disabledValue)) {
                                 // If the object is for a row that is not editable don't show the
                                 // remove button
@@ -224,6 +222,20 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                                 deleteAction.add(new AttributeAppender("class", "remove-link"));
                                 return deleteAction;
                             }
+                        } else if (property.getName()
+                                .equals(RepeatableComplexAttributeDataProvider.KEY_UPDOWN_ROW)) {
+                            return new AttributePositionPanel(
+                                    id,
+                                    (IModel<ComplexMetadataMap>)
+                                            RepeatableComplexAttributesTablePanel.this
+                                                    .getDefaultModel(),
+                                    dataProvider.getConfiguration(),
+                                    itemModel.getObject().getIndex(),
+                                    derivedAtts == null
+                                            ? null
+                                            : derivedAtts.get(
+                                                    dataProvider.getConfiguration().getKey()),
+                                    this);
                         }
                         return null;
                     }

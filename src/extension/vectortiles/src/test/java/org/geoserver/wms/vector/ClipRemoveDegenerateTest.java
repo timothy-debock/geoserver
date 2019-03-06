@@ -61,11 +61,8 @@ public class ClipRemoveDegenerateTest {
         Geometry result = clip._run(fromWKT("LINESTRING(-1 -1,0 0)")); // intersection is POINT(0 0)
         assertNull(result);
 
-        result =
-                clip._run(
-                        fromWKT(
-                                "LINESTRING(0 0, -10 0, -10 5,0 5)")); // intersection is
-                                                                       // MULTIPOINT(0 0,0 5)
+        result = clip._run(fromWKT("LINESTRING(0 0, -10 0, -10 5,0 5)")); // intersection is
+        // MULTIPOINT(0 0,0 5)
         assertNull(result);
 
         // intersection is LINESTRING(2 2, 3 0) + POINT(5 0) + POINT(7 0)
@@ -94,28 +91,24 @@ public class ClipRemoveDegenerateTest {
         Clip clip2 = new Clip(new Envelope(0, 10, 0, 10));
 
         Geometry result =
-                clip._run(
-                        fromWKT(
-                                "POLYGON( (-10 -10, 0 -10, 0 0,-10 0,-10 -10))")); // intersection
-                                                                                   // is POINT(0 0)
+                clip._run(fromWKT("POLYGON( (-10 -10, 0 -10, 0 0,-10 0,-10 -10))")); // intersection
+        // is POINT(0 0)
         assertNull(result);
 
         result =
                 clip._run(
-                        fromWKT(
-                                "POLYGON( (-10 -10, 10 -10, 10 0,-10 0,-10 -10))")); // intersection
-                                                                                     // is
-                                                                                     // LINESTRING
-                                                                                     // (10 0, 0 0)
+                        fromWKT("POLYGON( (-10 -10, 10 -10, 10 0,-10 0,-10 -10))")); // intersection
+        // is
+        // LINESTRING
+        // (10 0, 0 0)
         assertNull(result);
 
         result =
                 clip._run(
-                        fromWKT(
-                                "POLYGON( (-10 -10, 10 -10, 10 0,-10 0,-10 -10))")); // intersection
-                                                                                     // is
-                                                                                     // LINESTRING
-                                                                                     // (10 0, 0 0)
+                        fromWKT("POLYGON( (-10 -10, 10 -10, 10 0,-10 0,-10 -10))")); // intersection
+        // is
+        // LINESTRING
+        // (10 0, 0 0)
         assertNull(result);
 
         // intersection is GEOMETRYCOLLECTION (POINT (10 0), LINESTRING (1 0, 3 0), LINESTRING (5 0,

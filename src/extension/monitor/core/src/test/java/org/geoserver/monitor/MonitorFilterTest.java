@@ -148,7 +148,7 @@ public class MonitorFilterTest {
                 "maxBodySize",
                 Integer.toString(
                         UNBOUNDED_BODY_SIZE)); // Ensure the configured property is correct for the
-                                               // tests
+        // tests
 
         chain =
                 new MockFilterChain(

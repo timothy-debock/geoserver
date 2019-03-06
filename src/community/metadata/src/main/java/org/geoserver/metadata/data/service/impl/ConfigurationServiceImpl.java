@@ -80,7 +80,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     private void readConfiguration() {
         Resource folder = getFolder();
-        LOGGER.info("Searching for yamls in: " + folder.path());
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         configuration = new MetadataConfigurationImpl();
         mappingConfig = new MappingConfigurationImpl();

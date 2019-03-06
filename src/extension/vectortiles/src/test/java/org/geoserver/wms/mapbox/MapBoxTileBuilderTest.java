@@ -110,9 +110,8 @@ public class MapBoxTileBuilderTest {
         MapBoxTileBuilder tileBuilder = builderFact.newBuilder(screenSize, mapArea);
 
         Geometry line =
-                geom(
-                        "LINESTRING(-100 -100,300 300)"); // box is 0 to 256, so this is outside the
-                                                          // box
+                geom("LINESTRING(-100 -100,300 300)"); // box is 0 to 256, so this is outside the
+        // box
 
         Map<String, Object> lineProps = ImmutableMap.<String, Object>of("name", "line1");
 

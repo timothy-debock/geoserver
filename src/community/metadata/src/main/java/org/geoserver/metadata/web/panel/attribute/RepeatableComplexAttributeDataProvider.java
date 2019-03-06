@@ -21,13 +21,18 @@ public class RepeatableComplexAttributeDataProvider
 
     public static String KEY_VALUE = "value";
 
-    public static String KEY_REMOVE_ROW = "";
+    public static String KEY_REMOVE_ROW = "remove";
+
+    public static String KEY_UPDOWN_ROW = "updown";
 
     public static final Property<ComplexMetadataMap> VALUE =
             new BeanProperty<ComplexMetadataMap>(KEY_VALUE, "value");
 
-    private final GeoServerDataProvider.Property<ComplexMetadataMap> REMOVE_ROW =
-            new GeoServerDataProvider.BeanProperty<ComplexMetadataMap>(KEY_REMOVE_ROW, "value");
+    private final Property<ComplexMetadataMap> REMOVE_ROW =
+            new GeoServerDataProvider.BeanProperty<ComplexMetadataMap>(KEY_REMOVE_ROW, "");
+
+    private final Property<ComplexMetadataMap> UPDOWN_ROW =
+            new BeanProperty<ComplexMetadataMap>(KEY_UPDOWN_ROW, "");
 
     private IModel<ComplexMetadataMap> metadataModel;
 
@@ -53,7 +58,7 @@ public class RepeatableComplexAttributeDataProvider
 
     @Override
     protected List<Property<ComplexMetadataMap>> getProperties() {
-        return Arrays.asList(VALUE, REMOVE_ROW);
+        return Arrays.asList(VALUE, UPDOWN_ROW, REMOVE_ROW);
     }
 
     @Override

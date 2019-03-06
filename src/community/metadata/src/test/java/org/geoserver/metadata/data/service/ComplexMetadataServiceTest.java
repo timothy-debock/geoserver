@@ -275,7 +275,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         Assert.assertEquals(
                 "list-objectcodeSpace02", submap02.get(String.class, "code-space").getValue());
         // Should be updated list of nested objects
-        Assert.assertEquals(3, parent.size("feature-catalog/feature-attribute"));
+        Assert.assertEquals(1, parent.size("feature-catalog/feature-attribute"));
         ComplexMetadataMap submapTemplate = parent.subMap("feature-catalog/feature-attribute", 0);
         Assert.assertEquals(
                 "template-identifier", submapTemplate.get(String.class, "name").getValue());

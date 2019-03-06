@@ -113,7 +113,7 @@ public class TemplatesPageTest extends AbstractWicketMetadataTest {
         tester.clickLink("templatesPanel:listContainer:items:1:itemProperties:1:component:link");
 
         tester.assertRenderedPage(MetadataTemplatePage.class);
-        print(tester.getLastRenderedPage(), true, true);
+        // print(tester.getLastRenderedPage(), true, true);
 
         tester.assertComponent("form:name", TextField.class);
         tester.assertComponent("form:description", TextField.class);

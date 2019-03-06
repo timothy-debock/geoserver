@@ -6,10 +6,8 @@ package org.geoserver.metadata.data.model.impl;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -100,20 +98,8 @@ public class MetadataTemplateImpl implements Serializable, MetadataTemplate {
         clone.linkedLayers = new HashSet<>(getLinkedLayers());
         clone.metadata = new HashMap<>();
         for (Entry<String, Serializable> entry : getMetadata().entrySet()) {
-            clone.metadata.put(entry.getKey(), dimCopy(entry.getValue()));
+            clone.metadata.put(entry.getKey(), ComplexMetadataMapImpl.dimCopy(entry.getValue()));
         }
         return clone;
-    }
-
-    private static Serializable dimCopy(Serializable source) {
-        if (source instanceof List) {
-            ArrayList<Serializable> list = new ArrayList<>();
-            for (Object item : ((List<?>) source)) {
-                list.add(dimCopy((Serializable) item));
-            }
-            return list;
-        } else {
-            return source;
-        }
     }
 }

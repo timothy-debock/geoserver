@@ -4,8 +4,6 @@
  */
 package org.geoserver.metadata.web.layer;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 import org.geoserver.catalog.LayerInfo;
@@ -30,15 +28,6 @@ public class MetadataTabPanelInfo extends PublishedEditTabPanelInfo<LayerInfo> {
                         .getApplicationContext()
                         .getBean(MetadataTemplateService.class);
 
-        List<MetadataTemplate> linkedTemplates = new ArrayList<>();
-        for (MetadataTemplate template : service.list()) {
-            if (template.getLinkedLayers() != null
-                    && template.getLinkedLayers()
-                            .contains(model.getObject().getResource().getId())) {
-                linkedTemplates.add(template);
-            }
-        }
-
-        return new ListModel<MetadataTemplate>(linkedTemplates);
+        return new ListModel<MetadataTemplate>(service.list());
     }
 }

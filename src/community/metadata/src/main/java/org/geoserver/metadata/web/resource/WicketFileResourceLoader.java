@@ -82,7 +82,7 @@ public class WicketFileResourceLoader implements IStringResourceLoader {
                                     "Unable able to locate resource bundle for the specifed base name: %s",
                                     resourceBundleName));
                 }
-                LOGGER.warning(
+                LOGGER.fine(
                         "Unable able to locate resource bundle for the specifed base name:"
                                 + resourceBundleName);
             }

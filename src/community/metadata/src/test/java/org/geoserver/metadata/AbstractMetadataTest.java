@@ -151,11 +151,9 @@ public abstract class AbstractMetadataTest {
             while ((entry = zis.getNextEntry()) != null) {
                 // consume all the data from this entry
                 FileOutputStream output = null;
-                System.out.println("entry: " + entry.getName() + ", " + entry.getSize());
                 try {
 
                     File file = new File(target, entry.getName());
-                    System.out.println(file.toString());
                     if (entry.isDirectory()) {
                         file.mkdirs();
                     } else {

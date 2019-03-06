@@ -57,7 +57,7 @@ public class SerialVersionSafeSerialBinding<T> extends SerialBase implements Ent
                     Class.forName(
                             resultClassDescriptor
                                     .getName()); // the class in the local JVM that this descriptor
-                                                 // represents.
+            // represents.
             if (localClass == null) {
                 return resultClassDescriptor;
             }

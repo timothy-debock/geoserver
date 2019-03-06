@@ -18,4 +18,6 @@ public interface ComplexMetadataMap extends Serializable {
     int size(String att, int... index);
 
     ComplexMetadataMap clone();
+
+    int getIndex();
 }
