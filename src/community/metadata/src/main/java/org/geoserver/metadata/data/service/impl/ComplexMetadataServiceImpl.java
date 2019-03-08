@@ -197,7 +197,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             if (config.getFieldType() != FieldTypeEnum.COMPLEX) {
                 Serializable value = map.get(Serializable.class, config.getKey()).getValue();
                 Serializable otherValue = other.get(Serializable.class, config.getKey()).getValue();
-                if (!(value == null && otherValue == null || value.equals(otherValue))) {
+                if (!(value == null && otherValue == null || value != null && value.equals(otherValue))) {
                     return false;
                 }
             } else {

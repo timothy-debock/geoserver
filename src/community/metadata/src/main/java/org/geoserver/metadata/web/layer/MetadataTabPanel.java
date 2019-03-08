@@ -195,6 +195,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
             }
         }
 
+        service.derive(metadataModel.getObject());
         service.merge(metadataModel.getObject(), maps, derivedAtts);
     }
 
