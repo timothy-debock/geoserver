@@ -21,6 +21,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
+import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -157,6 +158,10 @@ public abstract class ImportTemplatePanel extends Panel {
                 target.add(ImportTemplatePanel.this);
                 target.add(getFeedbackPanel());
             }
+
+            protected void onError(AjaxRequestTarget target, Form<?> form) {
+                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
+            }
         };
     }
 
@@ -167,6 +172,10 @@ public abstract class ImportTemplatePanel extends Panel {
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 unlinkTemplate(target, templatesPanel.getSelection());
+            }
+
+            protected void onError(AjaxRequestTarget target, Form<?> form) {
+                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
             }
         };
     }

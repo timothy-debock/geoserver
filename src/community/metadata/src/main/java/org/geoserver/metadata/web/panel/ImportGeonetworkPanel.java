@@ -21,6 +21,7 @@ import org.geoserver.metadata.data.dto.GeonetworkConfiguration;
 import org.geoserver.metadata.data.dto.MetadataConfiguration;
 import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.web.GeoServerApplication;
+import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.ParamResourceModel;
 
@@ -130,6 +131,10 @@ public abstract class ImportGeonetworkPanel extends Panel {
                 }
 
                 target.add(getFeedbackPanel());
+            }
+
+            protected void onError(AjaxRequestTarget target, Form<?> form) {
+                ((GeoServerBasePage) getPage()).addFeedbackPanels(target);
             }
         };
     }
