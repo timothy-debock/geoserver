@@ -11,4 +11,6 @@ public interface AttributeCollection {
     List<AttributeConfiguration> getAttributes();
 
     AttributeConfiguration findAttribute(String attName);
+
+    List<String> getCsvImports();
 }

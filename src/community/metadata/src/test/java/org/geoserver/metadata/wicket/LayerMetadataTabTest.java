@@ -74,6 +74,13 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
                 "publishedinfo:tabs:panel:importTemplatePanel", ImportTemplatePanel.class);
         tester.assertComponent(
                 "publishedinfo:tabs:panel:geonetworkPanel", ImportGeonetworkPanel.class);
+
+        GeoServerTablePanel<?> panel =
+                (GeoServerTablePanel<?>)
+                        tester.getComponentFromLastRenderedPage(
+                                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel");
+        // derived field hidden
+        assertEquals(14, panel.getDataProvider().size());
     }
 
     @Test

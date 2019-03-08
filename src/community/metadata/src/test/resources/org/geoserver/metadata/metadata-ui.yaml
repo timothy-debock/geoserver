@@ -45,7 +45,16 @@ attributes:
   - label: Feature catalog
     key: feature-catalog
     fieldType: COMPLEX
-    typename: featureCatalog
+    typename: featureCatalog    
+  - key: source
+    fieldType: DROPDOWN
+    occurrence: REPEAT
+  - key: target
+    fieldType: DERIVED
+    derivedFrom: source
+    occurrence: REPEAT
+csvImports:
+  - sourcetarget.csv
 
 types:
   - typename: referencesystem

@@ -38,12 +38,7 @@ public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfig
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(ConfigurationService.class);
-        for (AttributeConfiguration config :
-                metadataConfigurationService.getMetadataConfiguration().getAttributes()) {
-            if (config.getFieldType() != FieldTypeEnum.DERIVED) { // don't display derived fields!
-                items.add(config);
-            }
-        }
+        load(metadataConfigurationService.getMetadataConfiguration());
     }
 
     /**
@@ -52,7 +47,6 @@ public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfig
      * @param typename
      */
     public AttributeDataProvider(String typename) {
-        super();
         ConfigurationService metadataConfigurationService =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -60,7 +54,13 @@ public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfig
         AttributeCollection typeConfiguration =
                 metadataConfigurationService.getMetadataConfiguration().findType(typename);
         if (typeConfiguration != null) {
-            for (AttributeConfiguration config : typeConfiguration.getAttributes()) {
+            load(typeConfiguration);
+        }
+    }
+
+    protected void load(AttributeCollection coll) {
+        for (AttributeConfiguration config : coll.getAttributes()) {
+            if (config.getFieldType() != FieldTypeEnum.DERIVED) { // don't display derived fields!
                 items.add(config);
             }
         }

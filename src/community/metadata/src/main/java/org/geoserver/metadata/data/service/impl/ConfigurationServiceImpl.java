@@ -6,8 +6,10 @@ package org.geoserver.metadata.data.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import javax.annotation.PostConstruct;
 import org.geoserver.config.GeoServerDataDirectory;
+import org.geoserver.metadata.data.dto.AttributeCollection;
 import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
 import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
@@ -44,6 +47,8 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     private static final java.util.logging.Logger LOGGER =
             Logging.getLogger(ConfigurationServiceImpl.class);
+
+    private static final String SEPARATOR = ";";
 
     @Autowired private GeoServerDataDirectory dataDirectory;
 
@@ -105,6 +110,12 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
+
+        // process csv imports
+        processCsvImports(configuration);
+        for (AttributeTypeConfiguration type : configuration.getTypes()) {
+            processCsvImports(type);
+        }
     }
 
     private void readConfiguration(InputStream in, ObjectMapper mapper) throws IOException {
@@ -147,6 +158,11 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                 typesKeys.add(type.getTypename());
             }
         }
+
+        // merge csv imports
+        for (String csvImport : config.getCsvImports()) {
+            configuration.getCsvImports().add(csvImport);
+        }
     }
 
     private void readMapping(InputStream in, ObjectMapper mapper) throws IOException {
@@ -164,6 +180,38 @@ public class ConfigurationServiceImpl implements ConfigurationService {
             if (!objectKay.contains(mapping.getTypename())) {
                 mappingConfig.getObjectmapping().add(mapping);
                 objectKay.add(mapping.getTypename());
+            }
+        }
+    }
+
+    private void processCsvImports(AttributeCollection mapping) {
+        for (String csvImport : mapping.getCsvImports()) {
+            try (InputStream in = getFolder().get(csvImport).in()) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String line = br.readLine();
+                String[] splitLine = br == null ? null : line.split(SEPARATOR);
+                if (splitLine != null && splitLine.length > 0) {
+                    AttributeConfiguration[] configs = new AttributeConfiguration[splitLine.length];
+                    for (int i = 0; i < splitLine.length; i++) {
+                        configs[i] = mapping.findAttribute(splitLine[i].trim());
+                        if (configs[i] != null) {
+                            configs[i].getValues().clear();
+                        }
+                    }
+
+                    while ((line = br.readLine()) != null) {
+                        splitLine = line.split(SEPARATOR);
+                        for (int i = 0; i < configs.length; i++) {
+                            if (configs[i] != null)
+                                configs[i]
+                                        .getValues()
+                                        .add(i < splitLine.length ? splitLine[i].trim() : null);
+                        }
+                    }
+                }
+
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
     }

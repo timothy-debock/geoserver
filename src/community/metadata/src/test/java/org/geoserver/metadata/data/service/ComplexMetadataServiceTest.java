@@ -438,4 +438,18 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
                         .get(String.class, "code-space")
                         .getValue());
     }
+
+    @Test
+    public void testDerive() {
+        ComplexMetadataMap map = new ComplexMetadataMapImpl(new HashMap<>());
+
+        map.get(String.class, "source", 0).setValue("sourceb");
+        map.get(String.class, "source", 1).setValue("sourcex");
+        map.get(String.class, "source", 2).setValue("sourcec");
+        service.derive(map);
+
+        assertEquals("targetb", map.get(String.class, "target", 0).getValue());
+        assertEquals(null, map.get(String.class, "target", 1).getValue());
+        assertEquals("targetc", map.get(String.class, "target", 2).getValue());
+    }
 }

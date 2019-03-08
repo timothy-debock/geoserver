@@ -25,6 +25,8 @@ public class AttributeTypeConfigurationImpl implements AttributeTypeConfiguratio
 
     List<AttributeConfiguration> attributes = new ArrayList<>();
 
+    List<String> csvImports = new ArrayList<>();
+
     @Override
     public List<AttributeConfiguration> getAttributes() {
         return attributes;
@@ -43,5 +45,10 @@ public class AttributeTypeConfigurationImpl implements AttributeTypeConfiguratio
             }
         }
         return null;
+    }
+
+    @Override
+    public List<String> getCsvImports() {
+        return csvImports;
     }
 }

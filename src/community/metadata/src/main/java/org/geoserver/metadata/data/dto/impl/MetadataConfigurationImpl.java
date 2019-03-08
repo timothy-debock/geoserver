@@ -30,6 +30,8 @@ public class MetadataConfigurationImpl implements MetadataConfiguration {
 
     List<AttributeTypeConfiguration> types = new ArrayList<>();
 
+    List<String> csvImports = new ArrayList<>();
+
     @Override
     public List<AttributeConfiguration> getAttributes() {
         return attributes;
@@ -63,5 +65,10 @@ public class MetadataConfigurationImpl implements MetadataConfiguration {
             }
         }
         return null;
+    }
+
+    @Override
+    public List<String> getCsvImports() {
+        return csvImports;
     }
 }
