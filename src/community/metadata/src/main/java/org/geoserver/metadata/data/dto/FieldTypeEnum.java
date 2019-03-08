@@ -12,6 +12,7 @@ package org.geoserver.metadata.data.dto;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 public enum FieldTypeEnum {
+    COMPLEX,
     TEXT,
     NUMBER,
     TEXT_AREA,
@@ -21,5 +22,5 @@ public enum FieldTypeEnum {
     UUID,
     DROPDOWN,
     SUGGESTBOX,
-    COMPLEX
+    DERIVED
 }

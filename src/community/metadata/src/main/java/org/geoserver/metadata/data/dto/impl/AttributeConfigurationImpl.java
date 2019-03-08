@@ -33,6 +33,8 @@ public class AttributeConfigurationImpl implements AttributeConfiguration {
 
     String typename;
 
+    String derivedFrom;
+
     public AttributeConfigurationImpl() {}
 
     public AttributeConfigurationImpl(String key, FieldTypeEnum fieldType) {
@@ -87,5 +89,10 @@ public class AttributeConfigurationImpl implements AttributeConfiguration {
     @Override
     public OccurrenceEnum getOccurrence() {
         return occurrence;
+    }
+
+    @Override
+    public String getDerivedFrom() {
+        return derivedFrom;
     }
 }

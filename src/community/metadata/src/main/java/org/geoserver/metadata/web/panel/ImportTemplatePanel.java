@@ -7,8 +7,6 @@ package org.geoserver.metadata.web.panel;
 import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.feedback.ContainerFeedbackMessageFilter;
 import org.apache.wicket.markup.html.basic.Label;
@@ -43,7 +41,7 @@ public abstract class ImportTemplatePanel extends Panel {
 
     private Label noData;
 
-    private AjaxLink<Object> remove;
+    private AjaxSubmitLink remove;
 
     public ImportTemplatePanel(
             String id, String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
@@ -106,16 +104,6 @@ public abstract class ImportTemplatePanel extends Panel {
         DropDownChoice<MetadataTemplate> dropDownChoice =
                 new DropDownChoice<>(
                         "metadataTemplate", model, unlinked, new ChoiceRenderer<>("name"));
-        dropDownChoice.add(
-                new OnChangeAjaxBehavior() {
-
-                    private static final long serialVersionUID = 2208064045807777479L;
-
-                    @Override
-                    protected void onUpdate(AjaxRequestTarget art) {
-                        // just model update
-                    }
-                });
         return dropDownChoice;
     }
 
@@ -128,11 +116,6 @@ public abstract class ImportTemplatePanel extends Panel {
             final DropDownChoice<MetadataTemplate> dropDown, GeoServerDialog dialog) {
         return new AjaxSubmitLink("link") {
             private static final long serialVersionUID = -8718015688839770852L;
-
-            @Override
-            public boolean getDefaultFormProcessing() {
-                return false;
-            }
 
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
@@ -177,18 +160,18 @@ public abstract class ImportTemplatePanel extends Panel {
         };
     }
 
-    private AjaxLink<Object> createUnlinkAction() {
-        return new AjaxLink<Object>("removeSelected") {
+    private AjaxSubmitLink createUnlinkAction() {
+        return new AjaxSubmitLink("removeSelected") {
             private static final long serialVersionUID = 3581476968062788921L;
 
             @Override
-            public void onClick(AjaxRequestTarget target) {
+            public void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 unlinkTemplate(target, templatesPanel.getSelection());
             }
         };
     }
 
-    private GeoServerTablePanel<MetadataTemplate> createTemplateTable(AjaxLink<Object> remove) {
+    private GeoServerTablePanel<MetadataTemplate> createTemplateTable(AjaxSubmitLink remove) {
 
         return new GeoServerTablePanel<MetadataTemplate>(
                 "templatesPanel", linkedTemplatesDataProvider, true) {

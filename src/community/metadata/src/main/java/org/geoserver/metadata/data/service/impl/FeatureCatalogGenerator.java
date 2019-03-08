@@ -64,7 +64,7 @@ public class FeatureCatalogGenerator implements ComplexAttributeGenerator {
 
                 ComplexMetadataMap oldMap = old.get(att.getName());
                 if (oldMap != null) {
-                    service.merge(attMap, oldMap, MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME);
+                    service.copy(oldMap, attMap, MetadataConstants.FEATURE_ATTRIBUTE_TYPENAME);
                 }
 
                 attMap.get(String.class, MetadataConstants.FEATURE_ATTRIBUTE_NAME)

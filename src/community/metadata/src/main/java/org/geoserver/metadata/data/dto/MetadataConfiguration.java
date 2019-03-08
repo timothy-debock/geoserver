@@ -20,15 +20,11 @@ import org.geoserver.metadata.data.dto.impl.MetadataConfigurationImpl;
  */
 @JsonDeserialize(as = MetadataConfigurationImpl.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public interface MetadataConfiguration {
-
-    public List<AttributeConfiguration> getAttributes();
+public interface MetadataConfiguration extends AttributeCollection {
 
     public List<GeonetworkConfiguration> getGeonetworks();
 
     public List<AttributeTypeConfiguration> getTypes();
 
     public AttributeTypeConfiguration findType(String typename);
-
-    public AttributeConfiguration findAttribute(String attName);
 }

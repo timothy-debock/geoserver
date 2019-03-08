@@ -6,7 +6,6 @@ package org.geoserver.metadata.data.service;
 
 import java.util.HashMap;
 import java.util.List;
-import org.geoserver.metadata.data.dto.AttributeConfiguration;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 
 /**
@@ -20,13 +19,15 @@ public interface ComplexMetadataService {
      * Initialize a new map, making sure that there are null values to make multi-valued complex
      * attributes match sizes
      */
-    void init(ComplexMetadataMap map);
+    default void init(ComplexMetadataMap map) {
+        init(map, null);
+    }
 
     /**
      * Initialize a new submap, making sure that there are null values to make multi-valued complex
      * attributes match sizes
      */
-    void init(ComplexMetadataMap subMap, AttributeConfiguration attributeConfiguration);
+    void init(ComplexMetadataMap subMap, String typeName);
 
     /**
      * The values in the template are applied in reverse order, i.e. the first child has the highest
@@ -40,15 +41,6 @@ public interface ComplexMetadataService {
             ComplexMetadataMap destination,
             List<ComplexMetadataMap> sources,
             HashMap<String, List<Integer>> derivedAtts);
-
-    /**
-     * Apply the values from the source to the target.
-     *
-     * @param destination
-     * @param source
-     * @param derivedAtts
-     */
-    void merge(ComplexMetadataMap destination, ComplexMetadataMap source, String typeName);
 
     /**
      * Copy from one submap to another
@@ -68,4 +60,11 @@ public interface ComplexMetadataService {
      * @return whether they are equal
      */
     boolean equals(ComplexMetadataMap map, ComplexMetadataMap other, String typeName);
+
+    /**
+     * Fill derived attributes.
+     *
+     * @param map
+     */
+    void derive(ComplexMetadataMap map);
 }

@@ -73,7 +73,7 @@ public class RepeatableComplexAttributeDataProvider
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(ComplexMetadataService.class);
-        service.init(item, attributeConfiguration);
+        service.init(item, attributeConfiguration.getTypename());
         items.add(item);
     }
 

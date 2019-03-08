@@ -39,7 +39,8 @@ public class MetaDataRestService {
         } else {
             for (ResourceInfo info : catalog.getResources(ResourceInfo.class)) {
                 info.getMetadata().remove(MetadataConstants.CUSTOM_METADATA_KEY);
-                info.getMetadata().remove(MetadataConstants.DERIVED_KEY);
+                // TODO: remove
+                info.getMetadata().remove("custom-derived-attributes");
                 catalog.save(info);
             }
             templateService.saveList(Collections.emptyList());
@@ -52,8 +53,10 @@ public class MetaDataRestService {
         for (ResourceInfo info : catalog.getResources(ResourceInfo.class)) {
             Serializable custom = info.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
             if (custom instanceof HashMap<?, ?>) {
-                metadataService.init(
-                        new ComplexMetadataMapImpl((Map<String, Serializable>) custom));
+                ComplexMetadataMapImpl complex =
+                        new ComplexMetadataMapImpl((Map<String, Serializable>) custom);
+                metadataService.init(complex);
+                metadataService.derive(complex);
             }
             catalog.save(info);
         }

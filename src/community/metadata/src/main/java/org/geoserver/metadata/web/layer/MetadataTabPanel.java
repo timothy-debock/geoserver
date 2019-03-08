@@ -67,7 +67,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
         // we must always copy the data, to avoid references escaping the modification proxy commit
         HashMap<String, Serializable> custom = new HashMap<>();
-        derivedAtts = new HashMap<>();
 
         ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
         Serializable oldCustom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
@@ -77,13 +76,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                 custom.put(entry.getKey(), ComplexMetadataMapImpl.dimCopy(entry.getValue()));
             }
         }
-        Serializable oldDerivedAtts = resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
-        if (oldDerivedAtts instanceof HashMap<?, ?>) {
-            derivedAtts.putAll((Map<? extends String, ? extends List<Integer>>) oldDerivedAtts);
-        }
-
         resource.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, custom);
-        resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
 
         metadataModel = new Model<ComplexMetadataMap>(new ComplexMetadataMapImpl(custom));
 
@@ -92,6 +85,8 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         .getApplicationContext()
                         .getBean(ComplexMetadataService.class);
         service.init(metadataModel.getObject());
+        derivedAtts = new HashMap<>();
+        updateModel(resource.getId());
 
         // Link with templates panel
         this.add(

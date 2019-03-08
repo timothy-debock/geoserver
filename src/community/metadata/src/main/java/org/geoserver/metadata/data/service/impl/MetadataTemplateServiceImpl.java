@@ -262,11 +262,6 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
     }
 
     private void update(ResourceInfo resource) {
-        @SuppressWarnings("unchecked")
-        HashMap<String, List<Integer>> derivedAtts =
-                (HashMap<String, List<Integer>>)
-                        resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
-
         Serializable custom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
         @SuppressWarnings("unchecked")
         ComplexMetadataMapImpl model =
@@ -282,7 +277,7 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
         }
 
         if (sources.size() > 0) {
-            metadataService.merge(model, sources, derivedAtts);
+            metadataService.merge(model, sources, new HashMap<>());
             geoServer.getCatalog().save(resource);
         }
     }

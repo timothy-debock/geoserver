@@ -45,7 +45,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         Assert.assertEquals("99", parent.get(String.class, "number-field").getValue());
         Assert.assertEquals("Select me", parent.get(String.class, "dropdown-field").getValue());
 
-        HashMap<String, List<Integer>> descriptionMap = createDerivedAtts();
+        HashMap<String, List<Integer>> descriptionMap = new HashMap<>();
         service.merge(parent, children, descriptionMap);
 
         // Should be updated simple fields
@@ -104,7 +104,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
-        HashMap<String, List<Integer>> descriptionMap = createDerivedAtts();
+        HashMap<String, List<Integer>> descriptionMap = new HashMap<>();
         service.merge(parent, children, descriptionMap);
 
         // simple fields
@@ -150,7 +150,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
-        HashMap<String, List<Integer>> descriptionMap = createDerivedAtts();
+        HashMap<String, List<Integer>> descriptionMap = new HashMap<>();
         service.merge(parent, children, descriptionMap);
 
         // simple fields
@@ -201,7 +201,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
-        HashMap<String, List<Integer>> descriptionMap = createDerivedAtts();
+        HashMap<String, List<Integer>> descriptionMap = new HashMap<>();
         service.merge(parent, children, descriptionMap);
 
         // simple fields
@@ -264,7 +264,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
 
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
-        service.merge(parent, children, createDerivedAtts());
+        service.merge(parent, children, new HashMap<>());
 
         // list of objects
         Assert.assertEquals(2, parent.size("referencesystem-object-list"));
@@ -310,7 +310,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         ArrayList<ComplexMetadataMap> children = new ArrayList<>();
         children.add(child);
         children.add(child01);
-        HashMap<String, List<Integer>> derivedAtts = createDerivedAtts();
+        HashMap<String, List<Integer>> derivedAtts = new HashMap<>();
 
         // LINK
         service.merge(parent, children, derivedAtts);
@@ -359,10 +359,6 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
         Assert.assertNull(derivedAtts.get("refsystem-as-list"));
     }
 
-    private HashMap<String, List<Integer>> createDerivedAtts() {
-        return new HashMap<>();
-    }
-
     @Test
     public void testDuplicatedRemoved() {
         ComplexMetadataMap map = new ComplexMetadataMapImpl(new HashMap<>());
@@ -399,7 +395,7 @@ public class ComplexMetadataServiceTest extends AbstractMetadataTest {
                 new ComplexMetadataMapImpl(
                         templateService.findByName("template-object list").getMetadata()));
 
-        service.merge(map, templates, null);
+        service.merge(map, templates, new HashMap<>());
 
         assertEquals(5, map.size("refsystem-as-list"));
         assertEquals("template-value01", map.get(String.class, "refsystem-as-list", 0).getValue());

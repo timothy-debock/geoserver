@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.feedback.ContainerFeedbackMessageFilter;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
@@ -82,11 +81,6 @@ public abstract class ImportGeonetworkPanel extends Panel {
             GeoServerDialog dialog) {
         return new AjaxSubmitLink("link") {
             private static final long serialVersionUID = -8718015688839770852L;
-
-            @Override
-            public boolean getDefaultFormProcessing() {
-                return false;
-            }
 
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
@@ -165,19 +159,7 @@ public abstract class ImportGeonetworkPanel extends Panel {
     }
 
     private DropDownChoice<String> createDropDown(final ArrayList<String> optionsGeonetwork) {
-        DropDownChoice<String> dropDownChoice =
-                new DropDownChoice<>("geonetworkName", new Model<String>(""), optionsGeonetwork);
-        dropDownChoice.add(
-                new OnChangeAjaxBehavior() {
-
-                    private static final long serialVersionUID = 2966644157603893849L;
-
-                    @Override
-                    protected void onUpdate(AjaxRequestTarget art) {
-                        // just model update
-                    }
-                });
-        return dropDownChoice;
+        return new DropDownChoice<>("geonetworkName", new Model<String>(""), optionsGeonetwork);
     }
 
     public FeedbackPanel getFeedbackPanel() {

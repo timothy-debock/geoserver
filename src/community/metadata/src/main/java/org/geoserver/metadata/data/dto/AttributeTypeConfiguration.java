@@ -6,7 +6,6 @@ package org.geoserver.metadata.data.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
-import java.util.List;
 import org.geoserver.metadata.data.dto.impl.AttributeTypeConfigurationImpl;
 
 /**
@@ -18,11 +17,7 @@ import org.geoserver.metadata.data.dto.impl.AttributeTypeConfigurationImpl;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 @JsonDeserialize(as = AttributeTypeConfigurationImpl.class)
-public interface AttributeTypeConfiguration extends Serializable {
-
-    public List<AttributeConfiguration> getAttributes();
+public interface AttributeTypeConfiguration extends Serializable, AttributeCollection {
 
     public String getTypename();
-
-    public AttributeConfiguration findAttribute(String attName);
 }

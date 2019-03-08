@@ -84,6 +84,8 @@ public class EditorFactory {
                         new AttributeDataProvider(configuration.getTypename()),
                         new Model<ComplexMetadataMap>(submap),
                         null);
+            default:
+                break;
         }
         return null;
     }

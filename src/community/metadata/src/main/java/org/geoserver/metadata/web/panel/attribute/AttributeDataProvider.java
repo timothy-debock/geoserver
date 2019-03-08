@@ -7,8 +7,9 @@ package org.geoserver.metadata.web.panel.attribute;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.geoserver.metadata.data.dto.AttributeCollection;
 import org.geoserver.metadata.data.dto.AttributeConfiguration;
-import org.geoserver.metadata.data.dto.AttributeTypeConfiguration;
+import org.geoserver.metadata.data.dto.FieldTypeEnum;
 import org.geoserver.metadata.data.service.ConfigurationService;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
@@ -39,7 +40,9 @@ public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfig
                         .getBean(ConfigurationService.class);
         for (AttributeConfiguration config :
                 metadataConfigurationService.getMetadataConfiguration().getAttributes()) {
-            items.add(config);
+            if (config.getFieldType() != FieldTypeEnum.DERIVED) { // don't display derived fields!
+                items.add(config);
+            }
         }
     }
 
@@ -54,7 +57,7 @@ public class AttributeDataProvider extends GeoServerDataProvider<AttributeConfig
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(ConfigurationService.class);
-        AttributeTypeConfiguration typeConfiguration =
+        AttributeCollection typeConfiguration =
                 metadataConfigurationService.getMetadataConfiguration().findType(typename);
         if (typeConfiguration != null) {
             for (AttributeConfiguration config : typeConfiguration.getAttributes()) {
