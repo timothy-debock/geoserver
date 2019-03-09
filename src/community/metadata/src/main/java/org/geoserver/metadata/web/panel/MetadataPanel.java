@@ -4,8 +4,8 @@
  */
 package org.geoserver.metadata.web.panel;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
@@ -21,12 +21,12 @@ import org.geoserver.metadata.web.panel.attribute.AttributesTablePanel;
 public class MetadataPanel extends Panel {
     private static final long serialVersionUID = 1297739738862860160L;
 
-    private final HashMap<String, List<Integer>> derivedAtts;
+    private final Map<String, List<Integer>> derivedAtts;
 
     public MetadataPanel(
             String id,
             IModel<ComplexMetadataMap> metadataModel,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
         super(id, metadataModel);
         this.derivedAtts = derivedAtts;
     }

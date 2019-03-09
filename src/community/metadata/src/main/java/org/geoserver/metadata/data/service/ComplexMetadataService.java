@@ -4,8 +4,8 @@
  */
 package org.geoserver.metadata.data.service;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 
 /**
@@ -40,7 +40,7 @@ public interface ComplexMetadataService {
     void merge(
             ComplexMetadataMap destination,
             List<ComplexMetadataMap> sources,
-            HashMap<String, List<Integer>> derivedAtts);
+            Map<String, List<Integer>> derivedAtts);
 
     /**
      * Copy from one submap to another

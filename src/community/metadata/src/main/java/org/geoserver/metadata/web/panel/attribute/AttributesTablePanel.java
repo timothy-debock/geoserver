@@ -4,8 +4,8 @@
  */
 package org.geoserver.metadata.web.panel.attribute;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
@@ -39,7 +39,7 @@ public class AttributesTablePanel extends Panel {
             String id,
             GeoServerDataProvider<AttributeConfiguration> dataProvider,
             IModel<ComplexMetadataMap> metadataModel,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
         super(id, metadataModel);
 
         List<IStringResourceLoader> loaders =
@@ -82,7 +82,7 @@ public class AttributesTablePanel extends Panel {
 
     private GeoServerTablePanel<AttributeConfiguration> createAttributesTablePanel(
             GeoServerDataProvider<AttributeConfiguration> dataProvider,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
 
         return new GeoServerTablePanel<AttributeConfiguration>(
                 "attributesTablePanel", dataProvider) {

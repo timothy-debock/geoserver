@@ -4,8 +4,8 @@
  */
 package org.geoserver.metadata.web.panel.attribute;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -40,7 +40,7 @@ public class RepeatableAttributesTablePanel extends Panel {
             String id,
             RepeatableAttributeDataProvider<String> dataProvider,
             IModel<ComplexMetadataMap> metadataModel,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
         super(id, metadataModel);
 
         setOutputMarkupId(true);
@@ -80,7 +80,7 @@ public class RepeatableAttributesTablePanel extends Panel {
 
     private GeoServerTablePanel<ComplexMetadataAttribute<String>> createAttributesTablePanel(
             RepeatableAttributeDataProvider<String> dataProvider,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
 
         GeoServerTablePanel<ComplexMetadataAttribute<String>> tablePanel =
                 new GeoServerTablePanel<ComplexMetadataAttribute<String>>(

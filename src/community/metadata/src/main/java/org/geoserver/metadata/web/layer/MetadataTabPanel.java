@@ -77,16 +77,23 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
             }
         }
         resource.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, custom);
-
         metadataModel = new Model<ComplexMetadataMap>(new ComplexMetadataMapImpl(custom));
+
+        derivedAtts = new HashMap<>();
+        Serializable oldDerivedAtts = resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
+        if (oldDerivedAtts instanceof HashMap<?, ?>) {
+            for (Entry<? extends String, ? extends List<Integer>> entry :
+                    ((Map<? extends String, ? extends List<Integer>>) oldDerivedAtts).entrySet()) {
+                derivedAtts.put(entry.getKey(), new ArrayList<Integer>(entry.getValue()));
+            }
+        }
+        resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
 
         ComplexMetadataService service =
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(ComplexMetadataService.class);
         service.init(metadataModel.getObject());
-        derivedAtts = new HashMap<>();
-        updateModel(resource.getId());
 
         // Link with templates panel
         this.add(

@@ -7,8 +7,8 @@ package org.geoserver.metadata.data.service.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geoserver.metadata.data.dto.AttributeCollection;
@@ -43,7 +43,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     public void merge(
             ComplexMetadataMap destination,
             List<ComplexMetadataMap> sources,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
 
         clearTemplateData(destination, derivedAtts);
 
@@ -57,7 +57,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     private void mergeAttributes(
             ComplexMetadataMap destination,
             ComplexMetadataMap source,
-            HashMap<String, List<Integer>> derivedAtts) {
+            Map<String, List<Integer>> derivedAtts) {
         for (AttributeConfiguration attribute :
                 configService.getMetadataConfiguration().getAttributes()) {
             // keep track of the values that are from the template
@@ -197,7 +197,8 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
             if (config.getFieldType() != FieldTypeEnum.COMPLEX) {
                 Serializable value = map.get(Serializable.class, config.getKey()).getValue();
                 Serializable otherValue = other.get(Serializable.class, config.getKey()).getValue();
-                if (!(value == null && otherValue == null || value != null && value.equals(otherValue))) {
+                if (!(value == null && otherValue == null
+                        || value != null && value.equals(otherValue))) {
                     return false;
                 }
             } else {
@@ -213,7 +214,7 @@ public class ComplexMetadataServiceImpl implements ComplexMetadataService {
     }
 
     private void clearTemplateData(
-            ComplexMetadataMap destination, HashMap<String, List<Integer>> derivedAtts) {
+            ComplexMetadataMap destination, Map<String, List<Integer>> derivedAtts) {
         if (derivedAtts != null) {
             for (String key : derivedAtts.keySet()) {
                 AttributeConfiguration attConfig =

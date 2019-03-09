@@ -27,7 +27,6 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
-import org.geoserver.metadata.data.model.impl.ComplexMetadataIndexReference;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.model.impl.MetadataTemplateImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
@@ -46,6 +45,7 @@ import org.springframework.stereotype.Component;
  * metadata is also updated.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
+ * @author Niels Charlier
  */
 @Component
 public class MetadataTemplateServiceImpl implements MetadataTemplateService, ResourceListener {
@@ -68,12 +68,10 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
     public MetadataTemplateServiceImpl() {
         this.persister = new XStreamPersisterFactory().createXMLPersister();
+        this.persister.getXStream().processAnnotations(MetadataTemplateImpl.class);
         this.persister
                 .getXStream()
                 .allowTypesByWildcard(new String[] {"org.geoserver.metadata.data.model.**"});
-        this.persister.getXStream().processAnnotations(MetadataTemplateImpl.class);
-        this.persister.getXStream().processAnnotations(ComplexMetadataMapImpl.class);
-        this.persister.getXStream().processAnnotations(ComplexMetadataIndexReference.class);
     }
 
     private Resource getFolder() {
@@ -93,10 +91,11 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
     @SuppressWarnings("unchecked")
     public void reload() {
+        Resource folder = getFolder();
+
         synchronized (templates) {
             templates.clear();
 
-            Resource folder = getFolder();
             Resource listFile = folder.get(LIST_FILE);
 
             if (Resources.exists(listFile)) {

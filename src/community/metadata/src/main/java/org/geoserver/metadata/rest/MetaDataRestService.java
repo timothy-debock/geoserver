@@ -39,8 +39,7 @@ public class MetaDataRestService {
         } else {
             for (ResourceInfo info : catalog.getResources(ResourceInfo.class)) {
                 info.getMetadata().remove(MetadataConstants.CUSTOM_METADATA_KEY);
-                // TODO: remove
-                info.getMetadata().remove("custom-derived-attributes");
+                info.getMetadata().remove(MetadataConstants.DERIVED_KEY);
                 catalog.save(info);
             }
             templateService.saveList(Collections.emptyList());
