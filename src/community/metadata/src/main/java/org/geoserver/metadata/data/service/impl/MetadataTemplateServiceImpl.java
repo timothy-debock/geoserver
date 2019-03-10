@@ -276,7 +276,11 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
         }
 
         if (sources.size() > 0) {
-            metadataService.merge(model, sources, new HashMap<>());
+            @SuppressWarnings("unchecked")
+            HashMap<String, List<Integer>> derivedAtts =
+                    (HashMap<String, List<Integer>>)
+                            resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
+            metadataService.merge(model, sources, derivedAtts);
             geoServer.getCatalog().save(resource);
         }
     }
