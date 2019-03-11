@@ -11,9 +11,11 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -277,9 +279,12 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
 
         if (sources.size() > 0) {
             @SuppressWarnings("unchecked")
-            HashMap<String, List<Integer>> derivedAtts =
-                    (HashMap<String, List<Integer>>)
+            Map<String, List<Integer>> derivedAtts =
+                    (Map<String, List<Integer>>)
                             resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
+            if (derivedAtts == null) {
+                derivedAtts = Collections.emptyMap();
+            }
             metadataService.merge(model, sources, derivedAtts);
             geoServer.getCatalog().save(resource);
         }
