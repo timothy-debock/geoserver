@@ -82,6 +82,9 @@ public abstract class AbstractMetadataTest {
                     AbstractMetadataTest.class.getResourceAsStream("metadata-ui.yaml"),
                     new File(metadata, "metadata-ui.yaml"));
             IOUtils.copy(
+                    AbstractMetadataTest.class.getResourceAsStream("metadata-native.yaml"),
+                    new File(metadata, "metadata-native.yaml"));
+            IOUtils.copy(
                     AbstractMetadataTest.class.getResourceAsStream("sourcetarget.csv"),
                     new File(metadata, "sourcetarget.csv"));
             IOUtils.copy(

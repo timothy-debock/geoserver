@@ -49,7 +49,7 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
     public void parseMetadata(Document doc, ResourceInfo rInfo, ComplexMetadataMap metadataMap)
             throws IOException {
         for (AttributeMappingConfiguration attributeMapping :
-                configService.getMappingConfiguration().getGeonetworkmapping()) {
+                configService.getGeonetworkMappingConfiguration().getGeonetworkmapping()) {
             if (attributeMapping.getMappingType() == MappingTypeEnum.NATIVE) {
                 addNativeAttribute(rInfo, attributeMapping, doc);
             } else {
@@ -138,7 +138,7 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
             throws IOException {
         if (FieldTypeEnum.COMPLEX.equals(attConfig.getFieldType())) {
             AttributeTypeMappingConfiguration typeMapping =
-                    configService.getMappingConfiguration().findType(attConfig.getTypename());
+                    configService.getGeonetworkMappingConfiguration().findType(attConfig.getTypename());
             if (typeMapping == null) {
                 throw new IOException(
                         "type mapping " + attConfig.getTypename() + " not found in configuration");

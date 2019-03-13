@@ -24,6 +24,7 @@ import org.geoserver.metadata.data.model.ComplexMetadataMap;
 import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
+import org.geoserver.metadata.data.service.CustomNativeMappingService;
 import org.geoserver.metadata.data.service.GeonetworkXmlParser;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
 import org.geoserver.metadata.data.service.RemoteDocumentReader;
@@ -169,6 +170,17 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         Form<?> form = findParent(Form.class);
                         if (form != null && form.findSubmittingButton() == form.get("save")) {
                             updateModel(resource.getId());
+
+                            // calculate attributes of type DERIVED
+                            service.derive(metadataModel.getObject());
+                            
+                            // map to native attributes
+                            CustomNativeMappingService cnmService =
+                                    GeoServerApplication.get()
+                                            .getApplicationContext()
+                                            .getBean(CustomNativeMappingService.class);
+                            cnmService.mapCustomToNative((LayerInfo) 
+                                    MetadataTabPanel.this.getDefaultModelObject());
                         }
                     }
                 });
@@ -202,7 +214,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
             }
         }
 
-        service.derive(metadataModel.getObject());
         service.merge(metadataModel.getObject(), maps, derivedAtts);
     }
 

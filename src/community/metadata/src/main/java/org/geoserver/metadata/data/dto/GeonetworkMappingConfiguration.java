@@ -7,7 +7,7 @@ package org.geoserver.metadata.data.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
-import org.geoserver.metadata.data.dto.impl.MappingConfigurationImpl;
+import org.geoserver.metadata.data.dto.impl.GeonetworkMappingConfigurationImpl;
 
 /**
  * Toplevel Object that matches yaml structure.
@@ -19,9 +19,9 @@ import org.geoserver.metadata.data.dto.impl.MappingConfigurationImpl;
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
-@JsonDeserialize(as = MappingConfigurationImpl.class)
+@JsonDeserialize(as = GeonetworkMappingConfigurationImpl.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public interface MappingConfiguration {
+public interface GeonetworkMappingConfiguration {
 
     public List<AttributeMappingConfiguration> getGeonetworkmapping();
 

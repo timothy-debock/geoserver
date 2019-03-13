@@ -280,10 +280,8 @@ public class MetadataTemplateServiceImpl implements MetadataTemplateService, Res
             @SuppressWarnings("unchecked")
             Map<String, List<Integer>> derivedAtts =
                     (Map<String, List<Integer>>)
-                            resource.getMetadata().get(MetadataConstants.DERIVED_KEY);
-            if (derivedAtts == null) {
-                derivedAtts = new HashMap<>();
-            }
+                            resource.getMetadata().computeIfAbsent(MetadataConstants.DERIVED_KEY,
+                                    key -> new HashMap<>());
             metadataService.merge(model, sources, derivedAtts);
             geoServer.getCatalog().save(resource);
         }

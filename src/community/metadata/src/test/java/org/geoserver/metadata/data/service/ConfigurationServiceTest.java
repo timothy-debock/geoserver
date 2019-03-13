@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 import org.geoserver.metadata.AbstractMetadataTest;
 import org.geoserver.metadata.data.dto.AttributeConfiguration;
-import org.geoserver.metadata.data.dto.MappingConfiguration;
+import org.geoserver.metadata.data.dto.GeonetworkMappingConfiguration;
 import org.geoserver.metadata.data.dto.MetadataConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class ConfigurationServiceTest extends AbstractMetadataTest {
 
     @Test
     public void testGeonetworkMappingRegistry() throws IOException {
-        MappingConfiguration configuration = yamlService.getMappingConfiguration();
+        GeonetworkMappingConfiguration configuration = yamlService.getGeonetworkMappingConfiguration();
         Assert.assertNotNull(configuration);
         Assert.assertEquals(8, configuration.getGeonetworkmapping().size());
         Assert.assertEquals(2, configuration.getObjectmapping().size());

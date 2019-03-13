@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.geoserver.metadata.data.dto.AttributeMappingConfiguration;
 import org.geoserver.metadata.data.dto.AttributeTypeMappingConfiguration;
-import org.geoserver.metadata.data.dto.MappingConfiguration;
+import org.geoserver.metadata.data.dto.GeonetworkMappingConfiguration;
 
 /**
  * Toplevel Object that matches yaml structure.
@@ -22,7 +22,7 @@ import org.geoserver.metadata.data.dto.MappingConfiguration;
  * @author Timothy De Bock - timothy.debock.github@gmail.com
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MappingConfigurationImpl implements MappingConfiguration {
+public class GeonetworkMappingConfigurationImpl implements GeonetworkMappingConfiguration {
 
     List<AttributeMappingConfiguration> geonetworkmapping = new ArrayList<>();
 

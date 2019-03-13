@@ -4,7 +4,8 @@
  */
 package org.geoserver.metadata.data.service;
 
-import org.geoserver.metadata.data.dto.MappingConfiguration;
+import org.geoserver.metadata.data.dto.CustomNativeMappingsConfiguration;
+import org.geoserver.metadata.data.dto.GeonetworkMappingConfiguration;
 import org.geoserver.metadata.data.dto.MetadataConfiguration;
 
 /**
@@ -17,5 +18,7 @@ public interface ConfigurationService {
 
     MetadataConfiguration getMetadataConfiguration();
 
-    MappingConfiguration getMappingConfiguration();
+    GeonetworkMappingConfiguration getGeonetworkMappingConfiguration();
+
+    CustomNativeMappingsConfiguration getCustomNativeMappingsConfiguration();
 }
