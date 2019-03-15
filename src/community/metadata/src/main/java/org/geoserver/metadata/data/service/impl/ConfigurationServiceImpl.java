@@ -57,7 +57,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     private MetadataConfiguration configuration;
 
     private GeonetworkMappingConfiguration geonetworkMappingConfig;
-    
+
     private CustomNativeMappingsConfiguration customNativeMappingsConfig;
 
     private Resource getFolder() {
@@ -86,7 +86,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     public GeonetworkMappingConfiguration getGeonetworkMappingConfiguration() {
         return geonetworkMappingConfig;
     }
-    
+
     @Override
     public CustomNativeMappingsConfiguration getCustomNativeMappingsConfiguration() {
         return customNativeMappingsConfig;
@@ -97,11 +97,11 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         List<Resource> files = Resources.list(folder, new Resources.ExtensionFilter("YAML"));
         Collections.sort(files, (o1, o2) -> o1.name().compareTo(o2.name()));
-        
+
         configuration = new MetadataConfigurationImpl();
 
         geonetworkMappingConfig = new GeonetworkMappingConfigurationImpl();
-        
+
         customNativeMappingsConfig = new CustomNativeMappingsConfigurationImpl();
 
         for (Resource file : files) {
@@ -136,9 +136,13 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         }
     }
 
-    private void readingCustomNativeMapping(InputStream in, ObjectMapper mapper) throws IOException {
-        CustomNativeMappingsConfiguration config = mapper.readValue(in, CustomNativeMappingsConfiguration.class);
-        customNativeMappingsConfig.getCustomNativeMappings().addAll(config.getCustomNativeMappings());
+    private void readingCustomNativeMapping(InputStream in, ObjectMapper mapper)
+            throws IOException {
+        CustomNativeMappingsConfiguration config =
+                mapper.readValue(in, CustomNativeMappingsConfiguration.class);
+        customNativeMappingsConfig
+                .getCustomNativeMappings()
+                .addAll(config.getCustomNativeMappings());
     }
 
     private void readConfiguration(InputStream in, ObjectMapper mapper) throws IOException {
@@ -188,7 +192,8 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     private void readMapping(InputStream in, ObjectMapper mapper) throws IOException {
-        GeonetworkMappingConfiguration config = mapper.readValue(in, GeonetworkMappingConfigurationImpl.class);
+        GeonetworkMappingConfiguration config =
+                mapper.readValue(in, GeonetworkMappingConfigurationImpl.class);
         Set<String> attKeys = new HashSet<>();
         for (AttributeMappingConfiguration mapping : config.getGeonetworkmapping()) {
             if (!attKeys.contains(mapping.getGeoserver())) {

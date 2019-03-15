@@ -4,22 +4,19 @@
  */
 package org.geoserver.metadata.data.dto.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.geoserver.metadata.data.dto.CustomNativeMappingConfiguration;
 import org.geoserver.metadata.data.dto.CustomNativeMappingsConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomNativeMappingsConfigurationImpl implements CustomNativeMappingsConfiguration {
-    
+
     private List<CustomNativeMappingConfiguration> customNativeMappings = new ArrayList<>();
 
     @Override
     public List<CustomNativeMappingConfiguration> getCustomNativeMappings() {
         return customNativeMappings;
     }
-
 }

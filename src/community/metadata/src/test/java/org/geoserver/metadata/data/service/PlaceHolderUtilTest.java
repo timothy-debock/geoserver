@@ -49,5 +49,4 @@ public class PlaceHolderUtilTest {
                 Lists.newArrayList(STR_1, STR_2),
                 PlaceHolderUtil.replacePlaceHolder(PATTERN_2, map2));
     }
-    
 }

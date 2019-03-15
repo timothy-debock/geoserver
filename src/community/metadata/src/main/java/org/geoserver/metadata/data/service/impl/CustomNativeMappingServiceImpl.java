@@ -4,6 +4,7 @@
  */
 package org.geoserver.metadata.data.service.impl;
 
+import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.geoserver.catalog.Keyword;
 import org.geoserver.catalog.LayerInfo;
@@ -30,19 +30,16 @@ import org.geotools.util.logging.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Lists;
-
 /**
- * Allows the geoserver-native attributes keywords, metadatalinks, and identifiers to be automatically
- * updated based on custom attributes.
- * 
- * @author Niels Charlier
+ * Allows the geoserver-native attributes keywords, metadatalinks, and identifiers to be
+ * automatically updated based on custom attributes.
  *
+ * @author Niels Charlier
  */
 @Service
 public class CustomNativeMappingServiceImpl implements CustomNativeMappingService {
-    
-    private static enum MappingTypeEnum  {
+
+    private static enum MappingTypeEnum {
         KEYWORDS {
             @Override
             List<?> list(LayerInfo layer) {
@@ -76,7 +73,8 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
             String getValue(Object object) {
                 return ((LayerIdentifier) object).getIdentifier();
             }
-        }, METADATALINKS {
+        },
+        METADATALINKS {
             @Override
             List<?> list(LayerInfo layer) {
                 return layer.getResource().getMetadataLinks();
@@ -94,55 +92,57 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
                 return ((MetadataLinkInfo) object).getContent();
             }
         };
-        
+
         abstract List<?> list(LayerInfo layer);
-        
+
         abstract Object create(String value);
-        
+
         abstract String getValue(Object object);
-        
     }
 
     private static final java.util.logging.Logger LOGGER =
             Logging.getLogger(CustomNativeMappingServiceImpl.class);
-    
+
     private static final String VALUE = "value";
-    
-    @Autowired
-    private ConfigurationService configService;
+
+    @Autowired private ConfigurationService configService;
 
     @Override
     public void mapCustomToNative(LayerInfo layer) {
-        CustomNativeMappingsConfiguration config = 
+        CustomNativeMappingsConfiguration config =
                 configService.getCustomNativeMappingsConfiguration();
-        
+
         @SuppressWarnings("unchecked")
-        Map<String, List<String>> custom = convert((Map<String, Serializable>)
-                        layer.getResource()
-                                .getMetadata()
-                                .get(MetadataConstants.CUSTOM_METADATA_KEY));
+        Map<String, List<String>> custom =
+                convert(
+                        (Map<String, Serializable>)
+                                layer.getResource()
+                                        .getMetadata()
+                                        .get(MetadataConstants.CUSTOM_METADATA_KEY));
 
         Set<MappingTypeEnum> cleared = new HashSet<>();
         for (CustomNativeMappingConfiguration mapping : config.getCustomNativeMappings()) {
             MappingTypeEnum mappingType = MappingTypeEnum.valueOf(mapping.getType());
-            
+
             if (!cleared.contains(mappingType)) {
                 mappingType.list(layer).clear();
                 cleared.add(mappingType);
             }
-            mappingType.list(layer).addAll(
-                    build(mapping.getMapping(), mappingType, custom));
+            mappingType.list(layer).addAll(build(mapping.getMapping(), mappingType, custom));
         }
     }
-    
+
     @Override
     public void mapNativeToCustom(LayerInfo layer) {
-        CustomNativeMappingsConfiguration config = 
+        CustomNativeMappingsConfiguration config =
                 configService.getCustomNativeMappingsConfiguration();
 
         @SuppressWarnings("unchecked")
-        Map<String, Serializable> custom = (Map<String, Serializable>) layer.getResource()
-                .getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+        Map<String, Serializable> custom =
+                (Map<String, Serializable>)
+                        layer.getResource()
+                                .getMetadata()
+                                .get(MetadataConstants.CUSTOM_METADATA_KEY);
 
         for (CustomNativeMappingConfiguration mapping : config.getCustomNativeMappings()) {
             MappingTypeEnum mappingType = MappingTypeEnum.valueOf(mapping.getType());
@@ -151,16 +151,20 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
                 Map<String, String> mappedRecord = new HashMap<>();
                 for (Entry<String, String> mappingEntry : mapping.getMapping().entrySet()) {
                     try {
-                        Map<String, String> mappedProperties = PlaceHolderUtil.reversePlaceHolders(
-                                mappingEntry.getValue(),
-                                VALUE.equals(mappingEntry.getKey()) ? mappingType.getValue(item)
-                                        : BeanUtils.getProperty(item, mappingEntry.getKey()));
+                        Map<String, String> mappedProperties =
+                                PlaceHolderUtil.reversePlaceHolders(
+                                        mappingEntry.getValue(),
+                                        VALUE.equals(mappingEntry.getKey())
+                                                ? mappingType.getValue(item)
+                                                : BeanUtils.getProperty(
+                                                        item, mappingEntry.getKey()));
                         if (mappedProperties == null) {
                             mappedRecord = null;
                             break;
                         }
                         mappedRecord.putAll(mappedProperties);
-                    } catch (IllegalAccessException | InvocationTargetException
+                    } catch (IllegalAccessException
+                            | InvocationTargetException
                             | NoSuchMethodException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
@@ -173,11 +177,11 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> List<T> build(Map<String, String> mapping, 
+    private static <T> List<T> build(
+            Map<String, String> mapping,
             MappingTypeEnum mappingType,
             Map<String, List<String>> custom) {
-        List<String> values = PlaceHolderUtil.replacePlaceHolder(
-                mapping.get(VALUE), custom);
+        List<String> values = PlaceHolderUtil.replacePlaceHolder(mapping.get(VALUE), custom);
         List<T> result = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
             result.add((T) mappingType.create(values.get(i)));
@@ -185,10 +189,12 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
         for (Entry<String, String> entry : mapping.entrySet()) {
             if (!VALUE.equals(entry.getKey())) {
                 values = PlaceHolderUtil.replacePlaceHolder(entry.getValue(), custom);
-                for (int i = 0 ; i < result.size() && (values == null || i < values.size()); i++) {
+                for (int i = 0; i < result.size() && (values == null || i < values.size()); i++) {
                     try {
-                        BeanUtils.setProperty(result.get(i), entry.getKey(), 
-                               values == null ? entry.getValue() : values.get(i));
+                        BeanUtils.setProperty(
+                                result.get(i),
+                                entry.getKey(),
+                                values == null ? entry.getValue() : values.get(i));
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
@@ -213,10 +219,10 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
         }
         return result;
     }
-    
+
     @SuppressWarnings("unchecked")
     public void merge(Map<String, Serializable> dest, Map<String, String> map) {
-        //check if nothing is being duplicated
+        // check if nothing is being duplicated
         boolean exists = true;
         for (Entry<String, String> entry : map.entrySet()) {
             Serializable target = dest.get(entry.getKey());
@@ -224,7 +230,7 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
                 exists = ((List<Serializable>) target).contains(entry.getValue());
             } else {
                 exists = target != null && target.equals(entry.getValue());
-            } 
+            }
             if (!exists) {
                 break;
             }
@@ -237,8 +243,11 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
             if (target instanceof List) {
                 ((List<Serializable>) target).add(entry.getValue());
             } else {
-                dest.put(entry.getKey(), target == null ? entry.getValue() :
-                    Lists.newArrayList(target, entry.getValue()));
+                dest.put(
+                        entry.getKey(),
+                        target == null
+                                ? entry.getValue()
+                                : Lists.newArrayList(target, entry.getValue()));
             }
         }
     }

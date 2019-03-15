@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
 import javax.servlet.http.HttpServletResponse;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.LayerInfo;
@@ -29,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/metadata")
 public class MetaDataRestService {
-    
+
     private static final Logger LOGGER = Logging.getLogger(MetaDataRestService.class);
 
     @Autowired private Catalog catalog;
@@ -72,13 +71,14 @@ public class MetaDataRestService {
         }
         return "Success.";
     }
-    
+
     @PostMapping("nativeToCustom")
     public void nativeToCustom(@RequestBody String csvFile) {
         for (String resourceName : csvFile.split("\n")) {
             LayerInfo info = catalog.getLayerByName(resourceName.trim());
             if (info != null) {
-                info.setResource(catalog.getResource(info.getResource().getId(), ResourceInfo.class));
+                info.setResource(
+                        catalog.getResource(info.getResource().getId(), ResourceInfo.class));
                 nativeToCustomService.mapNativeToCustom(info);
                 catalog.save(info.getResource());
             } else {

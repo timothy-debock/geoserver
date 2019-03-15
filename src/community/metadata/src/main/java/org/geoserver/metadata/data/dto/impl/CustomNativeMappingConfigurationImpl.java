@@ -4,18 +4,16 @@
  */
 package org.geoserver.metadata.data.dto.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.geoserver.metadata.data.dto.CustomNativeMappingConfiguration;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomNativeMappingConfigurationImpl implements CustomNativeMappingConfiguration {
-    
+
     private String type;
-    
+
     private Map<String, String> mapping = new HashMap<>();
 
     @Override
@@ -27,5 +25,4 @@ public class CustomNativeMappingConfigurationImpl implements CustomNativeMapping
     public Map<String, String> getMapping() {
         return mapping;
     }
-
 }

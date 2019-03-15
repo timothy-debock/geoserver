@@ -30,13 +30,13 @@ public class PlaceHolderUtil {
         List<String> list = new ArrayList<>();
         while (matcher.find()) {
             list.add(matcher.group(1));
-            pattern = pattern.substring(0, matcher.start())
+            pattern =
+                    pattern.substring(0, matcher.start())
                             + "\\E(.*)\\Q"
                             + pattern.substring(matcher.end());
             matcher = PATTERN_PLACEHOLDER.matcher(pattern);
         }
-        matcher = Pattern.compile("\\Q" + pattern + "\\E")
-                .matcher(value);
+        matcher = Pattern.compile("\\Q" + pattern + "\\E").matcher(value);
         if (matcher.matches()) {
             Map<String, String> map = new HashMap<>();
             for (int i = 0; i < list.size(); i++) {
@@ -55,8 +55,10 @@ public class PlaceHolderUtil {
             List<String> value = map.get(matcher.group(1));
             if (value != null) {
                 for (int i = 0; i < value.size(); i++) {
-                    list.add(pattern.substring(0, matcher.start()) + value.get(i)
-                            + pattern.substring(matcher.end()));
+                    list.add(
+                            pattern.substring(0, matcher.start())
+                                    + value.get(i)
+                                    + pattern.substring(matcher.end()));
                 }
             }
             return list;

@@ -7,5 +7,4 @@ public interface CustomNativeMappingService {
     void mapCustomToNative(LayerInfo layer);
 
     void mapNativeToCustom(LayerInfo layer);
-
 }

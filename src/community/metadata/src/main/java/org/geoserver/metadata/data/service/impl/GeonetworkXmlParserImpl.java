@@ -138,7 +138,9 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
             throws IOException {
         if (FieldTypeEnum.COMPLEX.equals(attConfig.getFieldType())) {
             AttributeTypeMappingConfiguration typeMapping =
-                    configService.getGeonetworkMappingConfiguration().findType(attConfig.getTypename());
+                    configService
+                            .getGeonetworkMappingConfiguration()
+                            .findType(attConfig.getTypename());
             if (typeMapping == null) {
                 throw new IOException(
                         "type mapping " + attConfig.getTypename() + " not found in configuration");

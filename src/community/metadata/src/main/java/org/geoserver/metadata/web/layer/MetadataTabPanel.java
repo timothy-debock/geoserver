@@ -177,14 +177,14 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                                             .getApplicationContext()
                                             .getBean(ComplexMetadataService.class);
                             service.derive(metadataModel.getObject());
-                            
+
                             // map to native attributes
                             CustomNativeMappingService cnmService =
                                     GeoServerApplication.get()
                                             .getApplicationContext()
                                             .getBean(CustomNativeMappingService.class);
-                            cnmService.mapCustomToNative((LayerInfo) 
-                                    MetadataTabPanel.this.getDefaultModelObject());
+                            cnmService.mapCustomToNative(
+                                    (LayerInfo) MetadataTabPanel.this.getDefaultModelObject());
                         }
                     }
                 });
