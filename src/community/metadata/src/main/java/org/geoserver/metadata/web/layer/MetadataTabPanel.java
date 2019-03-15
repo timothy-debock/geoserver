@@ -172,6 +172,10 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                             updateModel(resource.getId());
 
                             // calculate attributes of type DERIVED
+                            ComplexMetadataService service =
+                                    GeoServerApplication.get()
+                                            .getApplicationContext()
+                                            .getBean(ComplexMetadataService.class);
                             service.derive(metadataModel.getObject());
                             
                             // map to native attributes

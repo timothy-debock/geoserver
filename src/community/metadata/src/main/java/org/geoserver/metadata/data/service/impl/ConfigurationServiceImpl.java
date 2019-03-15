@@ -54,11 +54,11 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     @Autowired private GeoServerDataDirectory dataDirectory;
 
-    private MetadataConfiguration configuration = new MetadataConfigurationImpl();
+    private MetadataConfiguration configuration;
 
-    private GeonetworkMappingConfiguration geonetworkMappingConfig = new GeonetworkMappingConfigurationImpl();
+    private GeonetworkMappingConfiguration geonetworkMappingConfig;
     
-    private CustomNativeMappingsConfiguration customNativeMappingsConfig = new CustomNativeMappingsConfigurationImpl();
+    private CustomNativeMappingsConfiguration customNativeMappingsConfig;
 
     private Resource getFolder() {
         return dataDirectory.get(MetadataConstants.DIRECTORY);
@@ -97,6 +97,12 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         List<Resource> files = Resources.list(folder, new Resources.ExtensionFilter("YAML"));
         Collections.sort(files, (o1, o2) -> o1.name().compareTo(o2.name()));
+        
+        configuration = new MetadataConfigurationImpl();
+
+        geonetworkMappingConfig = new GeonetworkMappingConfigurationImpl();
+        
+        customNativeMappingsConfig = new CustomNativeMappingsConfigurationImpl();
 
         for (Resource file : files) {
             try (InputStream in = file.in()) {
