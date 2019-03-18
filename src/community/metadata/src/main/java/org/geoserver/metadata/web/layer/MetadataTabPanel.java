@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -33,7 +32,6 @@ import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
 import org.geoserver.metadata.web.panel.ImportTemplatePanel;
 import org.geoserver.metadata.web.panel.MetadataPanel;
 import org.geoserver.web.GeoServerApplication;
-import org.geoserver.web.data.resource.ResourceConfigurationPage;
 import org.geoserver.web.publish.PublishedEditTabPanel;
 import org.geotools.util.logging.Logging;
 import org.w3c.dom.Document;
@@ -55,21 +53,16 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     private IModel<ComplexMetadataMap> metadataModel;
 
+    @SuppressWarnings("unchecked")
     public MetadataTabPanel(
             String id, IModel<LayerInfo> model, IModel<List<MetadataTemplate>> templatesModel) {
         super(id, model);
         this.templatesModel = templatesModel;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void onInitialize() {
-        super.onInitialize();
 
         // we must always copy the data, to avoid references escaping the modification proxy commit
         HashMap<String, Serializable> custom = new HashMap<>();
 
-        ResourceInfo resource = findParent(ResourceConfigurationPage.class).getResourceInfo();
+        ResourceInfo resource = model.getObject().getResource();
         Serializable oldCustom = resource.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
         if (oldCustom instanceof HashMap<?, ?>) {
             for (Entry<? extends String, ? extends Serializable> entry :
@@ -89,6 +82,13 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
             }
         }
         resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
+    }
+
+    @Override
+    protected void onInitialize() {
+        super.onInitialize();
+
+        ResourceInfo resource = ((LayerInfo) getDefaultModelObject()).getResource();
 
         ComplexMetadataService service =
                 GeoServerApplication.get()
@@ -106,7 +106,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
                     @Override
                     protected void handleUpdate(AjaxRequestTarget target) {
-                        updateModel(resource.getId());
+                        updateModel();
                         target.add(
                                 metadataPanel()
                                         .replaceWith(
@@ -159,35 +159,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                     }
                 };
         add(geonetworkPanel);
-
-        // bit of a hack - no other hook to do something before save
-        add(
-                new Form<Object>("dummyForm") {
-                    private static final long serialVersionUID = -1130841705471835763L;
-
-                    @Override
-                    protected void onSubmit() {
-                        Form<?> form = findParent(Form.class);
-                        if (form != null && form.findSubmittingButton() == form.get("save")) {
-                            updateModel(resource.getId());
-
-                            // calculate attributes of type DERIVED
-                            ComplexMetadataService service =
-                                    GeoServerApplication.get()
-                                            .getApplicationContext()
-                                            .getBean(ComplexMetadataService.class);
-                            service.derive(metadataModel.getObject());
-
-                            // map to native attributes
-                            CustomNativeMappingService cnmService =
-                                    GeoServerApplication.get()
-                                            .getApplicationContext()
-                                            .getBean(CustomNativeMappingService.class);
-                            cnmService.mapCustomToNative(
-                                    (LayerInfo) MetadataTabPanel.this.getDefaultModelObject());
-                        }
-                    }
-                });
     }
 
     protected MetadataPanel metadataPanel() {
@@ -199,7 +170,9 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
     }
 
     /** Merge the model and the linked templates. */
-    private void updateModel(String resourceId) {
+    private void updateModel() {
+        ResourceInfo resource = ((LayerInfo) getDefaultModelObject()).getResource();
+
         MetadataTemplateService templateService =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -210,7 +183,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         .getBean(ComplexMetadataService.class);
         ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
         for (MetadataTemplate template : templatesModel.getObject()) {
-            if (template.getLinkedLayers().contains(resourceId)) {
+            if (template.getLinkedLayers().contains(resource.getId())) {
                 template = templateService.getById(template.getId());
                 if (template != null) {
                     maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
@@ -219,6 +192,25 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
         }
 
         service.merge(metadataModel.getObject(), maps, derivedAtts);
+    }
+
+    @Override
+    public void beforeSave() {
+        updateModel();
+
+        // calculate attributes of type DERIVED
+        ComplexMetadataService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(ComplexMetadataService.class);
+        service.derive(metadataModel.getObject());
+
+        // map to native attributes
+        CustomNativeMappingService cnmService =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(CustomNativeMappingService.class);
+        cnmService.mapCustomToNative((LayerInfo) MetadataTabPanel.this.getDefaultModelObject());
     }
 
     @Override
