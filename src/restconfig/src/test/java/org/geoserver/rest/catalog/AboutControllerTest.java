@@ -126,9 +126,9 @@ public class AboutControllerTest extends GeoServerSystemTestSupport {
     }
 
     private void checkJSONModel(JSONObject json) {
-        // StringWriter sw = new StringWriter();
-        // json.write(sw);
-        // System.out.println(sw.toString());
+        StringWriter sw = new StringWriter();
+        json.write(sw);
+        System.out.println(sw.toString());
 
         // make assertions
         assertTrue(json != null);
