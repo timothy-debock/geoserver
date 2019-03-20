@@ -18,12 +18,14 @@ import java.util.List;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 
 /** @author Ian Schneider <ischneider@boundlessgeo.com> */
+@Ignore
 public class FilePublisherTest {
 
     static FilePublisher publisher;
