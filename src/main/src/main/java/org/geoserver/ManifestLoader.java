@@ -254,7 +254,7 @@ public class ManifestLoader {
 
         } catch (Exception e) {
             // be safe
-            LOGGER.log(Level.SEVERE, "Error looking up geoserver package", e);
+            LOGGER.log(Level.FINE, "Error looking up geoserver package", e);
         }
 
         try {
@@ -286,7 +286,7 @@ public class ManifestLoader {
             // model.add(manifest);
         } catch (Exception e) {
             // be safe
-            LOGGER.log(Level.SEVERE, "Error looking up geoserver package", e);
+            LOGGER.log(Level.FINE, "Error looking up geoserver package", e);
         }
 
         try {
@@ -322,7 +322,7 @@ public class ManifestLoader {
             // }
         } catch (Exception e) {
             // be safe
-            LOGGER.log(Level.SEVERE, "Error looking up org.geowebcache package", e);
+            LOGGER.log(Level.FINE, "Error looking up org.geowebcache package", e);
         }
         return model;
     }
