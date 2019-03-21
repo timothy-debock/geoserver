@@ -5,7 +5,6 @@
 package org.geoserver.metadata.web.panel;
 
 import java.util.ArrayList;
-import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -36,18 +35,8 @@ import org.geoserver.web.wicket.ParamResourceModel;
 public abstract class ImportGeonetworkPanel extends Panel {
     private static final long serialVersionUID = 1297739738862860160L;
 
-    private List<GeonetworkConfiguration> geonetworks = new ArrayList<>();
-
     public ImportGeonetworkPanel(String id) {
         super(id);
-        ConfigurationService configService =
-                GeoServerApplication.get()
-                        .getApplicationContext()
-                        .getBean(ConfigurationService.class);
-        MetadataConfiguration configuration = configService.getMetadataConfiguration();
-        if (configuration != null && configuration.getGeonetworks() != null) {
-            this.geonetworks = configuration.getGeonetworks();
-        }
     }
 
     @Override
@@ -61,12 +50,7 @@ public abstract class ImportGeonetworkPanel extends Panel {
                 new FeedbackPanel("importFeedback", new ContainerFeedbackMessageFilter(this))
                         .setOutputMarkupId(true));
 
-        ArrayList<String> optionsGeonetwork = new ArrayList<>();
-        for (GeonetworkConfiguration geonetwork : geonetworks) {
-            optionsGeonetwork.add(geonetwork.getName());
-        }
-
-        DropDownChoice<String> dropDown = createDropDown(optionsGeonetwork);
+        DropDownChoice<String> dropDown = createDropDown();
         dropDown.setNullValid(true);
         add(dropDown);
 
@@ -122,9 +106,11 @@ public abstract class ImportGeonetworkPanel extends Panel {
                                 @Override
                                 protected boolean onSubmit(
                                         AjaxRequestTarget target, Component contents) {
-                                    String url =
-                                            generateMetadataUrl(dropDown.getModelObject(), uuId);
-                                    handleImport(url, target, getFeedbackPanel());
+                                    handleImport(
+                                            dropDown.getModelObject(),
+                                            inputUUID.getModelObject(),
+                                            target,
+                                            getFeedbackPanel());
                                     return true;
                                 }
                             });
@@ -140,30 +126,20 @@ public abstract class ImportGeonetworkPanel extends Panel {
     }
 
     public abstract void handleImport(
-            String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel);
+            String geoNetwork, String uuid, AjaxRequestTarget target, FeedbackPanel feedbackPanel);
 
-    private String generateMetadataUrl(String modelValue, String uuid) {
-        String url = "";
-
-        if (modelValue != null) {
-            for (GeonetworkConfiguration geonetwork : geonetworks) {
-                if (modelValue.equals(geonetwork.getName())) {
-                    url = geonetwork.getUrl();
-                }
+    private DropDownChoice<String> createDropDown() {
+        ConfigurationService configService =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(ConfigurationService.class);
+        MetadataConfiguration configuration = configService.getMetadataConfiguration();
+        ArrayList<String> optionsGeonetwork = new ArrayList<>();
+        if (configuration != null && configuration.getGeonetworks() != null) {
+            for (GeonetworkConfiguration geonetwork : configuration.getGeonetworks()) {
+                optionsGeonetwork.add(geonetwork.getName());
             }
-            if (!url.contains("xml_iso19139_save?uuid=")) {
-                // assume we got the base url.
-                if (!url.endsWith("/")) {
-                    url = url + "/";
-                }
-                url = url + "srv/xml_iso19139_save?uuid=";
-            }
-            url = url + uuid;
         }
-        return url;
-    }
-
-    private DropDownChoice<String> createDropDown(final ArrayList<String> optionsGeonetwork) {
         return new DropDownChoice<>("geonetworkName", new Model<String>(""), optionsGeonetwork);
     }
 

@@ -6,7 +6,6 @@ package org.geoserver.metadata.web.layer;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,9 +23,8 @@ import org.geoserver.metadata.data.model.MetadataTemplate;
 import org.geoserver.metadata.data.model.impl.ComplexMetadataMapImpl;
 import org.geoserver.metadata.data.service.ComplexMetadataService;
 import org.geoserver.metadata.data.service.CustomNativeMappingService;
-import org.geoserver.metadata.data.service.GeonetworkXmlParser;
+import org.geoserver.metadata.data.service.GeonetworkImportService;
 import org.geoserver.metadata.data.service.MetadataTemplateService;
-import org.geoserver.metadata.data.service.RemoteDocumentReader;
 import org.geoserver.metadata.data.service.impl.MetadataConstants;
 import org.geoserver.metadata.web.panel.ImportGeonetworkPanel;
 import org.geoserver.metadata.web.panel.ImportTemplatePanel;
@@ -34,7 +32,6 @@ import org.geoserver.metadata.web.panel.MetadataPanel;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.publish.PublishedEditTabPanel;
 import org.geotools.util.logging.Logging;
-import org.w3c.dom.Document;
 
 /**
  * A tabpanel that adds the metadata configuration to the layer.
@@ -126,24 +123,23 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
                     @Override
                     public void handleImport(
-                            String url, AjaxRequestTarget target, FeedbackPanel feedbackPanel) {
+                            String geoNetwork,
+                            String uuid,
+                            AjaxRequestTarget target,
+                            FeedbackPanel feedbackPanel) {
                         try {
                             // First unlink all templates
                             importTemplatePanel()
                                     .unlinkTemplate(
                                             target, importTemplatePanel().getLinkedTemplates());
                             // Read the file
-                            RemoteDocumentReader geonetworkReader =
+                            GeonetworkImportService importService =
                                     GeoServerApplication.get()
                                             .getApplicationContext()
-                                            .getBean(RemoteDocumentReader.class);
-                            GeonetworkXmlParser xmlParser =
-                                    GeoServerApplication.get()
-                                            .getApplicationContext()
-                                            .getBean(GeonetworkXmlParser.class);
+                                            .getBean(GeonetworkImportService.class);
                             // import metadata
-                            Document doc = geonetworkReader.readDocument(new URL(url));
-                            xmlParser.parseMetadata(doc, resource, metadataModel.getObject());
+                            importService.importLayer(
+                                    resource, metadataModel.getObject(), geoNetwork, uuid);
                         } catch (IOException e) {
                             LOGGER.severe(e.getMessage());
                             feedbackPanel.error(e.getMessage());

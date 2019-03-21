@@ -84,7 +84,13 @@ public class GeonetworkXmlParserImpl implements GeonetworkXmlParser {
                     for (int i = 0; i < nodes.getLength(); i++) {
                         list.add(nodes.item(i).getNodeValue());
                     }
-                    BeanUtils.setProperty(rInfo, attributeMapping.getGeoserver(), list);
+                    @SuppressWarnings("unchecked")
+                    List<Object> propList =
+                            (List<Object>)
+                                    PropertyUtils.getProperty(
+                                            rInfo, attributeMapping.getGeoserver());
+                    propList.clear();
+                    propList.addAll(list);
                 } else {
                     Object value =
                             clazz == null

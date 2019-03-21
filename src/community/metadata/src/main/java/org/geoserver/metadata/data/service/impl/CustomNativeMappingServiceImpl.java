@@ -133,7 +133,7 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
     }
 
     @Override
-    public void mapNativeToCustom(LayerInfo layer) {
+    public void mapNativeToCustom(LayerInfo layer, List<Integer> indexes) {
         CustomNativeMappingsConfiguration config =
                 configService.getCustomNativeMappingsConfiguration();
 
@@ -142,35 +142,40 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
                 (Map<String, Serializable>)
                         layer.getResource()
                                 .getMetadata()
-                                .get(MetadataConstants.CUSTOM_METADATA_KEY);
+                                .computeIfAbsent(
+                                        MetadataConstants.CUSTOM_METADATA_KEY,
+                                        key -> new HashMap<>());
 
-        for (CustomNativeMappingConfiguration mapping : config.getCustomNativeMappings()) {
-            MappingTypeEnum mappingType = MappingTypeEnum.valueOf(mapping.getType());
+        for (int i = 0; i < config.getCustomNativeMappings().size(); i++) {
+            if (indexes == null || indexes.contains(i)) {
+                CustomNativeMappingConfiguration mapping = config.getCustomNativeMappings().get(i);
+                MappingTypeEnum mappingType = MappingTypeEnum.valueOf(mapping.getType());
 
-            for (Object item : mappingType.list(layer)) {
-                Map<String, String> mappedRecord = new HashMap<>();
-                for (Entry<String, String> mappingEntry : mapping.getMapping().entrySet()) {
-                    try {
-                        Map<String, String> mappedProperties =
-                                PlaceHolderUtil.reversePlaceHolders(
-                                        mappingEntry.getValue(),
-                                        VALUE.equals(mappingEntry.getKey())
-                                                ? mappingType.getValue(item)
-                                                : BeanUtils.getProperty(
-                                                        item, mappingEntry.getKey()));
-                        if (mappedProperties == null) {
-                            mappedRecord = null;
-                            break;
+                for (Object item : mappingType.list(layer)) {
+                    Map<String, String> mappedRecord = new HashMap<>();
+                    for (Entry<String, String> mappingEntry : mapping.getMapping().entrySet()) {
+                        try {
+                            Map<String, String> mappedProperties =
+                                    PlaceHolderUtil.reversePlaceHolders(
+                                            mappingEntry.getValue(),
+                                            VALUE.equals(mappingEntry.getKey())
+                                                    ? mappingType.getValue(item)
+                                                    : BeanUtils.getProperty(
+                                                            item, mappingEntry.getKey()));
+                            if (mappedProperties == null) {
+                                mappedRecord = null;
+                                break;
+                            }
+                            mappedRecord.putAll(mappedProperties);
+                        } catch (IllegalAccessException
+                                | InvocationTargetException
+                                | NoSuchMethodException e) {
+                            LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         }
-                        mappedRecord.putAll(mappedProperties);
-                    } catch (IllegalAccessException
-                            | InvocationTargetException
-                            | NoSuchMethodException e) {
-                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
-                }
-                if (mappedRecord != null) {
-                    merge(custom, mappedRecord);
+                    if (mappedRecord != null) {
+                        merge(custom, mappedRecord);
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ package org.geoserver.metadata.data.service;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.HashMap;
 import org.geoserver.catalog.Keyword;
@@ -161,5 +162,58 @@ public class CustomNativeMappingServiceTest extends AbstractMetadataTest {
         assertEquals(
                 "EOV-ce",
                 map.subMap("referencesystem-object", 1).get(String.class, "code-space").getValue());
+    }
+
+    @Test
+    public void testNativeToCustomPartial() {
+        LayerInfo layer = geoServer.getCatalog().getLayers().get(0);
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, Serializable> underlying =
+                (HashMap<String, Serializable>)
+                        layer.getResource()
+                                .getMetadata()
+                                .get(MetadataConstants.CUSTOM_METADATA_KEY);
+        underlying.clear();
+        ComplexMetadataMap map = new ComplexMetadataMapImpl(underlying);
+
+        layer.getResource().getKeywords().add(new Keyword("KEY_foo"));
+        layer.getResource().getKeywords().get(0).setVocabulary("VOCABULARY_A");
+        layer.getResource().getKeywords().add(new Keyword("KEY_bar"));
+        layer.getResource().getKeywords().get(1).setVocabulary("VOCABULARY_A");
+        layer.getResource().getKeywords().add(new Keyword("KEY_DOV"));
+        layer.getResource().getKeywords().get(2).setVocabulary("VOCABULARY_B");
+        layer.getResource().getKeywords().add(new Keyword("KEY_Vlaanderen"));
+        layer.getResource().getKeywords().get(3).setVocabulary("VOCABULARY_B");
+        layer.getResource().getMetadataLinks().add(new MetadataLinkInfoImpl());
+        layer.getResource()
+                .getMetadataLinks()
+                .get(0)
+                .setContent("https://www.dov.vlaanderen.be/geonetwork/?uuid=1234");
+        layer.getResource().getMetadataLinks().get(0).setType("text/html");
+        layer.getResource().getMetadataLinks().get(0).setMetadataType("ISO191156:2003");
+        layer.getResource().getMetadataLinks().add(new MetadataLinkInfoImpl());
+        layer.getResource()
+                .getMetadataLinks()
+                .get(1)
+                .setContent(
+                        "https://www.dov.vlaanderen.be/geonetwork/srv/nl/csw?Service=CSW&Request=GetRecordById&Version=2.0.2&outputSchema=http://www.isotc211.org/2005/gmd&elementSetName=full&id=1234");
+        layer.getResource().getMetadataLinks().get(1).setType("text/xml");
+        layer.getResource().getMetadataLinks().get(1).setMetadataType("ISO191156:2003");
+        layer.getIdentifiers().add(new LayerIdentifier());
+        layer.getIdentifiers().get(0).setIdentifier("abcde");
+        layer.getIdentifiers().get(0).setAuthority("DOV-be");
+        layer.getIdentifiers().add(new LayerIdentifier());
+        layer.getIdentifiers().get(1).setIdentifier("fghi");
+        layer.getIdentifiers().get(1).setAuthority("EOV-ce");
+
+        cnmService.mapNativeToCustom(layer, Lists.newArrayList(0, 2));
+
+        assertEquals(2, map.size("refsystem-as-list"));
+        assertEquals("foo", map.get(String.class, "refsystem-as-list", 0).getValue());
+        assertEquals("bar", map.get(String.class, "refsystem-as-list", 1).getValue());
+        assertEquals(0, map.size("contact"));
+        assertEquals("1234", map.get(String.class, "identifier-single").getValue());
+        assertEquals(0, map.size("referencesystem-object"));
     }
 }
