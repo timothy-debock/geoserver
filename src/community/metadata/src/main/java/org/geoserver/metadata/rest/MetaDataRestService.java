@@ -145,11 +145,13 @@ public class MetaDataRestService {
                 LOGGER.warning("Skipping incomplete line");
                 continue;
             }
-            ResourceInfo info = catalog.getResourceByName(cols[0].trim(), ResourceInfo.class);
-            if (info != null) {
+            LayerInfo lInfo = catalog.getLayerByName(cols[0].trim());
+            if (lInfo != null) {
+                ResourceInfo rInfo = catalog.getResource(lInfo.getResource().getId(), ResourceInfo.class);
+                lInfo.setResource(rInfo);
                 HashMap<String, Serializable> map = new HashMap<String, Serializable>();
                 Serializable oldCustom =
-                        info.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+                        rInfo.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
                 if (oldCustom instanceof HashMap<?, ?>) {
                     for (Entry<? extends String, ? extends Serializable> entry :
                             ((Map<? extends String, ? extends Serializable>) oldCustom)
@@ -157,31 +159,36 @@ public class MetaDataRestService {
                         map.put(entry.getKey(), ComplexMetadataMapImpl.dimCopy(entry.getValue()));
                     }
                 }
-                info.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, map);
+                rInfo.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, map);
                 ComplexMetadataMap complex = new ComplexMetadataMapImpl(map);
                 String uuid = cols[1].trim();
                 if (uuid.length() > 0 && geonetwork != null) {
                     try {
-                        geonetworkService.importLayer(info, complex, geonetwork, uuid);
+                        geonetworkService.importLayer(rInfo, complex, geonetwork, uuid);
                     } catch (IOException | IllegalArgumentException e) {
                         LOGGER.log(Level.SEVERE, "Exception importing layer " + uuid, e);
                     }
                 }
                 linkTemplates(
-                        info,
+                        rInfo,
                         complex,
                         templates,
                         Sets.newHashSet(
                                 Arrays.stream(Arrays.copyOfRange(cols, 2, cols.length))
                                         .map(s -> s.trim())
                                         .toArray(i -> new String[i])));
-                catalog.save(info);
+                nativeToCustomService.mapCustomToNative(lInfo);
+                metadataService.derive(complex);
+                catalog.save(rInfo);
+                catalog.save(lInfo);
             } else {
                 LOGGER.warning("Couldn't find layer " + cols[0]);
             }
         }
         try {
-            templateService.saveList(templates);
+            for (MetadataTemplate template : templates) {
+                templateService.save(template);
+            }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception saving templates.", e);
         }
