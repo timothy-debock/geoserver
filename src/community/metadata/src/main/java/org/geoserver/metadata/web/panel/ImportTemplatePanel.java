@@ -54,8 +54,6 @@ public abstract class ImportTemplatePanel extends Panel {
     public void onInitialize() {
         super.onInitialize();
 
-        setOutputMarkupId(true);
-
         GeoServerDialog dialog = new GeoServerDialog("importDialog");
         dialog.setInitialHeight(100);
         add(dialog);
@@ -69,6 +67,7 @@ public abstract class ImportTemplatePanel extends Panel {
         // unlink button
         remove = createUnlinkAction();
         remove.setOutputMarkupId(true);
+        remove.setOutputMarkupPlaceholderTag(true);
         remove.setEnabled(false);
         add(remove);
         add(
@@ -84,6 +83,7 @@ public abstract class ImportTemplatePanel extends Panel {
         templatesPanel.setSelectable(true);
         templatesPanel.setSortable(false);
         templatesPanel.setOutputMarkupId(true);
+        templatesPanel.setOutputMarkupPlaceholderTag(true);
         templatesPanel.setItemReuseStrategy(DefaultItemReuseStrategy.getInstance());
 
         add(templatesPanel);
@@ -91,6 +91,7 @@ public abstract class ImportTemplatePanel extends Panel {
         // the no data links label
         noData = new Label("noData", new ResourceModel("noData"));
         noData.setOutputMarkupId(true);
+        noData.setOutputMarkupPlaceholderTag(true);
         add(noData);
         updateTableState(null, linkedTemplatesDataProvider);
     }
@@ -155,8 +156,9 @@ public abstract class ImportTemplatePanel extends Panel {
                                 }
                             });
                 }
-                target.add(ImportTemplatePanel.this);
                 target.add(getFeedbackPanel());
+                target.add(templatesPanel);
+                target.add(dropDown);
             }
 
             protected void onError(AjaxRequestTarget target, Form<?> form) {
@@ -231,7 +233,6 @@ public abstract class ImportTemplatePanel extends Panel {
         target.add(getFeedbackPanel());
         target.add(templatesPanel);
         target.add(getDropDown());
-        target.add(ImportTemplatePanel.this);
     }
 
     public List<MetadataTemplate> getLinkedTemplates() {
@@ -253,7 +254,6 @@ public abstract class ImportTemplatePanel extends Panel {
             target.add(remove);
             target.add(templatesPanel);
             target.add(getDropDown());
-            target.add(ImportTemplatePanel.this);
         }
     }
 }

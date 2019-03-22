@@ -55,8 +55,6 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         ResourceConfigurationPage page = new ResourceConfigurationPage(layer, false);
         tester.startPage(page);
         tester.clickLink("publishedinfo:tabs:tabs-container:tabs:3:link");
-        tester.assertComponent(
-                "publishedinfo:tabs:panel:importTemplatePanel", ImportTemplatePanel.class);
     }
 
     @After
@@ -226,9 +224,9 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         tester.clickLink(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:9:itemProperties:2:component");
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:10:itemProperties:2:component");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:12:itemProperties:2:component");
         tester.clickLink(
-                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:11:itemProperties:2:component");
+                "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:attributesTablePanel:listContainer:items:14:itemProperties:2:component");
         tester.assertComponent(
                 "publishedinfo:tabs:panel:metadataPanel:attributesPanel:attributesTablePanel:listContainer:items:5:itemProperties:1:component:noData",
                 Label.class);
