@@ -89,7 +89,7 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                         target.add(tablePanel);
                         target.add(noData);
                     }
-                });
+                }.setVisible(isEnabledInHierarchy()));
 
         GeoServerDialog dialog = new GeoServerDialog("dialog");
         dialog.setInitialHeight(100);
@@ -142,7 +142,8 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                                 });
                     }
                 }.setVisible(
-                        generator != null
+                        isEnabledInHierarchy()
+                                && generator != null
                                 && tabPanel != null
                                 && generator.supports(
                                         getMetadataModel().getObject(),
@@ -215,27 +216,36 @@ public class RepeatableComplexAttributesTablePanel extends Panel {
                                                     AjaxRequestTarget target, Form<?> form) {
                                                 removeFields(target, itemModel);
                                                 updateTable();
+                                                ((MarkupContainer)
+                                                                tablePanel
+                                                                        .get("listContainer")
+                                                                        .get("items"))
+                                                        .removeAll();
                                                 target.add(tablePanel);
                                                 target.add(noData);
                                             }
                                         };
                                 deleteAction.add(new AttributeAppender("class", "remove-link"));
+                                deleteAction.setVisible(isEnabledInHierarchy());
                                 return deleteAction;
                             }
                         } else if (property.getName()
                                 .equals(RepeatableComplexAttributeDataProvider.KEY_UPDOWN_ROW)) {
                             return new AttributePositionPanel(
-                                    id,
-                                    (IModel<ComplexMetadataMap>)
-                                            RepeatableComplexAttributesTablePanel.this
-                                                    .getDefaultModel(),
-                                    dataProvider.getConfiguration(),
-                                    itemModel.getObject().getIndex(),
-                                    derivedAtts == null
-                                            ? null
-                                            : derivedAtts.get(
-                                                    dataProvider.getConfiguration().getKey()),
-                                    this);
+                                            id,
+                                            (IModel<ComplexMetadataMap>)
+                                                    RepeatableComplexAttributesTablePanel.this
+                                                            .getDefaultModel(),
+                                            dataProvider.getConfiguration(),
+                                            itemModel.getObject().getIndex(),
+                                            derivedAtts == null
+                                                    ? null
+                                                    : derivedAtts.get(
+                                                            dataProvider
+                                                                    .getConfiguration()
+                                                                    .getKey()),
+                                            this)
+                                    .setVisible(isEnabledInHierarchy());
                         }
                         return null;
                     }

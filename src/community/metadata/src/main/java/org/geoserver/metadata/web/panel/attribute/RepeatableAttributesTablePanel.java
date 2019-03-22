@@ -75,7 +75,7 @@ public class RepeatableAttributesTablePanel extends Panel {
                         target.add(tablePanel);
                         target.add(RepeatableAttributesTablePanel.this);
                     }
-                });
+                }.setVisible(isEnabledInHierarchy()));
     }
 
     private GeoServerTablePanel<ComplexMetadataAttribute<String>> createAttributesTablePanel(
@@ -145,21 +145,26 @@ public class RepeatableAttributesTablePanel extends Panel {
                                             }
                                         };
                                 deleteAction.add(new AttributeAppender("class", "remove-link"));
+                                deleteAction.setVisible(isEnabledInHierarchy());
                                 return deleteAction;
                             }
                         } else if (property.getName()
                                 .equals(RepeatableAttributeDataProvider.KEY_UPDOWN_ROW)) {
                             return new AttributePositionPanel(
-                                    id,
-                                    (IModel<ComplexMetadataMap>)
-                                            RepeatableAttributesTablePanel.this.getDefaultModel(),
-                                    dataProvider.getConfiguration(),
-                                    itemModel.getObject().getIndex(),
-                                    derivedAtts == null
-                                            ? null
-                                            : derivedAtts.get(
-                                                    dataProvider.getConfiguration().getKey()),
-                                    this);
+                                            id,
+                                            (IModel<ComplexMetadataMap>)
+                                                    RepeatableAttributesTablePanel.this
+                                                            .getDefaultModel(),
+                                            dataProvider.getConfiguration(),
+                                            itemModel.getObject().getIndex(),
+                                            derivedAtts == null
+                                                    ? null
+                                                    : derivedAtts.get(
+                                                            dataProvider
+                                                                    .getConfiguration()
+                                                                    .getKey()),
+                                            this)
+                                    .setVisible(isEnabledInHierarchy());
                         }
                         return null;
                     }
@@ -170,6 +175,7 @@ public class RepeatableAttributesTablePanel extends Panel {
                         ComplexMetadataAttribute<String> object = itemModel.getObject();
                         dataProvider.removeField(object);
                         updateTable(dataProvider);
+                        ((MarkupContainer) get("listContainer").get("items")).removeAll();
                         target.add(this);
                         target.add(RepeatableAttributesTablePanel.this);
                     }

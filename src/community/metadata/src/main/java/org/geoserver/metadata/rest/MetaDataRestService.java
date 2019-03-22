@@ -70,7 +70,7 @@ public class MetaDataRestService {
                 templateService.saveList(Collections.emptyList());
             } else {
                 List<MetadataTemplate> templates = templateService.list();
-                for(MetadataTemplate template : templates) {
+                for (MetadataTemplate template : templates) {
                     template.getLinkedLayers().clear();
                 }
                 templateService.saveList(templates);
