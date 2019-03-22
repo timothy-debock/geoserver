@@ -196,7 +196,12 @@ public class MetaDataRestService {
             }
         }
         if (linkedTemplates.size() > 0) {
-            HashMap<String, List<Integer>> derivedAtts = new HashMap<>();
+            @SuppressWarnings("unchecked")
+            HashMap<String, List<Integer>> derivedAtts =
+                    (HashMap<String, List<Integer>>)
+                            resource.getMetadata()
+                                    .computeIfAbsent(
+                                            MetadataConstants.DERIVED_KEY, key -> new HashMap<>());
             metadataService.merge(map, linkedTemplates, derivedAtts);
             resource.getMetadata().put(MetadataConstants.DERIVED_KEY, derivedAtts);
         }
