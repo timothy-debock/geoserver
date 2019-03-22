@@ -48,6 +48,14 @@ public class PlaceHolderUtil {
         }
     }
 
+    public static String getPlaceHolder(String pattern) {
+        Matcher matcher = PATTERN_PLACEHOLDER.matcher(pattern);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
     public static List<String> replacePlaceHolder(String pattern, Map<String, List<String>> map) {
         Matcher matcher = PATTERN_PLACEHOLDER.matcher(pattern);
         if (matcher.find()) {
@@ -55,10 +63,14 @@ public class PlaceHolderUtil {
             List<String> value = map.get(matcher.group(1));
             if (value != null) {
                 for (int i = 0; i < value.size(); i++) {
-                    list.add(
-                            pattern.substring(0, matcher.start())
-                                    + value.get(i)
-                                    + pattern.substring(matcher.end()));
+                    if (value.get(i) == null) {
+                        list.add(null);
+                    } else {
+                        list.add(
+                                pattern.substring(0, matcher.start())
+                                        + value.get(i)
+                                        + pattern.substring(matcher.end()));
+                    }
                 }
             }
             return list;

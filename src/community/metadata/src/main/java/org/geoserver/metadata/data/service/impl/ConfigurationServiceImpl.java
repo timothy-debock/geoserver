@@ -216,6 +216,10 @@ public class ConfigurationServiceImpl implements ConfigurationService {
             try (InputStream in = getFolder().get(csvImport).in()) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
                 String line = br.readLine();
+                if (line == null) {
+                    LOGGER.log(Level.WARNING, "No content found for " + csvImport);
+                    return;
+                }
                 String[] splitLine = br == null ? null : line.split(SEPARATOR);
                 if (splitLine != null && splitLine.length > 0) {
                     AttributeConfiguration[] configs = new AttributeConfiguration[splitLine.length];

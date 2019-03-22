@@ -112,13 +112,15 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
         CustomNativeMappingsConfiguration config =
                 configService.getCustomNativeMappingsConfiguration();
 
+        Map<String, List<Integer>> indexMap = new HashMap<>();
         @SuppressWarnings("unchecked")
         Map<String, List<String>> custom =
                 convert(
                         (Map<String, Serializable>)
                                 layer.getResource()
                                         .getMetadata()
-                                        .get(MetadataConstants.CUSTOM_METADATA_KEY));
+                                        .get(MetadataConstants.CUSTOM_METADATA_KEY),
+                        indexMap);
 
         Set<MappingTypeEnum> cleared = new HashSet<>();
         for (CustomNativeMappingConfiguration mapping : config.getCustomNativeMappings()) {
@@ -128,7 +130,9 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
                 mappingType.list(layer).clear();
                 cleared.add(mappingType);
             }
-            mappingType.list(layer).addAll(build(mapping.getMapping(), mappingType, custom));
+            mappingType
+                    .list(layer)
+                    .addAll(build(mapping.getMapping(), mappingType, custom, indexMap));
         }
     }
 
@@ -185,21 +189,30 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
     private static <T> List<T> build(
             Map<String, String> mapping,
             MappingTypeEnum mappingType,
-            Map<String, List<String>> custom) {
+            Map<String, List<String>> custom,
+            Map<String, List<Integer>> indexMap) {
         List<String> values = PlaceHolderUtil.replacePlaceHolder(mapping.get(VALUE), custom);
         List<T> result = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
             result.add((T) mappingType.create(values.get(i)));
         }
+        List<Integer> indexList = indexMap.get(PlaceHolderUtil.getPlaceHolder(mapping.get(VALUE)));
         for (Entry<String, String> entry : mapping.entrySet()) {
             if (!VALUE.equals(entry.getKey())) {
                 values = PlaceHolderUtil.replacePlaceHolder(entry.getValue(), custom);
-                for (int i = 0; i < result.size() && (values == null || i < values.size()); i++) {
+                for (int i = 0;
+                        i < result.size()
+                                && (values == null || indexList != null || i < values.size());
+                        i++) {
                     try {
                         BeanUtils.setProperty(
                                 result.get(i),
                                 entry.getKey(),
-                                values == null ? entry.getValue() : values.get(i));
+                                values == null
+                                        ? entry.getValue()
+                                        : indexList == null || values.size() == result.size()
+                                                ? values.get(i)
+                                                : values.get(indexList.get(i)));
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
@@ -209,15 +222,29 @@ public class CustomNativeMappingServiceImpl implements CustomNativeMappingServic
         return result;
     }
 
-    private static Map<String, List<String>> convert(Map<String, Serializable> map) {
+    private static Map<String, List<String>> convert(
+            Map<String, Serializable> map, Map<String, List<Integer>> indexMap) {
         Map<String, List<String>> result = new HashMap<>();
         for (Entry<String, Serializable> entry : map.entrySet()) {
             List<String> list = new ArrayList<>();
             if (entry.getValue() instanceof List<?>) {
-                for (Object item : (List<?>) entry.getValue()) {
-                    list.add(Converters.convert(item, String.class));
+                List<?> items = (List<?>) entry.getValue();
+                if (items.size() > 0 && items.get(0) instanceof List<?>) {
+                    // two dimensions, make index map for cross-dimensional mapping
+                    List<Integer> indexList = new ArrayList<Integer>();
+                    for (int i = 0; i < items.size(); i++) {
+                        for (Object item : (List<?>) items.get(i)) {
+                            list.add(Converters.convert(item, String.class));
+                            indexList.add(i);
+                        }
+                    }
+                    indexMap.put(entry.getKey(), indexList);
+                } else {
+                    for (Object item : items) {
+                        list.add(Converters.convert(item, String.class));
+                    }
                 }
-            } else {
+            } else if (entry.getValue() != null) {
                 list.add(Converters.convert(entry.getValue(), String.class));
             }
             result.put(entry.getKey(), list);
