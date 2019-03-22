@@ -147,7 +147,8 @@ public class MetaDataRestService {
             }
             LayerInfo lInfo = catalog.getLayerByName(cols[0].trim());
             if (lInfo != null) {
-                ResourceInfo rInfo = catalog.getResource(lInfo.getResource().getId(), ResourceInfo.class);
+                ResourceInfo rInfo =
+                        catalog.getResource(lInfo.getResource().getId(), ResourceInfo.class);
                 lInfo.setResource(rInfo);
                 HashMap<String, Serializable> map = new HashMap<String, Serializable>();
                 Serializable oldCustom =

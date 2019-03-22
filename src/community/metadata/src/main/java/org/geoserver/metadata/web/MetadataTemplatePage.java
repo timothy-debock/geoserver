@@ -12,9 +12,12 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
@@ -32,12 +35,15 @@ import org.geoserver.metadata.web.panel.ProgressPanel;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerBasePage;
+import org.geoserver.web.wicket.GeoServerDialog;
+import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.util.logging.Logging;
 
 /**
  * The template page, view or edit the values in the template.
  *
  * @author Timothy De Bock - timothy.debock.github@gmail.com
+ * @author Niels Charlier
  */
 public class MetadataTemplatePage extends GeoServerBasePage {
 
@@ -50,6 +56,8 @@ public class MetadataTemplatePage extends GeoServerBasePage {
     private final IModel<MetadataTemplate> metadataTemplateModel;
 
     private ProgressPanel progressPanel;
+
+    private GeoServerDialog dialog;
 
     public MetadataTemplatePage(IModel<List<MetadataTemplate>> templates) {
         this(templates, new Model<>(newTemplate()));
@@ -70,6 +78,11 @@ public class MetadataTemplatePage extends GeoServerBasePage {
 
     public void onInitialize() {
         super.onInitialize();
+
+        add(dialog = new GeoServerDialog("dialog"));
+        dialog.setInitialHeight(100);
+        ((ModalWindow) dialog.get("dialog")).showUnloadConfirmation(false);
+
         IModel<ComplexMetadataMap> metadataModel =
                 new Model<ComplexMetadataMap>(
                         new ComplexMetadataMapImpl(
@@ -126,68 +139,44 @@ public class MetadataTemplatePage extends GeoServerBasePage {
 
             @Override
             public void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                MetadataTemplateService service =
-                        GeoServerApplication.get()
-                                .getApplicationContext()
-                                .getBean(MetadataTemplateService.class);
-                try {
-                    service.save(metadataTemplateModel.getObject());
-                    if (templates.getObject().contains(metadataTemplateModel.getObject())) {
-                        templates
-                                .getObject()
-                                .set(
-                                        templates
-                                                .getObject()
-                                                .indexOf(metadataTemplateModel.getObject()),
-                                        metadataTemplateModel.getObject());
-                    } else {
-                        templates.getObject().add(metadataTemplateModel.getObject());
-                    }
-
-                    GlobalModel<Float> progressModel = new GlobalModel<Float>(0.0f);
-
-                    Executors.newSingleThreadExecutor()
-                            .execute(
-                                    new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            service.update(
-                                                    metadataTemplateModel.getObject(),
-                                                    progressModel.getKey());
-                                        }
-                                    });
-
-                    progressPanel.start(
+                if (metadataTemplateModel.getObject().getLinkedLayers().size() > 0) {
+                    dialog.showOkCancel(
                             target,
-                            progressModel,
-                            new ProgressPanel.EventHandler() {
-                                private static final long serialVersionUID = 8967087707332457974L;
+                            new GeoServerDialog.DialogDelegate() {
+
+                                private boolean ok = false;
+
+                                private static final long serialVersionUID = 6769706050075583226L;
 
                                 @Override
-                                public void onFinished(AjaxRequestTarget target) {
-                                    doReturn();
-                                    progressModel.cleanUp();
+                                protected Component getContents(String id) {
+                                    return new Label(
+                                            id,
+                                            new ParamResourceModel(
+                                                    "saveWarning",
+                                                    MetadataTemplatePage.this,
+                                                    metadataTemplateModel
+                                                            .getObject()
+                                                            .getLinkedLayers()
+                                                            .size()));
                                 }
 
                                 @Override
-                                public void onCanceled(AjaxRequestTarget target) {
-                                    doReturn();
-                                    progressModel.cleanUp();
+                                public void onClose(AjaxRequestTarget target) {
+                                    if (ok) {
+                                        save(form, target);
+                                    }
+                                }
+
+                                @Override
+                                protected boolean onSubmit(
+                                        AjaxRequestTarget target, Component contents) {
+                                    ok = true;
+                                    return true;
                                 }
                             });
-                } catch (IOException | IllegalArgumentException e) {
-                    if (e instanceof IOException) {
-                        LOGGER.log(Level.WARNING, e.getMessage(), e);
-                    }
-                    Throwable rootCause = ExceptionUtils.getRootCause(e);
-                    String message =
-                            rootCause == null
-                                    ? e.getLocalizedMessage()
-                                    : rootCause.getLocalizedMessage();
-                    if (message != null) {
-                        form.error(message);
-                    }
-                    addFeedbackPanels(target);
+                } else {
+                    save(form, target);
                 }
             }
 
@@ -207,5 +196,72 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                 doReturn();
             }
         };
+    }
+
+    private void save(Form<?> form, AjaxRequestTarget target) {
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        try {
+            service.save(metadataTemplateModel.getObject());
+            boolean isOld = templates.getObject().contains(metadataTemplateModel.getObject());
+            if (isOld) {
+                templates
+                        .getObject()
+                        .set(
+                                templates.getObject().indexOf(metadataTemplateModel.getObject()),
+                                metadataTemplateModel.getObject());
+            } else {
+                templates.getObject().add(metadataTemplateModel.getObject());
+            }
+
+            if (isOld) {
+                GlobalModel<Float> progressModel = new GlobalModel<Float>(0.0f);
+
+                Executors.newSingleThreadExecutor()
+                        .execute(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        service.update(
+                                                metadataTemplateModel.getObject(),
+                                                progressModel.getKey());
+                                    }
+                                });
+
+                progressPanel.start(
+                        target,
+                        progressModel,
+                        new ProgressPanel.EventHandler() {
+                            private static final long serialVersionUID = 8967087707332457974L;
+
+                            @Override
+                            public void onFinished(AjaxRequestTarget target) {
+                                doReturn();
+                                progressModel.cleanUp();
+                            }
+
+                            @Override
+                            public void onCanceled(AjaxRequestTarget target) {
+                                doReturn();
+                                progressModel.cleanUp();
+                            }
+                        });
+            } else {
+                doReturn();
+            }
+        } catch (IOException | IllegalArgumentException e) {
+            if (e instanceof IOException) {
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+            }
+            Throwable rootCause = ExceptionUtils.getRootCause(e);
+            String message =
+                    rootCause == null ? e.getLocalizedMessage() : rootCause.getLocalizedMessage();
+            if (message != null) {
+                form.error(message);
+            }
+            addFeedbackPanels(target);
+        }
     }
 }

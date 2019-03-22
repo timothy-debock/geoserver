@@ -17,6 +17,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -209,57 +210,95 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
                     @Override
                     public void onClick(AjaxRequestTarget target) {
 
-                        MetadataTemplateService service =
-                                GeoServerApplication.get()
-                                        .getApplicationContext()
-                                        .getBean(MetadataTemplateService.class);
-                        try {
-                            service.saveList(templates.getObject());
-                        } catch (IOException e) {
-                            Throwable rootCause = ExceptionUtils.getRootCause(e);
-                            String message =
-                                    rootCause == null
-                                            ? e.getLocalizedMessage()
-                                            : rootCause.getLocalizedMessage();
-                            if (message != null) {
-                                error(message);
-                            }
-                            addFeedbackPanels(target);
-                        }
+                        if (tracker.getAffectedResources().isEmpty()) {
+                            save(target);
+                            doReturn();
+                        } else {
 
-                        GlobalModel<Float> progressModel = new GlobalModel<Float>(0.0f);
+                            dialog.showOkCancel(
+                                    target,
+                                    new GeoServerDialog.DialogDelegate() {
 
-                        Collection<String> affectedResources = tracker.getAffectedResources();
+                                        private static final long serialVersionUID =
+                                                6769706050075583226L;
 
-                        Executors.newSingleThreadExecutor()
-                                .execute(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                service.update(
-                                                        affectedResources, progressModel.getKey());
+                                        private boolean ok = false;
+
+                                        @Override
+                                        protected Component getContents(String id) {
+                                            return new Label(
+                                                    id,
+                                                    new ParamResourceModel(
+                                                            "saveWarning",
+                                                            MetadataTemplatesPage.this,
+                                                            tracker.getAffectedResources().size()));
+                                        }
+
+                                        @Override
+                                        public void onClose(AjaxRequestTarget target) {
+
+                                            if (ok) {
+
+                                                save(target);
+
+                                                MetadataTemplateService service =
+                                                        GeoServerApplication.get()
+                                                                .getApplicationContext()
+                                                                .getBean(
+                                                                        MetadataTemplateService
+                                                                                .class);
+
+                                                GlobalModel<Float> progressModel =
+                                                        new GlobalModel<Float>(0.0f);
+
+                                                Collection<String> affectedResources =
+                                                        tracker.getAffectedResources();
+
+                                                Executors.newSingleThreadExecutor()
+                                                        .execute(
+                                                                new Runnable() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        service.update(
+                                                                                affectedResources,
+                                                                                progressModel
+                                                                                        .getKey());
+                                                                    }
+                                                                });
+
+                                                progressPanel.start(
+                                                        target,
+                                                        progressModel,
+                                                        new ProgressPanel.EventHandler() {
+                                                            private static final long
+                                                                    serialVersionUID =
+                                                                            8967087707332457974L;
+
+                                                            @Override
+                                                            public void onFinished(
+                                                                    AjaxRequestTarget target) {
+                                                                doReturn();
+                                                                progressModel.cleanUp();
+                                                            }
+
+                                                            @Override
+                                                            public void onCanceled(
+                                                                    AjaxRequestTarget target) {
+                                                                doReturn();
+                                                                progressModel.cleanUp();
+                                                            }
+                                                        });
                                             }
-                                        });
+                                        }
 
-                        progressPanel.start(
-                                target,
-                                progressModel,
-                                new ProgressPanel.EventHandler() {
-                                    private static final long serialVersionUID =
-                                            8967087707332457974L;
-
-                                    @Override
-                                    public void onFinished(AjaxRequestTarget target) {
-                                        doReturn();
-                                        progressModel.cleanUp();
-                                    }
-
-                                    @Override
-                                    public void onCanceled(AjaxRequestTarget target) {
-                                        doReturn();
-                                        progressModel.cleanUp();
-                                    }
-                                });
+                                        @Override
+                                        protected boolean onSubmit(
+                                                AjaxRequestTarget target, Component contents) {
+                                            ok = true;
+                                            return true;
+                                        }
+                                    });
+                        }
                     }
                 });
         add(
@@ -293,5 +332,23 @@ public class MetadataTemplatesPage extends GeoServerSecuredPage {
     @Override
     protected ComponentAuthorizer getPageAuthorizer() {
         return ComponentAuthorizer.AUTHENTICATED;
+    }
+
+    private void save(AjaxRequestTarget target) {
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        try {
+            service.saveList(templates.getObject());
+        } catch (IOException e) {
+            Throwable rootCause = ExceptionUtils.getRootCause(e);
+            String message =
+                    rootCause == null ? e.getLocalizedMessage() : rootCause.getLocalizedMessage();
+            if (message != null) {
+                error(message);
+            }
+            addFeedbackPanels(target);
+        }
     }
 }
