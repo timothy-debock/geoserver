@@ -72,8 +72,8 @@ public class MetaDataRestService {
                 List<MetadataTemplate> templates = templateService.list();
                 for (MetadataTemplate template : templates) {
                     template.getLinkedLayers().clear();
+                    templateService.save(template);
                 }
-                templateService.saveList(templates);
             }
         }
     }
