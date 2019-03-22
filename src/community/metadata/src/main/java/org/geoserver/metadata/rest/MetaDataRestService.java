@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,6 +55,7 @@ public class MetaDataRestService {
     @DeleteMapping
     public void clearAll(
             @RequestParam(required = false, defaultValue = "false") boolean iAmSure,
+            @RequestParam(required = false, defaultValue = "false") boolean templatesToo,
             HttpServletResponse response)
             throws IOException {
         if (!iAmSure) {
@@ -64,7 +66,9 @@ public class MetaDataRestService {
                 info.getMetadata().remove(MetadataConstants.DERIVED_KEY);
                 catalog.save(info);
             }
-            templateService.saveList(Collections.emptyList());
+            if (templatesToo) {
+                templateService.saveList(Collections.emptyList());
+            }
         }
     }
 
@@ -124,6 +128,7 @@ public class MetaDataRestService {
         return "Success.";
     }
 
+    @SuppressWarnings("unchecked")
     @PostMapping("import")
     public void importAndLink(
             @RequestParam(required = false) String geonetwork, @RequestBody String csvFile) {
@@ -137,6 +142,15 @@ public class MetaDataRestService {
             ResourceInfo info = catalog.getResourceByName(cols[0].trim(), ResourceInfo.class);
             if (info != null) {
                 HashMap<String, Serializable> map = new HashMap<String, Serializable>();
+                Serializable oldCustom =
+                        info.getMetadata().get(MetadataConstants.CUSTOM_METADATA_KEY);
+                if (oldCustom instanceof HashMap<?, ?>) {
+                    for (Entry<? extends String, ? extends Serializable> entry :
+                            ((Map<? extends String, ? extends Serializable>) oldCustom)
+                                    .entrySet()) {
+                        map.put(entry.getKey(), ComplexMetadataMapImpl.dimCopy(entry.getValue()));
+                    }
+                }
                 info.getMetadata().put(MetadataConstants.CUSTOM_METADATA_KEY, map);
                 ComplexMetadataMap complex = new ComplexMetadataMapImpl(map);
                 String uuid = cols[1].trim();
