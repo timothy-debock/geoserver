@@ -14,6 +14,7 @@ import java.util.Locale;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.extensions.markup.html.tabs.TabbedPanel;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -54,7 +55,10 @@ public class LayerMetadataTabTest extends AbstractWicketMetadataTest {
         login();
         ResourceConfigurationPage page = new ResourceConfigurationPage(layer, false);
         tester.startPage(page);
-        tester.clickLink("publishedinfo:tabs:tabs-container:tabs:3:link");
+        ((TabbedPanel<?>) tester.getComponentFromLastRenderedPage("publishedinfo:tabs"))
+                .setSelectedTab(3);
+        tester.submitForm("publishedinfo");
+        tester.assertComponent("publishedinfo:tabs:panel:metadataPanel", MetadataPanel.class);
     }
 
     @After
