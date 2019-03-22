@@ -548,6 +548,7 @@
         <module>status-monitoring</module>
       </modules>
     </profile>
+     <!-- dov profile -->
     <profile>
       <id>dov</id>
       <modules>
