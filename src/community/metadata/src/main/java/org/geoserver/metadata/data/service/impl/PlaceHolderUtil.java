@@ -26,6 +26,9 @@ public class PlaceHolderUtil {
     }
 
     public static Map<String, String> reversePlaceHolders(String pattern, String value) {
+        if (pattern == null) {
+            pattern = "";
+        }
         Matcher matcher = PATTERN_PLACEHOLDER.matcher(pattern);
         List<String> list = new ArrayList<>();
         while (matcher.find()) {
@@ -36,7 +39,7 @@ public class PlaceHolderUtil {
                             + pattern.substring(matcher.end());
             matcher = PATTERN_PLACEHOLDER.matcher(pattern);
         }
-        matcher = Pattern.compile("\\Q" + pattern + "\\E").matcher(value);
+        matcher = Pattern.compile("\\Q" + pattern + "\\E").matcher(value == null ? "" : value);
         if (matcher.matches()) {
             Map<String, String> map = new HashMap<>();
             for (int i = 0; i < list.size(); i++) {
