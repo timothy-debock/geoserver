@@ -1,0 +1,363 @@
+attributes:
+  - key: metadata-identifier
+    fieldType: UUID
+  - key: parent-identifier
+    fieldType: UUID
+  - key: data-identifier
+    fieldType: UUID
+  - key: metadata-datestamp
+    fieldType: DATETIME
+  - key: metadata-language
+    fieldType: DROPDOWN
+    values:
+      - dut
+      - eng
+      - fre
+      - ger
+  - key: data-language
+    fieldType: DROPDOWN
+    values:
+      - dut
+      - eng
+      - fre
+      - ger
+  - key: data-date
+    fieldType: COMPLEX
+    typename: data-identification-date
+    occurrence: REPEAT
+  - key: data-valid-date
+    fieldType: COMPLEX
+    typename: date-range
+  - key: alternate-title
+    fieldType: TEXT
+  - key: edition
+    fieldType: TEXT
+  - key: purpose
+    fieldType: TEXT_AREA
+  - key: topic-category
+    fieldType: SUGGESTBOX
+    occurrence: REPEAT
+    values:
+      - farming
+      - biota
+      - boundaries
+      - climatologyMeteorologyAtmosphere
+      - economy
+      - elevation
+      - environment
+      - geoscientificInformation
+      - health
+      - imageryBaseMapsEarthCover
+      - intelligenceMilitary
+      - inlandWaters
+      - location
+      - oceans
+      - planningCadastre
+      - society
+      - structure
+      - transportation
+      - utilitiesCommunication
+  - key: status
+    fieldType: DROPDOWN
+    values:
+      - completed
+      - historicalArchive
+      - obsolete
+      - onGoing
+      - planned
+      - required
+      - underDevelopment
+  - key: update-frequency
+    fieldType: DROPDOWN
+    values:
+      - continual
+      - daily
+      - weekly
+      - fortnightly
+      - monthly
+      - quarterly
+      - biannually
+      - annually
+      - asNeeded
+      - irregular
+      - notPlanned
+      - unknown
+  - key: referencesystem
+    fieldType: COMPLEX
+    typename: referencesystem
+    occurrence: REPEAT
+  - key: resolution-equivalent-scale
+    fieldType: NUMBER
+  - key: graphic-overview-url
+    fieldType: TEXT
+  - key: supplemental-information
+    fieldType: TEXT_AREA
+  - key: metadata-contact
+    fieldType: COMPLEX
+    typename: responsible-party
+    occurrence: REPEAT
+  - key: data-contact
+    fieldType: COMPLEX
+    typename: responsible-party
+    occurrence: REPEAT
+  - key: distributor
+    fieldType: COMPLEX
+    typename: responsible-party
+    occurrence: REPEAT
+  - key: transfer-option
+    fieldType: COMPLEX
+    typename: transfer-option
+    occurrence: REPEAT
+  - key: rc-rc-use-limitation
+    fieldType: TEXT_AREA
+    occurrence: REPEAT
+  - key: rc-lc-use-limitation
+    fieldType: TEXT_AREA
+    occurrence: REPEAT
+  - key: rc-lc-access-constraint
+    fieldType: DROPDOWN
+    values:
+      - copyright
+      - patent
+      - patentPending
+      - trademark
+      - license
+      - intellectualPropertyRights
+      - restricted
+      - otherRestrictions
+    occurrence: REPEAT
+  - key: rc-lc-use-constraint
+    fieldType: DROPDOWN
+    values:
+      - copyright
+      - patent
+      - patentPending
+      - trademark
+      - license
+      - intellectualPropertyRights
+      - restricted
+      - otherRestrictions
+    occurrence: REPEAT
+  - key: rc-lc-other-constraint
+    fieldType: TEXT_AREA
+    occurrence: REPEAT
+  - key: rc-sc-classification
+    fieldType: DROPDOWN
+    values:
+      - unclassified
+      - restricted
+      - confidential
+      - secret
+      - topSecret
+  - key: rc-sc-use-limitation
+    fieldType: TEXT_AREA
+    occurrence: REPEAT
+  - key: data-quality-conformance
+    fieldType: COMPLEX
+    typename: conformance
+  - key: lineage-statement
+    fieldType: TEXT_AREA
+  - key: lineage-source
+    fieldType: TEXT_AREA
+  - key: specific-usage
+    fieldType: TEXT_AREA
+  - key: data-quality-process-step
+    fieldType: COMPLEX
+    typename: process-step
+    occurrence: REPEAT
+  - key: keyword-inspire-theme
+    fieldType: COMPLEX
+    typename: keyword-inspire-theme
+    occurrence: REPEAT
+  - key: keyword-gemet-concept
+    fieldType: SUGGESTBOX
+    occurrence: REPEAT
+  - key: keyword-gdi-vlaanderen
+    fieldType: DROPDOWN
+    occurrence: REPEAT
+    values:
+      - Toegevoegd GDI-Vl
+      - Herbruikbaar
+      - Vlaamse Open data
+      - Kosteloos
+      - Lijst M&R INSPIRE
+      - Metadata INSPIRE-conform
+      - Metadata GDI-Vl-conform
+  - key: keyword-free
+    fieldType: TEXT
+    occurrence: REPEAT
+  - key: keyword-custom-thesaurus
+    fieldType: COMPLEX
+    typename: keyword-custom-thesaurus
+    occurrence: REPEAT
+  - key: keyword-dov-pathname
+    fieldType: TEXT
+  - key: keyword-dov-expertise
+    fieldType: TEXT
+  - key: feature-catalog
+    fieldType: COMPLEX
+    typename: feature-catalog
+
+csvImports:
+  - keyword-gemet-concept.csv
+    
+types:
+  - typename: referencesystem
+    attributes:
+      - key: code
+        fieldType: TEXT
+      - key: code-space
+        fieldType: TEXT
+  - typename: contactinfo
+    attributes:
+      - key: delivery-point
+        fieldType: TEXT
+      - key: postal-code
+        fieldType: TEXT
+      - key: city
+        fieldType: TEXT
+      - key: country
+        fieldType: TEXT
+      - key: telephone
+        fieldType: TEXT
+      - key: email
+        fieldType: TEXT
+      - key: website
+        fieldType: TEXT
+  - typename: responsible-party
+    attributes:
+      - key: organisation
+        fieldType: TEXT
+      - key: contactinfo
+        fieldType: COMPLEX
+        typename: contactinfo
+      - key: role
+        fieldType: DROPDOWN
+        values:
+          - resourceProvider
+          - custodian
+          - owner
+          - user
+          - distributor
+          - originator
+          - pointOfContact
+          - principalInvestigator
+          - processor
+          - publisher
+          - author
+  - typename: data-identification-date
+    attributes:
+      - key: date
+        fieldType: DATE
+      - key: date-type
+        fieldType: DROPDOWN
+        values:
+          - creation
+          - publication
+          - revision
+  - typename: conformance
+    attributes:
+      - key: title
+        fieldType: TEXT
+      - key: date
+        fieldType: DATE
+      - key: date-type
+        fieldType: DROPDOWN
+        values:
+          - creation
+          - publication
+          - revision
+      - key: explanation
+        fieldType: TEXT
+      - key: pass
+        fieldType: DROPDOWN
+        values:
+          - true
+          - false
+  - typename: date-range
+    attributes:
+      - key: start-date
+        fieldType: DATE
+      - key: end-date
+        fieldType: DATE
+  - typename: process-step
+    attributes:
+      - key: description
+        fieldType: TEXT_AREA
+      - key: rationale
+        fieldType: TEXT_AREA
+      - key: datetime
+        fieldType: DATETIME
+      - key: processor
+        fieldType: COMPLEX
+        typename: responsible-party
+        occurrence: REPEAT
+  - typename: transfer-option
+    attributes:
+      - key: linkage
+        fieldType: TEXT
+      - key: protocol
+        fieldType: DROPDOWN
+        values:
+          - 'WWW:DOWNLOAD-1.0-http--download'
+          - 'WWW:DOWNLOAD-1.0-ftp--download'
+          - 'LINK download-store'
+          - 'WWW:LINK-1.0-http--atom'
+          - 'WWW:LINK-1.0-http--link'
+          - 'WWW:LINK-1.0-http--related'
+      - key: transfer-name
+        fieldType: TEXT
+      - key: transfer-description
+        fieldType: TEXT
+  - typename: keyword-inspire-theme
+    attributes:
+      - key: keyword-inspire-theme-label
+        fieldType: SUGGESTBOX
+      - key: keyword-inspire-theme-ref
+        fieldType: DERIVED
+        derivedFrom: keyword-inspire-theme-label
+    csvImports:
+      - keyword-inspire-theme.csv
+  - typename: keyword-custom-thesaurus
+    attributes:
+      - key: keyword
+        fieldType: COMPLEX
+        typename: keyword
+        occurrence: REPEAT
+      - key: thesaurus-title-label
+        fieldType: TEXT
+      - key: thesaurus-title-ref
+        fieldType: TEXT
+      - key: thesaurus-citation-ref
+        fieldType: TEXT
+      - key: thesaurus-vocabulary
+        fieldType: TEXT
+      - key: thesaurus-date
+        fieldType: DATE
+      - key: thesaurus-date-type
+        fieldType: DROPDOWN
+        values:
+          - creation
+          - publication
+          - revision
+  - typename: keyword
+    attributes:
+      - key: keyword-label
+        fieldType: TEXT
+      - key: keyword-ref
+        fieldType: TEXT
+  - typename: feature-catalog
+    attributes:
+      - key: feature-catalog-identifier
+        fieldType: UUID
+      - key: feature-type
+        fieldType: COMPLEX
+        typename: feature-type
+  - typename: feature-type
+    attributes:
+      - key: feature-type-definition
+        fieldType: TEXT_AREA
+      - key: feature-attribute
+        fieldType: COMPLEX
+        typename: featureAttribute
+        occurrence: REPEAT
