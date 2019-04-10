@@ -1,0 +1,40 @@
+customNativeMappings:
+  - type: METADATALINKS
+    mapping:
+      value: https://www.dov.vlaanderen.be/geonetwork/?uuid=${metadata-identifier}
+      type: text/html
+      metadataType: ISO19115:2003
+  - type: METADATALINKS
+    mapping:
+      value: https://www.dov.vlaanderen.be/geonetwork/srv/nl/csw?Service=CSW&Request=GetRecordById&Version=2.0.2&outputSchema=http://www.isotc211.org/2005/gmd&elementSetName=full&id=${metadata-identifier}
+      type: text/xml
+      metadataType: ISO19115:2003
+  - type: KEYWORDS
+    mapping:
+      value: ${keyword-inspire-theme/keyword-inspire-theme-label}
+      vocabulary: GEMET
+  - type: KEYWORDS
+    mapping:
+      value: ${keyword-gemet-concept}
+      vocabulary: GEMET
+  - type: KEYWORDS
+    mapping:
+      value: ${keyword-gdi-vlaanderen}
+      vocabulary: GDI-Vlaanderen
+  - type: KEYWORDS
+    mapping:
+      value: ${keyword-free}
+  - type: KEYWORDS
+    mapping:
+      value: ${keyword-custom-thesaurus/keyword/keyword-label}
+      vocabulary: ${keyword-custom-thesaurus/thesaurus-vocabulary}
+  - type: KEYWORDS
+    mapping:
+      value: DOV_PATHNAME@${keyword-dov-pathname}
+  - type: KEYWORDS
+    mapping:
+      value: DOV_EXPERTISE@${keyword-dov-expertise}
+  - type: IDENTIFIERS
+    mapping:
+      value: ${data-identifier}
+      authority: DOV-be

@@ -1,3 +1,4 @@
+#sync custom fields and native fields
 customNativeMappings:
   - type: KEYWORDS
     mapping:
