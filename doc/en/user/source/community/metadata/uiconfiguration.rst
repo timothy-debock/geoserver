@@ -3,8 +3,8 @@
 UI components overview
 ======================
 The ui for metadata fields is made from a list of components.
-The type of the component and how the behave can be configured in the yaml file.
-All compontes should be configured as a list wich has the the parent key ``attributes``.
+The type of the component and how they behave can be configured in the yaml file.
+All components should be configured as a list which has the parent key ``attributes``.
 
 
 Components options
@@ -84,7 +84,7 @@ The value for ``occurrence`` determins whether or not the component should displ
 
         e.g. component of fieldType ``TEXT`` rendered as a table.
 
-    The data in table can be sorted by using the green arrow buttons.
+    The data in table can be sorted using the green arrow buttons.
 
     The default value is ``SINGLE``.
 
@@ -166,7 +166,7 @@ Only numbers are accepted as valid input.
 .. code:: YAML
 
   attributes:
-    - key: numer-field
+    - key: number-field
       fieldType: NUMBER
 
 BOOLEAN
@@ -217,7 +217,7 @@ Selection date with time information.
 DROPDOWN
 ^^^^^^^^
 A component for selecting a value from a dropdown. 
-The values can be configure with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is us for dropdowns with a lot of choices.
+The values can be configured with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is used for dropdowns with a lot of choices.
 
 
  .. figure:: images/fielddropdown.png
@@ -235,8 +235,8 @@ Configuration in the yaml file.
             - second
             - third
 
-To configure the values in a sepparate file add a yaml key ``csvImports`` on the same level as ``attributes`` and add the list of CSV files under this key. 
-The first line in each CSV file should contain the key of the dropdown component for wich you want to add the choices.
+To configure the values in a separate file add a yaml key ``csvImports`` on the same level as ``attributes`` and add the list of CSV files under this key. 
+The first line in each CSV file should contain the key of the dropdown component for which you want to add the choices.
 
 ``metadata-ui.yaml``
 
@@ -259,8 +259,8 @@ The first line in each CSV file should contain the key of the dropdown component
 
 SUGGESTBOX
 ^^^^^^^^^^
-A component for selecting a value from a suggestbox. Suggestion will be given for the values where the input matches the beginning of the possible values.
-The values can be put in a sepparate CSV file in thes same way as for the DROPDOWN_ component. 
+A component for selecting a value from a suggestbox. Suggestions will be given for the values where the input matches the beginning of the possible values.
+The values can be put in a separate CSV file in the same way as for the DROPDOWN component. 
 
 .. figure:: images/fieldsuggest.png
 
@@ -276,11 +276,10 @@ The values can be put in a sepparate CSV file in thes same way as for the DROPDO
 
 DERIVED
 ^^^^^^^
-A derived field is a hidden field field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
-When a value is selected in the parent component a matching value for the derived component is seached in csv file.
+A derived field is a hidden field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
+When a value is selected in the parent component a matching value for the derived component is searched in csv file.
 
-
-The CSV file should start wiht the key of the parent component as first column and the second column should contain the key of the derived component. The following lines conatin the mapping between the parent value and the derived value.
+The CSV file should start wiht the key of the parent component as first column and the second column should contain the key of the derived component. The following lines contain the mapping between the parent value and the derived value.
 
 
 .. figure:: images/fielddireved.png
@@ -310,9 +309,9 @@ The CSV file should start wiht the key of the parent component as first column a
 
 COMPLEX
 ^^^^^^^
-A complex component is composed of multiple ohter components.  The yaml key ``typename`` is added to the component configuration.
-On the root level the yaml key ``types`` indecates the beginning of all complex type definition. 
-A type definition should contain the ``typename`` followed by the key ``attributes`` wich contains the configuration for the subcomponents.
+A complex component is composed of multiple other components.  The yaml key ``typename`` is added to the component configuration.
+On the root level the yaml key ``types`` indicates the beginning of all complex type definition. 
+A type definition should contain the ``typename`` followed by the key ``attributes`` which contains the configuration for the subcomponents.
 
 .. figure:: images/fieldcomplex.png
 
@@ -341,9 +340,9 @@ secret hardcode  component
 
 Internationalization support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-All metadata field labels that appears in the :guilabel:`Metadata fields` can be interationalized.
+All metadata field labels that appear in the :guilabel:`Metadata fields` can be internationalized.
 This is performed by creating an internationalization (i18n) file named metadata.properties. 
-Create an entry for each key in the gui configuriation following this pattern:  `PREFIX.attribute-key`
+Create an entry for each key in the gui configuration following this pattern:  `PREFIX.attribute-key`
 
 e.g.
 

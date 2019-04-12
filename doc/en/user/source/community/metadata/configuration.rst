@@ -6,7 +6,7 @@ Metadata Module configuration
 Installation
 ------------
 
-To install the GeoServer Task Manager extension:
+To install the GeoServer Metadata extension:
 
 -  Download the extension from the `GeoServer Download
    Page <http://geoserver.org/download>`__. The file name is called
@@ -27,7 +27,7 @@ By default the metadata module will add an extra tab to the edit layer page. Ope
   
   The initial UI. Note the :guilabel:`Metadata fields` panel is still empty
 
-The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configration folder, see `Example configuration`_ for a real life example.
+The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configuration folder, see `Example configuration`_ for a real life example.
 
 Example UI configuration:
 
@@ -72,7 +72,7 @@ Example UI configuration:
             - publication
             - revision  
 
-This configration results in the following GUI:
+This configuration results in the following GUI:
 
 .. figure:: images/basic-gui.png
 
@@ -80,10 +80,10 @@ This configration results in the following GUI:
 
 There are 2 main parts in the `yaml <https://yaml.org/>`__:
 
-    - **attributes:** a list of GUI components that will be renderd in the tab. The can be a basic type or a complex type, a complex type is a collection of basic types.
+    - **attributes:** a list of GUI components that will be rendered in the tab. They can be a basic type or a complex type, a complex type is a collection of basic types.
     - **types:** a list that defines the fields in each complex type.
 
-:ref:`community_metadata_uiconfiguration` gives an overview of all suported types and advanced features.
+:ref:`community_metadata_uiconfiguration` gives an overview of all supported types and advanced features.
 
 
 Import from Geonetwork mapping
@@ -94,7 +94,7 @@ Two confurations are needed for the import to work:
     - **geonetworks:** configure a list geonetwork endpoints
     - **geonetworkmapping:** define the mapping between the geonetwork fields and the fields configured in the metadata module.
 
-The configration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a sepparate file.
+The configuration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a separate file.
 
 Enpoint configuration
 ^^^^^^^^^^^^^^^^^^^^^
@@ -189,7 +189,7 @@ Geonetwork mapping  :download:`metadata-mapping.yaml <files/metadata-mapping.yam
 
 Geonetwork endpoints  :download:`metadata-geonetwork.yaml <files/metadata-geonetwork.yaml>`
 
-Syncronize native fields  :download:`metadata-native-mapping.yaml <files/metadata-native-mapping.yaml>`
+Synchronize native fields  :download:`metadata-native-mapping.yaml <files/metadata-native-mapping.yaml>`
 
 
 CSW configuration
