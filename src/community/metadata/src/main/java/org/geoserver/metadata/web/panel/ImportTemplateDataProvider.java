@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.wicket.model.IModel;
 import org.geoserver.metadata.data.model.MetadataTemplate;
+import org.geoserver.metadata.data.service.MetadataTemplateService;
+import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 /**
@@ -28,22 +30,10 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
     public static final Property<MetadataTemplate> DESCRIPTION =
             new BeanProperty<MetadataTemplate>("description", "description");
 
-    private final String resourceId;
+    private IModel<List<MetadataTemplate>> selectedTemplates;
 
-    private IModel<List<MetadataTemplate>> templatesModel;
-
-    private List<MetadataTemplate> selectedTemplates = new ArrayList<>();
-
-    public ImportTemplateDataProvider(
-            String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
-        this.resourceId = resourceId;
-
-        this.templatesModel = templatesModel;
-        for (MetadataTemplate template : templatesModel.getObject()) {
-            if (template.getLinkedLayers().contains(resourceId)) {
-                selectedTemplates.add(template);
-            }
-        }
+    public ImportTemplateDataProvider(IModel<List<MetadataTemplate>> selectedTemplates) {
+        this.selectedTemplates = selectedTemplates;
     }
 
     @Override
@@ -53,15 +43,16 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
 
     @Override
     protected List<MetadataTemplate> getItems() {
-        return selectedTemplates;
+        return selectedTemplates.getObject();
     }
 
     public void addLink(MetadataTemplate modelObject) {
-        modelObject =
-                templatesModel.getObject().get(templatesModel.getObject().indexOf(modelObject));
-        modelObject.getLinkedLayers().add(resourceId);
-        selectedTemplates.add(modelObject);
-        selectedTemplates.sort(new MetadataTemplateComparator());
+        selectedTemplates.getObject().add(modelObject);
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        selectedTemplates.getObject().sort(new MetadataTemplateComparator(service.list()));
     }
 
     public void removeLinks(List<MetadataTemplate> templates) {
@@ -69,8 +60,7 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
         while (iterator.hasNext()) {
             MetadataTemplate modelObject = iterator.next();
 
-            modelObject.getLinkedLayers().remove(resourceId);
-            selectedTemplates.remove(modelObject);
+            selectedTemplates.getObject().remove(modelObject);
         }
     }
 
@@ -80,21 +70,32 @@ public class ImportTemplateDataProvider extends GeoServerDataProvider<MetadataTe
      * @return
      */
     public List<MetadataTemplate> getUnlinkedItems() {
-        List<MetadataTemplate> result = new ArrayList<>(templatesModel.getObject());
-        result.removeAll(selectedTemplates);
+        MetadataTemplateService service =
+                GeoServerApplication.get()
+                        .getApplicationContext()
+                        .getBean(MetadataTemplateService.class);
+        List<MetadataTemplate> result = new ArrayList<>(service.list());
+        result.removeAll(selectedTemplates.getObject());
+        result.sort(new MetadataTemplateComparator(service.list()));
         return result;
     }
 
     private class MetadataTemplateComparator implements Comparator<MetadataTemplate> {
 
+        private List<MetadataTemplate> list;
+
+        public MetadataTemplateComparator(List<MetadataTemplate> list) {
+            this.list = list;
+        }
+
         public int compare(MetadataTemplate obj1, MetadataTemplate obj2) {
             int priority1 = Integer.MAX_VALUE;
             if (obj1 != null) {
-                priority1 = templatesModel.getObject().indexOf(obj1);
+                priority1 = list.indexOf(obj1);
             }
             int priority2 = Integer.MAX_VALUE;
             if (obj2 != null) {
-                priority2 = templatesModel.getObject().indexOf(obj2);
+                priority2 = list.indexOf(obj2);
             }
             return Integer.compare(priority1, priority2);
         }
