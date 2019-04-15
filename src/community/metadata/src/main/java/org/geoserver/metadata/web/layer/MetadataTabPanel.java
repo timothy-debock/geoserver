@@ -164,8 +164,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     /** Merge the model and the linked templates. */
     private void updateModel() {
-        ResourceInfo resource = ((LayerInfo) getDefaultModelObject()).getResource();
-
         MetadataTemplateService templateService =
                 GeoServerApplication.get()
                         .getApplicationContext()
