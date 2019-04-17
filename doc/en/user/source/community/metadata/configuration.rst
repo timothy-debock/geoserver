@@ -3,10 +3,13 @@
 Metadata Module configuration
 =============================
 
+.. contents:: :local:
+    :depth: 2
+
 Installation
 ------------
 
-To install the GeoServer Task Manager extension:
+To install the GeoServer Metadata extension:
 
 -  Download the extension from the `GeoServer Download
    Page <http://geoserver.org/download>`__. The file name is called
@@ -27,7 +30,7 @@ By default the metadata module will add an extra tab to the edit layer page. Ope
   
   The initial UI. Note the :guilabel:`Metadata fields` panel is still empty
 
-The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configuration folder, see `Example configuration`_ for a real life example.
+The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configuration folder, see :ref:`tutorial_metadata` for a real life example.
 
 Example UI configuration:
 
@@ -80,24 +83,24 @@ This configuration results in the following GUI:
 
 There are 2 main parts in the `yaml <https://yaml.org/>`__:
 
-    - **attributes:** a list of GUI components that will be renderd in the tab. The can be a basic type or a complex type, a complex type is a collection of basic types.
+    - **attributes:** a list of GUI components that will be rendered in the tab. They can be a basic type or a complex type, a complex type is a collection of basic types.
     - **types:** a list that defines the fields in each complex type.
 
-:ref:`community_metadata_uiconfiguration` gives an overview of all suported types and advanced features.
+:ref:`community_metadata_uiconfiguration` gives an overview of all supported types and advanced features.
 
 
-Import from Geonetwork mapping
-------------------------------
+Import from Geonetwork
+----------------------
 The :guilabel:`Import from Geonetwork` option allows the user to import existing metadata from `GeoNetwork <https://geonetwork-opensource.org//>`_.
 Two confurations are needed for the import to work:
 
     - **geonetworks:** configure a list geonetwork endpoints
     - **geonetworkmapping:** define the mapping between the geonetwork fields and the fields configured in the metadata module.
 
-The configuration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a sepparate file.
+The configuration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a separate file.
 
-Enpoint configuration
-^^^^^^^^^^^^^^^^^^^^^
+Geonetwork endpoint configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The example will configure 2 endpoints. 
 
 .. code:: YAML
@@ -117,8 +120,12 @@ Key               Required  Description
 **url**            yes       The url of the geonetwork
 ================  ========  ============================
 
-Mapping configuration
-^^^^^^^^^^^^^^^^^^^^^
+Geonetwork mapping configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Each field from Geonetwork can be mapped to a native field from GeoServer or a field from the metadata module. 
+The configuration for simple components are added under the yaml attribute `geonetworkmapping`. 
+The fields of the type ``COMPLEX`` are mapped under the attribute  `objectmapping`.
+
 The example will map one field (UUID) from the geonetwork xml to UI.
 
 .. code:: YAML    
@@ -127,26 +134,87 @@ The example will map one field (UUID) from the geonetwork xml to UI.
         -  geoserver: metadata-identifier
            geonetwork: //gmd:fileIdentifier/gco:CharacterString/text()
 
+A complex object is mapped in the following example:
+
+.. code:: YAML
+
+    objectmapping:
+        - typename: responsible-party
+          mapping:
+            - geoserver: organisation
+              geonetwork: .//gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString/text()
+            - geoserver: contactinfo
+              geonetwork: .//gmd:CI_ResponsibleParty/gmd:contactInfo
+            - geoserver: role
+              geonetwork: .//gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode/@codeListValue
+
+Metadata from geonetwork can aslo be mapped to native fields. Do this by setting the `mappingType` to ``NATIVE``
+
+.. code:: YAML
+
+    -  geoserver: title
+       geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()
+       mappingType: NATIVE
+    -  geoserver: alias
+       geonetwork: //gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:alternateTitle/gco:CharacterString/text()
+       mappingType: NATIVE
+
 ================  ========  ============================
 Key               Required  Description
 ================  ========  ============================
 **geoserver**      yes      the key for the attributes in geoserver
 **geonetwork**     yes      The `xpath <https://developer.mozilla.org/en-US/docs/Web/XPath>`__ expression pointing to the content from the geonetwork metadata xml file.
+**mappingType:**   no        | CUSTOM (default; map to fields from the metadata module configuration)
+                             | NATIVE (map to geoserver native fields)
 ================  ========  ============================
 
-Native attribute mapping
+Custom to Native Mapping
 ------------------------
-.. warning:: TODO
+Sometimes your custom metadata configuration may contain a more complex version of fields already present in geoserver native metadata,
+or you may want to derive geoserver native fields (such as URL's, keywords, etcetera) from information in your custom metadata. Native fields
+are used by ``GetCapabilities`` requests, and you want to avoid filling in the same information twice. We can automatise deriving these
+native fields from custom fields using a custom-to-native mapping configuration. For example in the following configuration:
 
+.. code:: YAML
+
+      customNativeMappings:
+        - type: KEYWORDS
+          mapping:
+            value: KEY_${keywords/name}
+            vocabulary: ${keywords/vocabulary}
+        - type: IDENTIFIERS
+          mapping:
+            value: ${identifiers/id}
+            authority: ${identifiers/authority}
+        - type: METADATALINKS
+          mapping:
+            value: https://my-host/geonetwork/?uuid=${uuid}
+            type: text/html
+            metadataType: ISO191156:2003
+        - type: METADATALINKS
+          mapping:
+            value: https://my-host/geonetwork/srv/nl/csw?Service=CSW&Request=GetRecordById&Version=2.0.2&outputSchema=http://www.isotc211.org/2005/gmd&elementSetName=full&id=${uuid}
+            type: text/xml
+            metadataType: ISO191156:2003
+
+================  ========  ============================
+Key               Required  Description
+================  ========  ============================
+**type**           yes      currently supported: KEYWORDS, IDENTIFIERS, METADATALINKS
+**mapping**        yes      | List of key to value pairs. Value contains a literal with or without placeholder that contains custom attribute path (the ``/`` symbol denoting subfields inside complex fields).
+                            | Possible keys for KEYWORDS: value, vocabulary
+                            | Possible keys for METADATALINKS: value, type, metadataType, about
+                            | Possible keys for IDENTIFIERS: value, authority
+================  ========  ============================
+
+The synchronisation of the metadata takes place each time a layer is saved. Any information that has been entered by the user in mapped native fields via the GUI will be lost.
 
 CSW extension configuration
 ---------------------------
 
-.. warning:: TODO fix link
+The CSW module is a service that exposes the metadata as xml file that can be harvested by GeoNetwork. The documentation for the CSW module can be found here :ref:`csw`
 
-The CSW module is a service that exposes the metadata as xml file that can be harvested by GeoNetwork. The documentation for the CSW module can be found here :ref:`_services_csw`
-
-The `Example configuration`_ contains a complete mapping producing a valid geonetwork xml.
+The :ref:`tutorial_metadata` contains a complete mapping producing a valid geonetwork xml.
 
 Geonetwork Harvesting
 ---------------------
@@ -154,49 +222,3 @@ Configure a Geonetwork Harvester pointing to the CSW endpoint.
 
 e.g. `https://localhost:8080/geoserver/csw?Service=CSW&Request=Getcapabilities`
 
-
-Example configuration
----------------------
-.. warning:: At the time of writing 04/2019 the Pull Requests for CSW module are not yet merged into the master. The following configuration depends on features and bugfixes these that pull requests.
-
-    - https://github.com/geoserver/geoserver/pull/3414
-    - https://github.com/geoserver/geoserver/pull/3376
-    - https://github.com/geoserver/geoserver/pull/3346
-    - https://github.com/geoserver/geoserver/pull/3344
-    - https://github.com/geoserver/geoserver/pull/3343
-    - https://github.com/geoserver/geoserver/pull/3342
-    - https://github.com/geoserver/geoserver/pull/3336
-    - https://github.com/geoserver/geoserver/pull/3334
-
-Metadata configuration
-^^^^^^^^^^^^^^^^^^^^^^
-
-Place the following files in the ``metadata`` folder
-
-
-
-UI configuration :download:`metadata-ui.yaml <files/metadata-ui.yaml>`
-
-Translate keys to labels  :download:`metadata.properties <files/metadata.properties>`
-
-Translate keys to Dutch labels  :download:`metadata_nl.properties <files/metadata_nl.properties>`
-
-Content for gemet-concept dropdown  :download:`keyword-gemet-concept.csv <files/keyword-gemet-concept.csv>`
-
-Content for inspire-theme-label & inspire-theme-ref  :download:`keyword-inspire-theme.csv <files/keyword-inspire-theme.csv>`
-
-Geonetwork mapping  :download:`metadata-mapping.yaml <files/metadata-mapping.yaml>`
-
-Geonetwork endpoints  :download:`metadata-geonetwork.yaml <files/metadata-geonetwork.yaml>`
-
-Syncronize native fields  :download:`metadata-native-mapping.yaml <files/metadata-native-mapping.yaml>`
-
-
-CSW configuration
-^^^^^^^^^^^^^^^^^
-
-Map metadata attributes to xml :download:`MD_Metadata.properties <files/MD_Metadata.properties>`
-
-Map Feature Catalogue attributes to xml :download:`FC_FeatureCatalogue.properties <files/FC_FeatureCatalogue.properties>`
-
-Map Record attributes to xml :download:`Record.properties <files/Record.properties>`

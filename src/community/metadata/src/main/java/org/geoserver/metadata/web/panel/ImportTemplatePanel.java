@@ -44,10 +44,9 @@ public abstract class ImportTemplatePanel extends Panel {
 
     private AjaxSubmitLink remove;
 
-    public ImportTemplatePanel(
-            String id, String resourceId, IModel<List<MetadataTemplate>> templatesModel) {
+    public ImportTemplatePanel(String id, IModel<List<MetadataTemplate>> templatesModel) {
         super(id);
-        linkedTemplatesDataProvider = new ImportTemplateDataProvider(resourceId, templatesModel);
+        linkedTemplatesDataProvider = new ImportTemplateDataProvider(templatesModel);
     }
 
     @Override

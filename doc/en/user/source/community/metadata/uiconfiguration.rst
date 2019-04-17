@@ -3,9 +3,11 @@
 UI components overview
 ======================
 The ui for metadata fields is made from a list of components.
-The type of the component and how the behave can be configured in the yaml file.
-All compontes should be configured as a list wich has the the parent key ``attributes``.
+The type of the component and how they behave can be configured in the yaml file.
+All components should be configured as a list which has the parent key ``attributes``.
 
+.. contents:: :local:
+    :depth: 2
 
 Components options
 ------------------
@@ -81,37 +83,37 @@ The value for ``occurrence`` determins whether or not the component should displ
 
         e.g. single value input component of fieldType ``TEXT``.
 
-    Choosing ``REPEAT`` will render the component in a table allowing the user to input multiple values.
+Choosing ``REPEAT`` will render the component in a table allowing the user to input multiple values.
 
     .. figure:: images/repeat.png
 
         e.g. component of fieldType ``TEXT`` rendered as a table.
 
-    The data in table can be sorted by using the green arrow buttons.
+The data in table can be sorted using the green arrow buttons.
 
-    The default value is ``SINGLE``.
 
 :required:
         no
 :value: supported constants
 
-        - SINGLE
+        - SINGLE (Default)
         - REPEAT
 
 
 values
 ^^^^^^
 The choices in a `DROPDOWN`_ or a `SUGGESTBOX`_ can be set using the ``values``  attribute in the yaml. 
-This is useful for small list, for larger list it can be better to list the choices in a sepparate .csv file.
+This is useful for small list, for larger list it can be better to list the choices in a separate .csv file.
 
 derivedFrom
 ^^^^^^^^^^^
-Only used in the `DERIVED`_ component. The attribute ``derivedFrom`` contains the key for the parent on wich the `DERIVED`_ component depends.
+Only used in the `DERIVED`_ component. The attribute ``derivedFrom`` contains the key for the parent on which the `DERIVED`_ component depends.
 Follow the link for more information on the `DERIVED`_ component.
 
 typename
 ^^^^^^^^
 The ``typename`` is a required attribute for `COMPLEX`_ components. It contains the key pointing to the definition of the `COMPLEX`_ component.
+A special ``typename`` `featureAttribute` is reserved for the `Feature attribute component`_  and should not be used for other components.
 
 Field Types
 -----------
@@ -181,7 +183,7 @@ Only numbers are accepted as valid input.
 .. code:: YAML
 
   attributes:
-    - key: numer-field
+    - key: number-field
       fieldType: NUMBER
 
 BOOLEAN
@@ -232,7 +234,7 @@ Selection date with time information.
 DROPDOWN
 ^^^^^^^^
 A component for selecting a value from a dropdown. 
-The values can be configure with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is best for dropdowns with a lot of choices.
+The values can be configured with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is used for dropdowns with a lot of choices.
 
 
  .. figure:: images/fielddropdown.png
@@ -250,8 +252,8 @@ Configuration in the yaml file.
             - second
             - third
 
-To configure the values in a sepparate file add a yaml key ``csvImports`` on the same level as ``attributes`` and add the list of CSV files under this key. 
-The first line in each CSV file should contain the key of the dropdown component for wich you want to add the choices.
+To configure the values in a separate file add a yaml key ``csvImports`` on the same level as ``attributes`` and add the list of CSV files under this key.
+The first line in each CSV file should contain the key of the dropdown component for which you want to add the choices.
 
 ``metadata-ui.yaml``
 
@@ -274,8 +276,8 @@ The first line in each CSV file should contain the key of the dropdown component
 
 SUGGESTBOX
 ^^^^^^^^^^
-A component for selecting a value from a suggestbox. Suggestion will be given for the values where the input matches the beginning of the possible values.
-The values can be put in a sepparate CSV file in thes same way as for the DROPDOWN_ component. 
+A component for selecting a value from a suggestbox. Suggestions will be given for the values where the input matches the beginning of the possible values.
+The values can be put in a separate CSV file in the same way as for the DROPDOWN component.
 
 .. figure:: images/fieldsuggest.png
 
@@ -291,11 +293,11 @@ The values can be put in a sepparate CSV file in thes same way as for the DROPDO
 
 DERIVED
 ^^^^^^^
-A derived field is a hidden field field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
-When a value is selected in the parent component a matching value for the derived component is seached in csv file or the value with the same index is picked from the values list.
+A derived field is a hidden field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
+When a value is selected in the parent component a matching value for the derived component is searched in csv file or the value with the same index is picked from the values list.
 
 
-The CSV file should have at least two columns and start wiht the key of the parent component in the first column followed by the values for the parent component, the other columns should contain the key of the derived component in the first row followed by the matching values. 
+The CSV file should have at least two columns and start wiht the key of the parent component in the first column followed by the values for the parent component, the other columns should contain the key of the derived component in the first row followed by the matching values.
 
 Example derived field with config in a CSV file:
 
@@ -346,9 +348,9 @@ Example derived field with values lists:
 
 COMPLEX
 ^^^^^^^
-A complex component is composed of multiple ohter components.  The yaml key ``typename`` is added to the component configuration.
-On the root level the yaml key ``types`` indecates the beginning of all complex type definition. 
-A type definition should contain the ``typename`` followed by the key ``attributes`` wich contains the configuration for the subcomponents.
+A complex component is composed of multiple other components.  The yaml key ``typename`` is added to the component configuration.
+On the root level the yaml key ``types`` indicates the beginning of all complex type definition.
+A type definition should contain the ``typename`` followed by the key ``attributes`` which contains the configuration for the subcomponents.
 
 .. figure:: images/fieldcomplex.png
 
@@ -370,18 +372,50 @@ A type definition should contain the ``typename`` followed by the key ``attribut
 Advanced concepts
 -----------------
 
-secret hardcode  component
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. warning:: TODO
+Feature attribute component
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create a feature catalog a complex structure is needed to describe the all the attributes. A dedicated feature attribute component is provided to handle this. Making a COMPLEX_ type with the ``fieldType``  `featureAttribute` will create the feature attribute component.
 
+In the example the featureCatalog object has two attributes. A unique identifier of the type UUID_ and the feature attribute component.
+
+.. figure:: images/fa01.png
+
+    e.g. Empty Feature attribute component
+
+.. code:: YAML
+
+  - typename: featureCatalog
+    attributes:
+        - label: Unique identifier
+          key: feature-catalog-identifier
+          fieldType: UUID
+        - label: Feature attribute
+          key: feature-attribute
+          fieldType: COMPLEX
+          typename: featureAttribute
+          occurrence: REPEAT
+
+
+The ``Generate`` action will check the database metadata for that layer and generate a feature type for each column in the table.
+
+.. figure:: images/fa02.png
+
+    e.g. Feature attribute with generate feature types
+
+Whitin each feature type there is another ``Generate`` action that will generate the domain.
+
+.. figure:: images/fa03.png
+
+    e.g. Feature attribute with generate domain
 
 Internationalization support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-All metadata field labels that appears in the :guilabel:`Metadata fields` can be interationalized.
-This is performed by creating an internationalization (i18n) file named metadata.properties. 
-Create an entry for each key in the gui configuriation following this pattern:  `PREFIX.attribute-key`
+All metadata field labels that appear in the :guilabel:`Metadata fields` can be internationalized.
+This is performed by creating an internationalization (i18n) file named metadata.properties.
+Create an entry for each key in the gui configuration following this pattern:  `PREFIX.attribute-key`
 
 e.g.
+
 
 ``metadata.properties``
 

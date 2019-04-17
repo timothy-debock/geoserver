@@ -204,6 +204,16 @@ public class MetadataTemplatePage extends GeoServerBasePage {
                         .getApplicationContext()
                         .getBean(MetadataTemplateService.class);
         try {
+            // before saving,
+            // update linked layers with latest version, in case it was elsewhere changed
+            metadataTemplateModel.getObject().getLinkedLayers().clear();
+            metadataTemplateModel
+                    .getObject()
+                    .getLinkedLayers()
+                    .addAll(
+                            service.getById(metadataTemplateModel.getObject().getId())
+                                    .getLinkedLayers());
+            // save
             service.save(metadataTemplateModel.getObject());
             boolean isOld = templates.getObject().contains(metadataTemplateModel.getObject());
             if (isOld) {

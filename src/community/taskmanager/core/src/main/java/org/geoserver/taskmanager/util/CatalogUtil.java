@@ -76,8 +76,6 @@ public class CatalogUtil {
             for (String srs : coverage.getResponseSRS()) {
                 coverageEncoder.setResponseSRS(srs); // wrong: should be add
             }
-            coverageEncoder.setNativeName(resource.getNativeName());
-            coverageEncoder.setNativeCoverageName(coverage.getNativeCoverageName());
             coverageEncoder.setNativeFormat(coverage.getNativeFormat());
             re = coverageEncoder;
         } else {

@@ -44,7 +44,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     private static final Logger LOGGER = Logging.getLogger(MetadataTabPanel.class);
 
-    private IModel<List<MetadataTemplate>> templatesModel;
+    private IModel<List<MetadataTemplate>> selectedTemplatesModel;
 
     private HashMap<String, List<Integer>> derivedAtts;
 
@@ -54,7 +54,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
     public MetadataTabPanel(
             String id, IModel<LayerInfo> model, IModel<List<MetadataTemplate>> templatesModel) {
         super(id, model);
-        this.templatesModel = templatesModel;
+        this.selectedTemplatesModel = templatesModel;
 
         // we must always copy the data, to avoid references escaping the modification proxy commit
         HashMap<String, Serializable> custom = new HashMap<>();
@@ -95,10 +95,7 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
         // Link with templates panel
         this.add(
-                new ImportTemplatePanel(
-                        "importTemplatePanel",
-                        resource.getId(),
-                        (IModel<List<MetadataTemplate>>) templatesModel) {
+                new ImportTemplatePanel("importTemplatePanel", selectedTemplatesModel) {
                     private static final long serialVersionUID = -8056914656580115202L;
 
                     @Override
@@ -167,8 +164,6 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
 
     /** Merge the model and the linked templates. */
     private void updateModel() {
-        ResourceInfo resource = ((LayerInfo) getDefaultModelObject()).getResource();
-
         MetadataTemplateService templateService =
                 GeoServerApplication.get()
                         .getApplicationContext()
@@ -178,12 +173,11 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                         .getApplicationContext()
                         .getBean(ComplexMetadataService.class);
         ArrayList<ComplexMetadataMap> maps = new ArrayList<>();
-        for (MetadataTemplate template : templatesModel.getObject()) {
-            if (template.getLinkedLayers().contains(resource.getId())) {
-                template = templateService.getById(template.getId());
-                if (template != null) {
-                    maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
-                }
+        for (MetadataTemplate template : selectedTemplatesModel.getObject()) {
+            // get latest version
+            template = templateService.getById(template.getId());
+            if (template != null) {
+                maps.add(new ComplexMetadataMapImpl(template.getMetadata()));
             }
         }
 
@@ -215,8 +209,17 @@ public class MetadataTabPanel extends PublishedEditTabPanel<LayerInfo> {
                 GeoServerApplication.get()
                         .getApplicationContext()
                         .getBean(MetadataTemplateService.class);
-        for (MetadataTemplate template : templatesModel.getObject()) {
-            service.save(template);
+        ResourceInfo resource = ((LayerInfo) getDefaultModelObject()).getResource();
+        for (MetadataTemplate template : service.list()) {
+            if (selectedTemplatesModel.getObject().contains(template)
+                    && !template.getLinkedLayers().contains(resource.getId())) {
+                template.getLinkedLayers().add(resource.getId());
+                service.save(template);
+            } else if (!selectedTemplatesModel.getObject().contains(template)
+                    && template.getLinkedLayers().contains(resource.getId())) {
+                template.getLinkedLayers().remove(resource.getId());
+                service.save(template);
+            }
         }
     }
 }

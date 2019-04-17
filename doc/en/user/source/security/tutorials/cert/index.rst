@@ -115,7 +115,7 @@ Configure Tomcat for SSL
 
    This enables SSL on port 8443.
 
-#. By default, Tomcat has APR enabled. To disable it so the above configuration can work, remove or comment out the following line in the server.xml configration file
+#. By default, Tomcat has APR enabled. To disable it so the above configuration can work, remove or comment out the following line in the server.xml configuration file
 
     .. code-block:: xml
 
