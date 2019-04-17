@@ -15,6 +15,9 @@ A component is defined in the yaml following key-value pairs:
     - `fieldType`_
     - `label`_
     - `occurrence`_
+    - `values`_  (specific components)
+    - `derivedFrom`_  (specific components)
+    - `typename`_  (specific components)
 
 
 key
@@ -96,7 +99,19 @@ The value for ``occurrence`` determins whether or not the component should displ
         - REPEAT
 
 
+values
+^^^^^^
+The choices in a `DROPDOWN`_ or a `SUGGESTBOX`_ can be set using the ``values``  attribute in the yaml. 
+This is useful for small list, for larger list it can be better to list the choices in a sepparate .csv file.
 
+derivedFrom
+^^^^^^^^^^^
+Only used in the `DERIVED`_ component. The attribute ``derivedFrom`` contains the key for the parent on wich the `DERIVED`_ component depends.
+Follow the link for more information on the `DERIVED`_ component.
+
+typename
+^^^^^^^^
+The ``typename`` is a required attribute for `COMPLEX`_ components. It contains the key pointing to the definition of the `COMPLEX`_ component.
 
 Field Types
 -----------
@@ -217,7 +232,7 @@ Selection date with time information.
 DROPDOWN
 ^^^^^^^^
 A component for selecting a value from a dropdown. 
-The values can be configure with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is us for dropdowns with a lot of choices.
+The values can be configure with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is best for dropdowns with a lot of choices.
 
 
  .. figure:: images/fielddropdown.png
@@ -277,11 +292,12 @@ The values can be put in a sepparate CSV file in thes same way as for the DROPDO
 DERIVED
 ^^^^^^^
 A derived field is a hidden field field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
-When a value is selected in the parent component a matching value for the derived component is seached in csv file.
+When a value is selected in the parent component a matching value for the derived component is seached in csv file or the value with the same index is picked from the values list.
 
 
-The CSV file should start wiht the key of the parent component as first column and the second column should contain the key of the derived component. The following lines conatin the mapping between the parent value and the derived value.
+The CSV file should have at least two columns and start wiht the key of the parent component in the first column followed by the values for the parent component, the other columns should contain the key of the derived component in the first row followed by the matching values. 
 
+Example derived field with config in a CSV file:
 
 .. figure:: images/fielddireved.png
 
@@ -307,6 +323,26 @@ The CSV file should start wiht the key of the parent component as first column a
     parent-value02;hidden-value02
     parent-value03;hidden-value03
   
+Example derived field with values lists:
+
+``metadata-ui.yaml``
+
+.. code:: YAML
+
+  attributes:
+    - key: derived-parent-field
+      fieldType: DROPDOWN
+      values:
+          - parent-value01
+          - parent-value02
+          - parent-value03
+    - key: hidden-field
+      fieldType: DERIVED
+      derivedFrom: derived-parent-field
+      values:
+          - hidden-value01
+          - hidden-value02
+          - hidden-value03
 
 COMPLEX
 ^^^^^^^
@@ -347,14 +383,15 @@ Create an entry for each key in the gui configuriation following this pattern:  
 
 e.g.
 
-
 ``metadata.properties``
 
 .. code::
-metadata.generated.form.metadata-identifier=Unique identifier for the metadata
+
+  metadata.generated.form.metadata-identifier=Unique identifier for the metadata
 
 
 ``metadata_nl.properties``
 
 .. code::
-metadata.generated.form.metadata-identifier=Metadata identificator
+
+  metadata.generated.form.metadata-identifier=Metadata identificator

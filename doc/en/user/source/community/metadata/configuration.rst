@@ -27,7 +27,7 @@ By default the metadata module will add an extra tab to the edit layer page. Ope
   
   The initial UI. Note the :guilabel:`Metadata fields` panel is still empty
 
-The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configration folder, see `Example configuration`_ for a real life example.
+The content of the :guilabel:`Metadata fields` is configured by placing one or multiple `yaml <https://yaml.org/>`__ files describing the UI compontents in the metadata configuration folder, see `Example configuration`_ for a real life example.
 
 Example UI configuration:
 
@@ -72,7 +72,7 @@ Example UI configuration:
             - publication
             - revision  
 
-This configration results in the following GUI:
+This configuration results in the following GUI:
 
 .. figure:: images/basic-gui.png
 
@@ -94,7 +94,7 @@ Two confurations are needed for the import to work:
     - **geonetworks:** configure a list geonetwork endpoints
     - **geonetworkmapping:** define the mapping between the geonetwork fields and the fields configured in the metadata module.
 
-The configration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a sepparate file.
+The configuration can be added to the same `yaml <https://yaml.org/>`__ file as the UI configuration or it can be put in a sepparate file.
 
 Enpoint configuration
 ^^^^^^^^^^^^^^^^^^^^^
