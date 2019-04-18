@@ -1,11 +1,6 @@
-Metadata User Manual
-====================
-To add metadata to a layer follow the steps in `Adding metadata to Layer`_ . When the metadata is repeated in multiple layers it is easier to create a template and reuse the data in the template for all the layers. See `Managing templates`_ .
-
-.. contents:: :local:
-    :depth: 2
-
-
+User Guide
+==========
+To add metadata to a layer follow the steps in `Adding metadata to Layer`_ . When the metadata is repeated in multiple layers it is easier to create a template and reuse the data in the template for all the layers. See `Templates`_ .
 
 Adding metadata to Layer
 ------------------------
@@ -15,6 +10,8 @@ Manually adding metadata
 Open the layer: navigate to :menuselection:`Layers --> Choose the layer --> Metadata tab`.
 
 The metadata fields are available in the panel :guilabel:`Metadata fields`.
+
+.. figure:: images/basic-gui.png
 
 Import from geonetwork
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -40,8 +37,8 @@ The Field is a list
 When multiple templates are linked with a layer the priority of the template will determine which values are added. If a field is present in both templates the value of the template with the highest priority will be picked. The priority is determined by the `template order`_
 
 
-Managing templates
-------------------
+Templates
+---------
 Templates can be created, edited, deleted and ordered in :menuselection:`Metadata --> Templates` .
 All changes to the templates will also update the linked layers when the templates are saved by clicking the `Save` button in the overview page.
 Templates that are linked to a layer cannot be removed and a warning message will appear.
@@ -54,7 +51,7 @@ Use the `Add new` action to create a new template and choose a name for the temp
 
 Edit template
 ^^^^^^^^^^^^^^^
-Click on a template name to open the template and edit the values. Click `Save` to go back to the overview page. To trigger an update to all the linked layers click `Save` in the overview page.
+Click on a template name to open the template and edit the values. Click `Save` to go back to the overview page, this will also recalculate the values in all linked layers.
 
 Delete template
 ^^^^^^^^^^^^^^^
@@ -67,5 +64,5 @@ The templates have an order. The templates at the top of the list have a higher 
 When a field has a value in multiple templates and the layer is linked with those templates the priority will determine wich value is displayed in the metadata UI.
 The value defined in the template with the highest priority will be displayed.
 
-Change the order of the templates with the arrow keys in the priority column and save the changes by clicking `Save` button, this will also recalculate the values in all linked layers.
+Change the order of the templates with the arrow keys in the priority column and save the changes by clicking `Save` button, this will also recalculate the values in all linked layers that may be affected.
 

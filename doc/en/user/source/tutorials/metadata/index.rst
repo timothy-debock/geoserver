@@ -1,27 +1,16 @@
 .. _tutorial_metadata:
 
-Metadata example configuration
-------------------------------
-Creating all the needed configuration files needed to harvest real life data from geoserver can be a tedious and complex task.
-Therefore we have added this example configuration.
+INSPIRE metadata configuration using metadata and CSW
+-----------------------------------------------------
+The INSPIRE directive requires exposure of fairly complex metadata schemes based on the ISO Metadata Profile.
+This exposure is supported by the built-in :ref:`csw` service (can be harvested by GeoNetwork), while the :ref:`community_metadata` community module allows adding any amount of customized metadata fields to layers that may be required for your particular case.
 
-.. warning:: At the time of writing 04/2019 the Pull Requests for CSW module are not yet merged into the master. The following configuration depends on features and bugfixes these that pull requests.
-
-    - https://github.com/geoserver/geoserver/pull/3414
-    - https://github.com/geoserver/geoserver/pull/3376
-    - https://github.com/geoserver/geoserver/pull/3346
-    - https://github.com/geoserver/geoserver/pull/3344
-    - https://github.com/geoserver/geoserver/pull/3343
-    - https://github.com/geoserver/geoserver/pull/3342
-    - https://github.com/geoserver/geoserver/pull/3336
-    - https://github.com/geoserver/geoserver/pull/3334
+Creating all the needed configuration files in both modules can be a tedious task. Therefore we have added this example configuration.
 
 Metadata configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Place the following files in the ``metadata`` folder
-
-
+Place the following files in the ``metadata`` folder:
 
 UI configuration :download:`metadata-ui.yaml <files/metadata-ui.yaml>`
 
@@ -39,6 +28,12 @@ Geonetwork endpoints  :download:`metadata-geonetwork.yaml <files/metadata-geonet
 
 Synchronize native fields  :download:`metadata-native-mapping.yaml <files/metadata-native-mapping.yaml>`
 
+Open any layer: navigate to :menuselection:`Layers --> Choose the layer --> Metadata tab`.
+
+The metadata fields are available in the panel :guilabel:`Metadata fields`.
+
+You may now add custom metadata to your layers.
+
 
 CSW configuration
 ^^^^^^^^^^^^^^^^^
@@ -48,3 +43,16 @@ Map metadata attributes to xml :download:`MD_Metadata.properties <files/MD_Metad
 Map Feature Catalogue attributes to xml :download:`FC_FeatureCatalogue.properties <files/FC_FeatureCatalogue.properties>`
 
 Map Record attributes to xml :download:`Record.properties <files/Record.properties>`
+
+You may now see your custom metadata exposed by the built-in CSW service:
+
+e.g. `https://my.host/geoserver/csw?service=CSW&version=2.0.2&request=GetRecords&typeNames=gmd:MD_Metadata&resultType=results&elementSetName=full&outputSchema=http://www.isotc211.org/2005/gmd`. 
+
+
+GeoNetwork configuration
+^^^^^^^^^^^^^^^^^^^^^^^^
+Create a GeoNetwork CSW harvester that points to your to Geoserver's CSW endpoint:
+
+e.g. `https://my.host/geoserver/csw?Service=CSW&Request=Getcapabilities`. 
+
+You may now start harvesting!

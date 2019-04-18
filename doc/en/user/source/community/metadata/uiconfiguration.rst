@@ -1,103 +1,105 @@
 .. _community_metadata_uiconfiguration:
 
-UI components overview
-======================
-The ui for metadata fields is made from a list of components.
-The type of the component and how they behave can be configured in the yaml file.
-All components should be configured as a list which has the parent key ``attributes``.
+Fields configuration
+====================
+The ui for the metadata tab is made from a list of field components.
+The type of the field component and how they behave can be configured in the yaml file.
+All fields should be configured as a list which has the parent key ``attributes``.
 
 .. contents:: :local:
-    :depth: 2
+    :depth: 1
 
-Components options
-------------------
-A component is defined in the yaml following key-value pairs:
+Field options
+-------------
+A field is defined in the yaml following key-value pairs:
 
     - `key`_
     - `fieldType`_
     - `label`_
     - `occurrence`_
-    - `values`_  (specific components)
-    - `derivedFrom`_  (specific components)
-    - `typename`_  (specific components)
+    - `values`_  (specific field types)
+    - `derivedFrom`_  (specific field types)
+    - `typename`_  (specific field types)
 
 
 key
 ^^^
 
-The key is the identifier for the component and should therefore be unique.
-Other configurations can refer the component by using this identifier. E.g the geonetwork mapping, internationalization.
+The key is the identifier for the field and should therefore be unique.
+Other configurations can refer the field by using this identifier. E.g the geonetwork mapping, internationalization.
 
-:required:
-    yes
-:value:
-    a unique string
-
-    
+================  ========  ============================
+Key               Required  Value
+================  ========  ============================
+ key                yes          a unique string    
+================  ========  ============================
 
 fieldType
 ^^^^^^^^^
 
-Chooses the type of input widget for the component.
+Chooses the type of input widget for the field.
 A detailed description for each type can be found in the `Field Types`_ section.
 
-:required:
-    yes
-:value: supported constants
 
-        - COMPLEX
-        - TEXT
-        - NUMBER
-        - TEXT_AREA
-        - DATE
-        - DATETIME
-        - BOOLEAN
-        - UUID
-        - DROPDOWN
-        - SUGGESTBOX
-        - DERIVED
+================  ========  ============================
+Key               Required  Value
+================  ========  ============================
+ fieldType          yes         - COMPLEX
+                                - TEXT
+                                - NUMBER
+                                - TEXT_AREA
+                                - DATE
+                                - DATETIME
+                                - BOOLEAN
+                                - UUID
+                                - DROPDOWN
+                                - SUGGESTBOX
+                                - DERIVED
+================  ========  ============================
+
     
 
 
 label
 ^^^^^
 
-If present this value will be used as the label for the component.
+If present this value will be used as the label for the field.
 When the label is not present in the yaml cofiguration the key will be used as label. 
 Note: when the key is present in the internationalization (i18n) file see `Internationalization support`_  than the value from that file wil be used as the label.
 
-:required:
-    no
-:value:
-    any string
-    
+
+================  ========  ============================
+Key               Required  Value
+================  ========  ============================
+ label              no         any string
+================  ========  ============================
+   
 
 
 occurrence
 ^^^^^^^^^^
 
-The value for ``occurrence`` determins whether or not the component should displayed as a table or as a single input field.
+The value for ``occurrence`` determins whether or not the field should displayed as a table or as a single input field.
 ``SINGLE`` will result in one input field.
 
     .. figure:: images/single-value.png
 
-        e.g. single value input component of fieldType ``TEXT``.
+        e.g. single value input field of fieldType ``TEXT``.
 
-Choosing ``REPEAT`` will render the component in a table allowing the user to input multiple values.
+Choosing ``REPEAT`` will render the field in a table allowing the user to input multiple values.
 
     .. figure:: images/repeat.png
 
-        e.g. component of fieldType ``TEXT`` rendered as a table.
+        e.g. field of fieldType ``TEXT`` rendered as a table.
 
 The data in table can be sorted using the green arrow buttons.
 
-
-:required:
-        no
-:value: supported constants
-
-        - SINGLE (Default)
-        - REPEAT
+================  ========  ============================
+Key               Required  Value
+================  ========  ============================
+ occurrence         no        - SINGLE (Default)
+                              - REPEAT
+================  ========  ============================
 
 
 values
@@ -107,13 +109,13 @@ This is useful for small list, for larger list it can be better to list the choi
 
 derivedFrom
 ^^^^^^^^^^^
-Only used in the `DERIVED`_ component. The attribute ``derivedFrom`` contains the key for the parent on which the `DERIVED`_ component depends.
-Follow the link for more information on the `DERIVED`_ component.
+Only used in the `DERIVED`_ field. The attribute ``derivedFrom`` contains the key for the parent on which the `DERIVED`_ field depends.
+Follow the link for more information on the `DERIVED`_ field.
 
 typename
 ^^^^^^^^
-The ``typename`` is a required attribute for `COMPLEX`_ components. It contains the key pointing to the definition of the `COMPLEX`_ component.
-A special ``typename`` `featureAttribute` is reserved for the `Feature attribute component`_  and should not be used for other components.
+The ``typename`` is a required attribute for `COMPLEX`_ fields. It contains the key pointing to the definition of the `COMPLEX`_ field.
+A special ``typename`` `featureAttribute` is reserved for the `Feature Catalog Generation`_  and should not be used.
 
 Field Types
 -----------
@@ -233,7 +235,7 @@ Selection date with time information.
 
 DROPDOWN
 ^^^^^^^^
-A component for selecting a value from a dropdown. 
+A field for selecting a value from a dropdown. 
 The values can be configured with the ``values`` attribute in the yaml or they can be configured in an other .csv file which is used for dropdowns with a lot of choices.
 
 
@@ -253,7 +255,7 @@ Configuration in the yaml file.
             - third
 
 To configure the values in a separate file add a yaml key ``csvImports`` on the same level as ``attributes`` and add the list of CSV files under this key.
-The first line in each CSV file should contain the key of the dropdown component for which you want to add the choices.
+The first line in each CSV file should contain the key of the dropdown field for which you want to add the choices.
 
 ``metadata-ui.yaml``
 
@@ -276,8 +278,8 @@ The first line in each CSV file should contain the key of the dropdown component
 
 SUGGESTBOX
 ^^^^^^^^^^
-A component for selecting a value from a suggestbox. Suggestions will be given for the values where the input matches the beginning of the possible values.
-The values can be put in a separate CSV file in the same way as for the DROPDOWN component.
+A field for selecting a value from a suggestbox. Suggestions will be given for the values where the input matches the beginning of the possible values.
+The values can be put in a separate CSV file in the same way as for the DROPDOWN field.
 
 .. figure:: images/fieldsuggest.png
 
@@ -293,11 +295,11 @@ The values can be put in a separate CSV file in the same way as for the DROPDOWN
 
 DERIVED
 ^^^^^^^
-A derived field is a hidden field whose value depends on an other component. The yaml key ``derivedFrom`` should contain the key of the component it depends on.
-When a value is selected in the parent component a matching value for the derived component is searched in csv file or the value with the same index is picked from the values list.
+A derived field is a hidden field whose value depends on an other field. The yaml key ``derivedFrom`` should contain the key of the field it depends on.
+When a value is selected in the parent field a matching value for the derived field is searched in csv file or the value with the same index is picked from the values list.
 
 
-The CSV file should have at least two columns and start wiht the key of the parent component in the first column followed by the values for the parent component, the other columns should contain the key of the derived component in the first row followed by the matching values.
+The CSV file should have at least two columns and start with the key of the parent field in the first column followed by the values for the parent field, the other columns should contain the key(s) of the derived field(s) in the first row followed by the matching values.
 
 Example derived field with config in a CSV file:
 
@@ -348,9 +350,9 @@ Example derived field with values lists:
 
 COMPLEX
 ^^^^^^^
-A complex component is composed of multiple other components.  The yaml key ``typename`` is added to the component configuration.
+A complex field is composed of multiple other fields.  The yaml key ``typename`` is added to the field configuration.
 On the root level the yaml key ``types`` indicates the beginning of all complex type definition.
-A type definition should contain the ``typename`` followed by the key ``attributes`` which contains the configuration for the subcomponents.
+A type definition should contain the ``typename`` followed by the key ``attributes`` which contains the configuration for the subfields.
 
 .. figure:: images/fieldcomplex.png
 
@@ -359,28 +361,27 @@ A type definition should contain the ``typename`` followed by the key ``attribut
   attributes:
     - key: complex-type
       fieldType: COMPLEX
-      typename: complex-component
+      typename: complex-field
   
   types:
-     - typename: complex-component
+     - typename: complex-field
        attributes:
             - key: object-text
               fieldType: TEXT
             - key: object-numer
               fieldType: NUMBER
 
-Advanced concepts
------------------
+Feature Catalog Generation
+--------------------------
+To create a feature catalog for a vector layer, a complex structure is needed to describe all the attributes. A lot of this information is already present in the GeoServer feature type or the database.
+Metadata supports automatically generating a new structure in the metadata from the information at hands that can be customised afterwards. 
+To create support for this feature in your configuration, define a repeatable COMPLEX_ field with built-in ``fieldType``  `featureAttribute` .
 
-Feature attribute component
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To create a feature catalog a complex structure is needed to describe the all the attributes. A dedicated feature attribute component is provided to handle this. Making a COMPLEX_ type with the ``fieldType``  `featureAttribute` will create the feature attribute component.
-
-In the example the featureCatalog object has two attributes. A unique identifier of the type UUID_ and the feature attribute component.
+In the example the featureCatalog object has two attributes. A unique identifier of the type UUID_ and the feature attribute field.
 
 .. figure:: images/fa01.png
 
-    e.g. Empty Feature attribute component
+    e.g. Empty Feature attribute field
 
 .. code:: YAML
 
@@ -409,7 +410,7 @@ Whitin each feature type there is another ``Generate`` action that will generate
     e.g. Feature attribute with generate domain
 
 Internationalization support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 All metadata field labels that appear in the :guilabel:`Metadata fields` can be internationalized.
 This is performed by creating an internationalization (i18n) file named metadata.properties.
 Create an entry for each key in the gui configuration following this pattern:  `PREFIX.attribute-key`

@@ -10,12 +10,13 @@ The ``Metadata module`` adds a fully customizable metatada tab to the layer conf
 
     configuration
     uiconfiguration
+    advanced
     user
 
 Bulk Operations can be done via the :api:`Metadata Rest Service <metadata.yaml>`.
 
-The layer metadata can be exposed by the :ref:`_csw` service, and if desired from there harvested by
-`GeoNetwork <https://geonetwork-opensource.org//>`_ . Have a look at the INSPIRE metadata tutorial for an example matching metadata/csw configuration.
+The layer metadata can be exposed by the :ref:`csw` service, from there periodically harvested by
+`GeoNetwork <https://geonetwork-opensource.org//>`_ . Have a look at the :ref:`tutorial_metadata` tutorial for an example of matching metadata and CSW configurations that can be harvested by GeoNetwork.
 
 
 
