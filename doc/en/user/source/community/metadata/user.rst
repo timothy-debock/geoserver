@@ -2,6 +2,11 @@ User Guide
 ==========
 To add metadata to a layer follow the steps in `Adding metadata to Layer`_ . When the metadata is repeated in multiple layers it is easier to create a template and reuse the data in the template for all the layers. See `Templates`_ .
 
+.. contents:: :local:
+    :depth: 1
+
+
+
 Adding metadata to Layer
 ------------------------
 
